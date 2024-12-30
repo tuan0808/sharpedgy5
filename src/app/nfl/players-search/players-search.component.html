@@ -1,0 +1,100 @@
+<div class="d-flex justify-content-center mb-3">
+    <div class="p-2 ">
+        <div class="ng-autocomplete">
+            <ng-autocomplete
+                    [data]="autocomplete"
+                    [searchKeyword]="keyword"
+                    placeholder="Enter the Country Name"
+                    (selected)='selectEvent($event)'
+                    (inputChanged)='onChangeSearch($event)'
+                    (inputFocused)='onFocused($event)'
+                    historyIdentifier="countries"
+                    [itemTemplate]="itemTemplate"
+                    [notFoundTemplate]="notFoundTemplate">
+            </ng-autocomplete>
+
+            <ng-template #itemTemplate let-item>
+                <a [innerHTML]="item"></a>
+            </ng-template>
+
+            <ng-template #notFoundTemplate let-notFound>
+                <div [innerHTML]="notFound"></div>
+            </ng-template>
+
+
+            <ng-template #notFoundTemplate let-notFound>
+                <div [innerHTML]="notFound"></div>
+            </ng-template>
+        </div>
+    </div>
+</div>
+<div class="d-flex justify-content-center bg-secondary mb-3">
+    <div class="p-2">
+        <div class="btn-group" role="group" aria-label="Basic example" [@slideInOut]="isVisible ? 'in' : 'out'">
+            <button type="button" class="btn btn-primary"
+                    *ngIf="team != ''"
+                    (click)="setCurrentLetter('all')"
+                    [ngClass]="(currentIndex === 'All') ? 'active' : ''">
+                All
+            </button>
+            <button type="button" class="btn btn-primary"
+                    *ngFor="let letter of letters;let i = index"
+                    (click)="setCurrentLetter(letter)"
+                    [ngClass]="(currentIndex === letter) ? 'active' : ''">
+                {{ letter }}
+            </button>
+        </div>
+    </div>
+</div>
+<div class="d-flex flex-wrap align-content-start bg-light" style="height:300px">
+    <div class="p-2 border" *ngFor="let player of selectedPlayers | async; let i = index">
+        <article class="postcard dark green ">
+            <a class="postcard__img_link" href="#">
+                <!--This will be the player image -->
+                <img class="postcard__img" src="./assets/images/dummy.png" alt="Image Title"/>
+            </a>
+            <div class="postcard__text">
+                <h6 class="postcard__title green"><a href="#">{{player.Name}}</a></h6>
+                <div class="postcard__subtitle small">
+                    {{player.FantasyPosition}}
+                </div>
+                <div class="postcard__bar"></div>
+                <div class="postcard__preview-txt">
+                    <p>Height: {{player.Height}}</p>
+                    <p>Weight: {{player.Weight}}</p>
+                </div>
+                <ul class="postcard__tagbox">
+                    <li class="tag__item"><i class="fas fa-tag mr-2"></i>News</li>
+                    <li class="tag__item"><i class="fas  mr-2"></i>Stats</li>
+                    <li class="tag__item"><i class="fas  mr-2"></i>Game Logs</li>
+                </ul>
+            </div>
+        </article>
+    </div>
+    <!--<div class="p-2 border">
+        <article class="postcard dark green">
+            <a class="postcard__img_link" href="#">
+                <img class="postcard__img" src="https://picsum.photos/500/501" alt="Image Title"/>
+            </a>
+            <div class="postcard__text">
+                <h1 class="postcard__title green"><a href="#">Podcast Title</a></h1>
+                <div class="postcard__subtitle small">
+                    <time datetime="2020-05-25 12:00:00">
+                        <i class="fas fa-calendar-alt mr-2"></i>Mon, May 25th 2020
+                    </time>
+                </div>
+                <div class="postcard__bar"></div>
+                <div class="postcard__preview-txt">
+                </div>
+                <ul class="postcard__tagbox">
+                    <li class="tag__item"><i class="fas fa-tag mr-2"></i>Podcast</li>
+                    <li class="tag__item"><i class="fas fa-clock mr-2"></i>55 mins.</li>
+                    <li class="tag__item play green">
+                        <a href="#"><i class="fas fa-play mr-2"></i>Play Episode</a>
+                    </li>
+                </ul>
+            </div>
+        </article>
+    </div>-->
+</div>
+

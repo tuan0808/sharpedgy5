@@ -1,0 +1,40 @@
+<table class="table align-middle mb-0 bg-white">
+    <thead class="bg-light">
+    <tr>
+        <th>Opponent</th>
+        <th mdbTooltip="Final Score">Score</th>
+        <th mdbTooltip="Rushing Attempts">Rush</th>
+        <th mdbTooltip="Longest Yards">Yards</th>
+        <th mdbTooltip="Solo Tackle">Solo</th>
+        <th mdbTooltip="Assisted Tackles">Assisted</th>
+        <th mdbTooltip="Tackles For Loss">TFL</th>
+    </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let d of data | async">
+            <td>
+                <div class="d-flex align-items-center">
+                    <h5 class="team-spacer" [ngClass]="(d.HomeOrAway === 'HOME') ? 'hidden' : ''">&#64;</h5>
+                    <img
+                            src="./assets/images/NFL/{{d.Opponent.Image}}"
+                            alt=""
+                            style="width: 45px; height: 45px"
+                            class="rounded-circle"
+                    />
+                    <H6 class="team-spacer">{{d.Opponent.FullName}}</H6>
+
+                </div>
+            </td>
+            <td>
+               {{d.RushingAttempts}}
+            </td>
+            <td>
+                {{d.RushingYards}}
+            </td>
+            <td>{{ d.SoloTackles }}</td>
+            <td>{{d.AssistedTackles}}</td>
+            <td>{{d.Sacks}}</td>
+            <td>{{d.TacklesForLoss}}</td>
+        </tr>
+    </tbody>
+</table>

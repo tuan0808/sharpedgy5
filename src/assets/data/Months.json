@@ -1,0 +1,62 @@
+[
+  {
+    "fullName": "January",
+    "abbrevName": "Jan",
+    "numeric": "01"
+  },
+  {
+    "fullName": "February",
+    "abbrevName": "Feb",
+    "numeric": "02"
+  },
+  {
+    "fullName": "March",
+    "abbrevName": "Mar",
+    "numeric": "03"
+  },
+  {
+    "fullName": "April",
+    "abbrevName": "Apr",
+    "numeric": "04"
+  },
+  {
+    "fullName": "May",
+    "abbrevName": "May",
+    "numeric": "05"
+  },
+  {
+    "fullName": "June",
+    "abbrevName": "Jun",
+    "numeric": "06"
+  },
+  {
+    "fullName": "July",
+    "abbrevName": "Jul",
+    "numeric": "07"
+  },
+  {
+    "fullName": "August",
+    "abbrevName": "Aug",
+    "numeric": "08"
+  },
+  {
+    "fullName": "September",
+    "abbrevName": "Sep",
+    "numeric": "09"
+  },
+  {
+    "fullName": "October",
+    "abbrevName": "Oct",
+    "numeric": "10"
+  },
+  {
+    "fullName": "November",
+    "abbrevName": "Nov",
+    "numeric": "11"
+  },
+  {
+    "fullName": "December",
+    "abbrevName": "Dec",
+    "numeric": "12"
+  }
+]

@@ -1,0 +1,42 @@
+<div class="container mt-5">
+    <div class=" d-flex flex-row flex-fill">
+
+        <!-- Example of one Team Card -->
+        <div class="">
+            <section class="">
+                <article class="postcard light yellow" *ngFor="let team of teams | async">
+                    <a class="postcard__img_link" href="#">
+                        <img class="postcard__img img-padding" src="./assets/images/NFL/{{team.Team.Image}}" alt="Image Title"
+                        [ngStyle]="{'background-color': team.SecondaryColor}"/>
+                    </a>
+                    <div class="postcard__text t-dark">
+                        <h1 class="postcard__title yellow"><a href="#">{{team.FullName}}</a></h1>
+                        <div class="postcard__subtitle small">
+                           {{team.StadiumDetails.Name}}
+                        </div>
+                        <div class="postcard__bar" [ngStyle]="{'background-color': team.PrimaryColor}"></div>
+                        <div class="postcard__preview-txt">
+                            <div class="d-flex p-3  ">
+                                <div class="p-2  ms-3">
+                                    <p class="fw-bold mb-1">Head Coach:</p>
+                                    <p class="text-muted mb-0">{{team.HeadCoach}}</p>
+                                </div>
+                                <div class="p-2"> <p class="fw-bold mb-1">Conference:</p>
+                                    <p class="text-muted mb-0">{{team.Conference}}</p></div>
+                                <div class="p-2 "> <p class="fw-bold mb-1">Division:</p>
+                                    <p class="text-muted mb-0">{{team.Division}}</p></div>
+                            </div>
+                        </div>
+
+                        <ul class="postcard__tagbox">
+                            <li class="tag__item"><i class="fas fa-tag mr-2"></i>Schedule</li>
+                            <li class="tag__item"><i class="fas fa-clock mr-2"></i>Stats</li>
+                            <li class="tag__item"><i class="fas fa-clock mr-2"></i>Roster</li>
+                            <li class="tag__item"><i class="fas fa-tag mr-2"></i>Injuries</li>
+                        </ul>
+                    </div>
+                </article>
+            </section>
+        </div>
+    </div>
+</div>

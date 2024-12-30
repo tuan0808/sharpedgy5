@@ -1,0 +1,290 @@
+[
+  {
+    "Abbreviation": "ARI",
+    "FullName": "Arizona Cardinals",
+    "Image": "Arizona_Cardinals_logo.svg",
+    "Colors": {
+      "Primary": "#97233F",
+      "Secondary": "#000000"
+    }
+  },
+  {
+    "Abbreviation": "ATL",
+    "FullName": "Atlanta Falcons",
+    "Image": "Atlanta_Falcons_logo.svg",
+    "Colors": {
+      "Primary": "#A71930",
+      "Secondary": "#000000"
+    }
+  },
+  {
+    "Abbreviation": "BAL",
+    "FullName": "Baltimore Ravens",
+    "Image": "Baltimore_Ravens_logo.svg",
+    "Colors": {
+      "Primary": "#241773",
+      "Secondary": "#000000"
+    }
+  },
+  {
+    "Abbreviation": "BUF",
+    "FullName": "Buffalo Bills",
+    "Image": "Buffalo_Bills_logo.svg",
+    "Colors": {
+      "Primary": "#00338D",
+      "Secondary": "#C60C30"
+    }
+  },
+  {
+    "Abbreviation": "CAR",
+    "FullName": "Carolina Panthers",
+    "Image": "Carolina_Panthers_logo.svg",
+    "Colors": {
+      "Primary": "#0085CA",
+      "Secondary": "#000000"
+    }
+  },
+  {
+    "Abbreviation": "CHI",
+    "FullName": "Chicago Bears",
+    "Image": "Chicago_Bears_logo.svg.png",
+    "Colors": {
+      "Primary": "#0B162A",
+      "Secondary": "#C83803"
+    }
+  },
+  {
+    "Abbreviation": "CIN",
+    "FullName": "Cincinnati Bengals",
+    "Image": "Cincinnati_Bengals_logo.svg",
+    "Colors": {
+      "Primary": "#FB4F14",
+      "Secondary": "#000000"
+    }
+  },
+  {
+    "Abbreviation": "CLE",
+    "FullName": "Cleveland Browns",
+    "Image": "Cleveland_Browns_logo.svg",
+    "Colors": {
+      "Primary": "#311D00",
+      "Secondary": "#FF3C00"
+    }
+  },
+  {
+    "Abbreviation": "DAL",
+    "FullName": "Dallas Cowboys",
+    "Image": "Dallas_Cowboys.svg",
+    "Colors": {
+      "Primary": "#041E42",
+      "Secondary": "#869397"
+    }
+  },
+  {
+    "Abbreviation": "DEN",
+    "FullName": "Denver Broncos",
+    "Image": "Denver_Broncos_logo.svg",
+    "Colors": {
+      "Primary": "#FB4F14",
+      "Secondary": "#002244"
+    }
+  },
+  {
+    "Abbreviation": "DET",
+    "FullName": "Detroit Lions",
+    "Image": "Detroit_Lions_logo.svg",
+    "Colors": {
+      "Primary": "#0076B6",
+      "Secondary": "#B0B7BC"
+    }
+  },
+  {
+    "Abbreviation": "GB",
+    "FullName": "Green Bay Packers",
+    "Image": "Green_Bay_Packers_logo.svg",
+    "Colors": {
+      "Primary": "#203731",
+      "Secondary": "#FFB612"
+    }
+  },
+  {
+    "Abbreviation": "HOU",
+    "FullName": "Houston Texans",
+    "Image": "Houston_Texans_logo.svg",
+    "Colors": {
+      "Primary": "#03202F",
+      "Secondary": "#A71930"
+    }
+  },
+  {
+    "Abbreviation": "IND",
+    "FullName": "Indianopolis Colts",
+    "Image": "Indianopolis_Colts.svg",
+    "Colors": {
+      "Primary": "#006778",
+      "Secondary": "#9F792C"
+    }
+  },
+  {
+    "Abbreviation": "JAX",
+    "FullName": "Jacksonville Jaguars",
+    "Image": "Jacksonville_Jaguars_logo.svg",
+    "Colors": {
+      "Primary": "#006778",
+      "Secondary": "#9F792C"
+    }
+  },
+  {
+    "Abbreviation": "KC",
+    "FullName": "Kansas City Chiefs",
+    "Image": "Kansas_City_Chiefs_logo.svg",
+    "Colors": {
+      "Primary": "#E31837",
+      "Secondary": "#FFB81C"
+    }
+  },
+  {
+    "Abbreviation": "LV",
+    "FullName": "Las Vegas Raiders",
+    "Image": "Las_Vegas_Raiders_logo.svg",
+    "Colors": {
+      "Primary": "#000000",
+      "Secondary": "#A5ACAF"
+    }
+  },
+  {
+    "Abbreviation": "MIA",
+    "FullName": "Miami Dolphins",
+    "Image": "Miami_Dolphins_logo.svg",
+    "Colors": {
+      "Primary": "#008E97",
+      "Secondary": "#F58220"
+    }
+  },
+  {
+    "Abbreviation": "MIN",
+    "FullName": "Minnesota Vikings",
+    "Image": "Minnesota_Vikings_logo.svg.png",
+    "Colors": {
+      "Primary": "#4F2683",
+      "Secondary": "#FFC62F"
+    }
+  },
+  {
+    "Abbreviation": "NE",
+    "FullName": "New England Patriots",
+    "Image": "New_England_Patriots_logo.svg",
+    "Colors": {
+      "Primary": "#002244",
+      "Secondary": "#C60C30"
+    }
+  },
+  {
+    "Abbreviation": "NO",
+    "FullName": "New Orleans Saints",
+    "Image": "New_Orleans_Saints_logo.svg",
+    "Colors": {
+      "Primary": "#D3BC8D",
+      "Secondary": "#101820"
+    }
+  },
+  {
+    "Abbreviation": "NYG",
+    "FullName": "New York Giants",
+    "Image": "New_York_Giants_logo.svg",
+    "Colors": {
+      "Primary": "#0B2265",
+      "Secondary": "#A71930"
+    }
+  },
+  {
+    "Abbreviation": "NYJ",
+    "FullName": "New York Jets",
+    "Image": "New_York_Jets_logo.svg",
+    "Colors": {
+      "Primary": "#125740",
+      "Secondary": "#000000"
+    }
+  },
+  {
+    "Abbreviation": "LAC",
+    "FullName": "Los Angeles Chargers",
+    "Image": "NFL_Chargers_logo.svg",
+    "Colors": {
+      "Primary": "#002A5E",
+      "Secondary": "#FFC20E"
+    }
+  },
+  {
+    "Abbreviation": "LAR",
+    "FullName": "Los Angeles Rams",
+    "Image": "NFL_Rams_logo.svg",
+    "Colors": {
+      "Primary": "#003594",
+      "Secondary": "#FFD100"
+    }
+  },
+  {
+    "Abbreviation": "PHI",
+    "FullName": "Philadelphia Eagles",
+    "Image": "Philadelphia_Eagles_logo.svg",
+    "Colors": {
+      "Primary": "#004C54",
+      "Secondary": "#A5ACAF"
+    }
+  },
+  {
+    "Abbreviation": "PIT",
+    "FullName": "Pittsburgh Steelers",
+    "Image": "Pittsburgh_Steelers_logo.svg",
+    "Colors": {
+      "Primary": "#FFB612",
+      "Secondary": "#101820"
+    }
+  },
+  {
+    "Abbreviation": "SF",
+    "FullName": "San Francisco 49ers",
+    "Image": "San_Francisco_49ers_logo.svg",
+    "Colors": {
+      "Primary": "#AA0000",
+      "Secondary": "#B3995D"
+    }
+  },
+  {
+    "Abbreviation": "SEA",
+    "FullName": "Seattle Seahawks",
+    "Image": "Seattle_Seahawks_logo.svg",
+    "Colors": {
+      "Primary": "#002244",
+      "Secondary": "#69BE28"
+    }
+  },
+  {
+    "Abbreviation": "TB",
+    "FullName": "Tampa Bay Buccaneers",
+    "Image": "Tampa_Bay_Buccaneers_logo.svg",
+    "Colors": {
+      "Primary": "#D50A0A",
+      "Secondary": "#0A0A08"
+    }
+  },
+  {
+    "Abbreviation": "TEN",
+    "FullName": "Tennessee Titans",
+    "Image": "Tennessee_Titans_logo.svg",
+    "Colors": {
+      "Primary": "#4B92DB",
+      "Secondary": "#C8102E"
+    }
+  },
+  {
+    "Abbreviation": "WAS",
+    "FullName": "Washington Commanders",
+    "Image": "Washington_Commanders_logo.svg",
+    "Colors": {
+      "Primary": "#5A1414",
+      "Secondary": "#FFB612"
+    }
+  }
+]

@@ -1,0 +1,74 @@
+.limiter {
+  max-width: 60%;
+}
+tr.hide-table-padding td {
+  padding: 0;
+}
+
+.expand-button {
+  position: relative;
+}
+
+.accordion-toggle .expand-button:after
+{
+  position: absolute;
+  left:.75rem;
+  top: 50%;
+  transform: translate(0, -50%);
+  content: '-';
+}
+.accordion-toggle.collapsed .expand-button:after
+{
+  content: '+';
+}
+
+/* Sets button text when clicked. Should combine these later with wildcards */
+#subs-table .btn-primary:before {
+  content:'Click for details';
+}
+#subs-table .btn-primary[aria-expanded="true"]:before {
+  content:'Close Details';
+}
+/* Styling of the collapsible row */
+#subs-table td.collapse-row {
+  border-style: none;
+  padding: 0;
+}
+
+.player-photo {
+  border-radius: 50%;
+  width: 200px;
+  height: 200px;
+}
+
+.profile-header {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.profile-header h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+
+.profile-stats {
+  font-size: 1.1rem;
+}
+
+.stat-label {
+  font-weight: bold;
+}
+
+.player-draft {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+/* Responsive Styling */
+@media (max-width: 767px) {
+  .player-photo {
+    width: 150px;
+    height: 150px;
+  }
+}

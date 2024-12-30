@@ -1,0 +1,87 @@
+<div class="content" *ngIf="this.player | async as player">
+    <div class="d-flex justify-content-center">
+        <div class="card mb-3 limiter">
+            <div class="row g-0">
+                <div class="col-md-4" >
+                    <img
+                            src="./assets/images/dummy.png"
+                            alt="Trendy Pants and Shoes"
+                            class="img-fluid rounded-start limiter"
+                            style="max-height: 300px"
+                    />
+                </div>
+                <div class="col-md-8" >
+                    <div class="card-body" >
+                        <div class="row profile-header align-items-center">
+
+                            <div class="col-md-9">
+                                <h1>{{ player.Name }}</h1>
+                                <p>Position: {{ player.Position.fullName }} | Jersey #12</p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-column">
+
+                            <div class="btn-group" role="group" aria-label="Basic example">
+                                <button type="button" id="overview" class="btn btn-primary"
+                                        (click)="onSubMenuClick($event)">Overview
+                                </button>
+                                <button type="button" id="news" class="btn btn-primary"
+                                        (click)="onSubMenuClick($event)">News
+                                </button>
+                                <button type="button" id="stats" class="btn btn-primary"
+                                        (click)="onSubMenuClick($event)">Stats
+                                </button>
+                                <button type="button" id="log" class="btn btn-primary"
+                                        (click)="onSubMenuClick($event)">Game Log
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <ng-template [ngIf]="currentButton === 'overview'">
+        <div class="container d-flex justify-content-center my-5" >
+            <!-- Player Profile Header -->
+
+            <!-- Player Info Section -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="profile-stats">
+                        <p><span class="stat-label">Height/Weight:</span> {{ player.Height }} / {{ player.Weight }} lbs
+                        </p>
+                        <p><span class="stat-label">Birthday:</span> {{ player.Birthday }}</p>
+                        <p><span class="stat-label">Status:</span> {{ player.Status }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="profile-stats">
+                        <p><span class="stat-label">College:</span> {{ player.College }}</p>
+                        <p><span class="stat-label">Experience:</span> {{ player.Experience }} Years</p>
+                        <p class="Position"> {{ player.Position }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ng-template>
+    <ng-template [ngIf]="currentButton === 'news'">
+        <div class="card text-center d-flex justify-content-center " *ngFor="let n of news | async">
+            <div class="card-body">
+                <h5 class="card-title">{{ n.Title }}</h5>
+                <p class="card-text">{{ n.Content }}</p>
+            </div>
+            <div class="card-footer text-muted align-content-start">{{ n.TimeAgo }}</div>
+        </div>
+    </ng-template>
+    <ng-template [ngIf]="currentButton === 'stats'">
+        <app-accordion-table [data]="playerStats"></app-accordion-table>
+    </ng-template>
+    <ng-template [ngIf]="currentButton === 'log'">
+
+    </ng-template>
+
+</div>
+
+

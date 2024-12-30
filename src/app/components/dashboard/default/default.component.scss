@@ -1,0 +1,13 @@
+.gridster {
+  height: 100%; /* Ensure Gridster fills its parent container */
+}
+
+.gridster-item {
+  border: 1px solid #fff;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+}

@@ -1,0 +1,77 @@
+<
+<div class="search-wrapper ">
+    <div class="container px-0">
+        <section>
+            <drag-scroll #nav id="nav"
+                         [scroll-x-wheel-enabled]="true"
+                         [snap-duration]="500"
+                         [snap-offset]="0">
+                <div *ngFor="let w of yearArray" drag-scroll-item>
+
+                    <button class="card shadow-sm btn">
+                        <div class="card-body" (click)="getByYear(w)"
+                             [ngClass]="(currentYear === w) ? 'selectedItem' : ''">
+                            <h5 class="card-title">{{ w }}</h5>
+                        </div>
+                    </button>
+                </div>
+            </drag-scroll>
+        </section>
+        <section>
+            <table class="table align-middle mb-0 bg-white">
+                <thead class="bg-light">
+                <tr>
+                    <th></th>
+                    <th>W</th>
+                    <th>T</th>
+                    <th>L</th>
+                    <th>PCT</th>
+                    <th>HOME</th>
+                    <th>Away</th>
+                    <th>DIV</th>
+                    <th>CONF</th>
+                    <th>PF</th>
+                    <th>PA</th>
+                    <th>NetPoints</th>
+                    <th>Streak</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let st of standingsList| async">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <img
+                                    src="./assets/images/NFL/{{st.Team.Image}}"
+                                    alt=""
+                                    style="width: 45px; height: 45px"
+                                    class="rounded-circle"
+                            />
+                            <div class="ms-3">
+                                <p class="fw-bold mb-1">{{st.Name}}</p>
+                                <p class="text-muted mb-0"><strong>Division:</strong> {{st.Division}}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td mdbTooltip="Wins">{{st.Wins}}</td>
+                    <td mdbTooltip="Ties">{{st.Ties}}</td>
+                    <td mdbTooltip="Losses">{{ st.Losses }}</td>
+                    <td mdbTooltip="Percentage">{{st.Percentage}}</td>
+                    <td mdbTooltip="Wins - Ties - Losses">{{st.HomeWins}}-{{st.HomeTies}}-{{st.HomeLosses}}</td>
+                    <td mdbTooltip="Wins - Ties - Losses">{{st.AwayWins}}-{{st.AwayTies}}-{{st.AwayLosses}}</td>
+                    <td mdbTooltip="Wins - Ties - Losses">{{st.DivisionWins}}-{{st.DivisionTies}}-{{st.DivisionLosses}}</td>
+                    <td mdbTooltip="Wins - Ties - Losses">{{st.ConferenceWins}}-{{st.ConferenceTies}}-{{st.ConferenceLosses}}</td>
+                    <td mdbTooltip="Points For">{{st.PointsFor}}</td>
+                    <td mdbTooltip="Points Against">{{st.PointsAgainst}}</td>
+                    <td>{{st.NetPoints}}</td>
+                    <td>{{st.Streak}}</td>
+
+                </tr>
+                </tbody>
+            </table>
+
+        </section>
+    </div>
+</div>
+
+
+

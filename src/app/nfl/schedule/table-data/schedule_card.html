@@ -1,0 +1,43 @@
+<div class="container mt-2">
+  <div class="schedule-card">
+    <!-- Team 1 -->
+    <div class="d-flex align-items-center">
+      <div class="ms-2">
+        <p class="fw-bold mb-1">
+          <img src="assets/images/NFL/{{game.HomeTeam.Image }}" alt="Team 1 Logo" class="team-logo" >
+          {{game.HomeTeam.FullName}}
+        </p>
+        <p class="fw-bold mb-1">
+          <img src="assets/images/NFL/{{game.AwayTeam.Image }}" alt="Team 1 Logo" class="team-logo" >
+          {{game.AwayTeam.FullName}}
+        </p>
+      </div>
+    </div>
+    <ng-template [ngIf]="game.Status === 'Final'" [ngIfElse]="score">
+
+      <div class="details">
+        <h6>{{scoreData.HomeScore}} - {{scoreData.AwayScore}}</h6>
+        <div>{{game.StadiumDetails.Name}}</div>
+        <div>{{ game.Channel }}</div>
+      </div>
+    </ng-template>
+    <ng-template #score>
+      <div class="details">
+        <div>{{game.Date | date:"shortTime"}}</div>
+        <div>Metlife Stadium</div>
+        <div>{{ game.Channel }}</div>
+      </div>
+    </ng-template>
+    <!-- Game Details -->
+
+
+    <!-- Weather Info -->
+    <div class="d-flex weather-info">
+      <div>Low: {{game.ForecastTempLow}}°F</div>
+      <div>High: {{game.ForecastTempHigh}}°F</div>
+      <div>{{game.ForecastDescription}}</div>
+      <div>Windchill: {{ game.ForecastWindChill }}°F</div>
+      <div>Wind: {{game.ForecastWindSpeed}} mph</div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,35 @@
+<div class="search-wrapper ">
+
+    <div class="container px-0">
+
+        <drag-scroll #nav [scroll-x-wheel-enabled]="true" [snap-duration]="500">
+            <div *ngFor="let dl of dateList.reverse()" drag-scroll-item>
+                <button class="card shadow-sm btn" (click)="setCurrentDate(dl)">
+                    <div class="card-body">
+                        <h5 class="card-title">{{getMonthByAbbrev(dl.getMonth())}}</h5>
+                        <p class="card-date">{{dl.getDate()}}</p>
+                    </div>
+                </button>
+            </div>
+        </drag-scroll>
+        <section>
+            <div class="col-12">
+                <div class="position-relative">
+                    <div class="d-flex flex-column">
+                        <div class="p-2 ">
+                            <ag-grid-angular
+                                    class="ag-theme-quartz"
+                                    style="height: 500px;"
+                                    [rowData]="transactions"
+                                    [columnDefs]="colDefs"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+
+

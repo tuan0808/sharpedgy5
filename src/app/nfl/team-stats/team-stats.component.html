@@ -1,0 +1,75 @@
+<section class = "p4">
+    <div class="d-flex justify-content-evenly bottom-gap">
+        <div class="p-2 ">
+            <div class="btn-group" role="group" aria-label="Basic example">
+                <button type="button" class="btn btn-primary" (click)="onSectionSelect($event)" >Passing</button>
+                <button type="button" class="btn btn-primary" >Rushing</button>
+                <button type="button" class="btn btn-primary" >Receiving</button>
+                <button type="button" class="btn btn-primary" >Defense</button>
+                <button type="button" class="btn btn-primary" >Kicking</button>
+            </div>
+        </div>
+        <div class="p-2 ">
+            <div class="btn-group" role="group" aria-label="Basic example">
+                <button type="button" class="btn btn-primary" >NFL</button>
+                <button type="button" class="btn btn-primary" >AFC</button>
+                <button type="button" class="btn btn-primary" >NFC</button>
+                <button type="button" class="btn btn-primary" >Defense</button>
+                <button type="button" class="btn btn-primary" >Kicking</button>
+            </div>
+        </div>
+        <div class="p-2 bg-primary">Flex item 3</div>
+    </div>
+</section>
+<section>
+    <table class="table align-middle mb-0 ">
+        <thead class="bg-light">
+        <tr>
+            <th>Number</th>
+            <th>Team</th>
+            <th>G</th>
+            <th>CMP</th>
+            <th>ATT</th>
+            <th>PCT</th>
+            <th>YDS</th>
+            <th>YDS</th>
+            <th>LNG</th>
+            <th>TD</th>
+            <th>INT</th>
+            <th>SACK</th>
+            <th>YDS</th>
+            <th>RTG</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let st of passing">
+            <td>{{st.Rank}}</td>
+            <td>
+                <div class="d-flex align-items-center">
+
+                    <div class="ms-3">
+                        <p class="fw-bold mb-1">{{st.Team}}</p>
+
+                    </div>
+                </div>
+            </td>
+            <td> {{st.Team}}</td>
+            <td> {{st.G}}</td>
+            <td> {{st.CMP}}</td>
+            <td> {{st.ATT}}</td>
+            <td> {{st.PCT}}</td>
+            <td> {{st.YDS}}</td>
+            <td> {{st.YDS}}</td>
+            <td> {{st.LNG}}</td>
+            <td> {{st.TD}}</td>
+            <td> {{st.INT}}</td>
+            <td> {{st.SACK}}</td>
+            <td> {{st.YDS}}</td>
+            <td> {{st.RTG}}</td>
+
+
+
+        </tr>
+        </tbody>
+    </table>
+</section>

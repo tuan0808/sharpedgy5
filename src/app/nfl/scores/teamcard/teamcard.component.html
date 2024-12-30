@@ -1,0 +1,123 @@
+<link rel="stylesheet" href="teamcard.component.css">
+<div class="container">
+  <div class="card">
+    <div class="">
+      <!-- Main Container -->
+      <div class="d-flex flex-row">
+        <div class="">
+          <!-- Left Team Section -->
+          <div class="">
+            <div class ="d-flex img-container justify-content-center align-items-center">
+              <img src="./assets/images/NFL/{{game.HomeTeam.Image}}" class="team-logo" alt="Home Team Logo">
+
+            </div>
+            <div class="text-center">
+              <h6>{{game.HomeTeam.FullName}}</h6>
+            </div>
+
+            <div class="betting-info d-flex justify-content-center">
+              <div class="spread me-3">
+                <div>Spread</div>
+                <div class="card">{{game.PointSpread}}</div>
+              </div>
+              <div class="moneyline me-3">
+                <div>Moneyline</div>
+                <div class="card">{{game.HomeTeamMoneyLine}}</div>
+              </div>
+              <div class="total-points">
+                <div>OverUnder</div>
+                <div class="card">{{game.OverUnder}}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="">
+          <div class="d-flex flex-column">
+            <div class=" ">
+              <div class="row">
+                <div class="col-12">
+                </div>
+
+              </div>
+            </div>
+            <!-- Menu -->
+            <div class="bg-primary text-black">
+
+
+            </div>
+
+            <div class=" ">
+              <div class="d-inline-flex  ">
+                <div class="d-flex flex-column">
+                  <div class=" border">
+                    <div class="score-section">
+                      <div class="label">Home</div>
+                      <div class="score away">{{game.HomeScore}}</div>
+                    </div>
+                  </div>
+                  <div class=" border">
+                    <div class="timeline">
+                      <div>1</div><div>2</div><div>3</div><div>4</div>
+                      <div>7</div><div>3</div><div>10</div><div>0</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="spacer">
+                  <div class=" border spacer">
+                    <div class="score-section">
+                      <div class="label"></div>
+                      <div class="score away"></div>
+                    </div>
+                  </div>
+
+                </div>
+                <div class="d-flex flex-column">
+                  <div class=" border">
+                    <div class="score-section">
+                      <div class="label">Away</div>
+                      <div class="score away">{{game.AwayScore}}</div>
+                    </div>
+                  </div>
+                  <div class=" border">
+                    <div class="timeline">
+                      <div>1</div><div>2</div><div>3</div><div>4</div>
+                      <div>{{game.HomeScoreQuarter1}}</div><div>{{game.HomeScoreQuarter2}}</div><div>{{game.HomeScoreQuarter3}}</div><div>{{game.HomeScoreQuarter4}}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="">
+          <div class="">
+            <div class ="d-flex img-container justify-content-center align-items-center">
+              <img src="./assets/images/NFL/{{game.AwayTeam.Image}}" class="team-logo" alt="Home Team Logo">
+
+            </div>
+            <div class="text-center">
+              <h6>{{game.AwayTeam.fullName}}</h6>
+            </div>
+
+            <div class="betting-info d-flex justify-content-center">
+              <div class="spread me-3">
+                <div>Spread</div>
+                <div class="card">{{game.PointSpreadAwayTeamMoneyLine}}</div>
+              </div>
+              <div class="moneyline me-3">
+                <div>Moneyline</div>
+                <div class="card">{{game.PointSpreadAwayTeamMoneyLine}}</div>
+              </div>
+              <div class="total-points">
+                <div>OverUnder</div>
+                <div class="card">{{game.OverUnder}}</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

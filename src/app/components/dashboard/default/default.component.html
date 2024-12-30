@@ -1,0 +1,14 @@
+<div class="container-fluid vh-100">
+    <h2 class="text-center mt-2">
+        <button (click)="onSaveEvent()">Save (FOR THE TESTS)</button>
+        <button (click)="toggleDraggable()">Toggle Drag</button>
+    </h2>
+    <gridster [options]="options" class="h-100">
+        <gridster-item *ngFor="let item of dashboard" [item]="item" class="bg-primary text-white">
+            <div class="mt-5">            <ng-template appDynamicHost></ng-template>
+            </div>
+
+<!-- <div class="text-center p-2">Item {{ item | json }}</div> -->
+        </gridster-item>
+    </gridster>
+</div>

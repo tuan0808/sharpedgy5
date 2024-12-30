@@ -1,0 +1,106 @@
+[
+  {
+    "shorthand": "QB",
+    "fullName": "Quarterback"
+  },
+  {
+    "shorthand": "RB",
+    "fullName": "Running Back"
+  },
+  {
+    "shorthand": "WR",
+    "fullName": "Wide Receiver"
+  },
+  {
+    "shorthand": "TE",
+    "fullName": "Tight End"
+  },
+  {
+    "shorthand": "OL",
+    "fullName": "Offensive Lineman"
+  },
+  {
+    "shorthand": "LT",
+    "fullName": "Left Tackle"
+  },
+  {
+    "shorthand": "LG",
+    "fullName": "Left Guard"
+  },
+  {
+    "shorthand": "C",
+    "fullName": "Center"
+  },
+  {
+    "shorthand": "RG",
+    "fullName": "Right Guard"
+  },
+  {
+    "shorthand": "RT",
+    "fullName": "Right Tackle"
+  },
+  {
+    "shorthand": "DL",
+    "fullName": "Defensive Lineman"
+  },
+  {
+    "shorthand": "DE",
+    "fullName": "Defensive End"
+  },
+  {
+    "shorthand": "DT",
+    "fullName": "Defensive Tackle"
+  },
+  {
+    "shorthand": "LB",
+    "fullName": "Linebacker"
+  },
+  {
+    "shorthand": "MLB",
+    "fullName": "Middle Linebacker"
+  },
+  {
+    "shorthand": "OLB",
+    "fullName": "Outside Linebacker"
+  },
+  {
+    "shorthand": "CB",
+    "fullName": "Cornerback"
+  },
+  {
+    "shorthand": "S",
+    "fullName": "Safety"
+  },
+  {
+    "shorthand": "FS",
+    "fullName": "Free Safety"
+  },
+  {
+    "shorthand": "SS",
+    "fullName": "Strong Safety"
+  },
+  {
+    "shorthand": "K",
+    "fullName": "Kicker"
+  },
+  {
+    "shorthand": "P",
+    "fullName": "Punter"
+  },
+  {
+    "shorthand": "LS",
+    "fullName": "Long Snapper"
+  },
+  {
+    "shorthand": "KR",
+    "fullName": "Kick Returner"
+  },
+  {
+    "shorthand": "PR",
+    "fullName": "Punt Returner"
+  },
+  {
+    "shorthand": "ST",
+    "fullName": "Special Teams"
+  }
+]

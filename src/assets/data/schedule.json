@@ -1,0 +1,146 @@
+[
+  {
+    "week": 1,
+    "start_day": "05",
+    "end_day": "09",
+    "month": "Sep",
+    "start_date": "2024-09-05",
+    "end_date": "2024-09-09"
+  },
+  {
+    "week": 2,
+    "start_day": "12",
+    "end_day": "16",
+    "month": "Sep",
+    "start_date": "2024-09-12",
+    "end_date": "2024-09-16"
+  },
+  {
+    "week": 3,
+    "start_day": "19",
+    "end_day": "23",
+    "month": "Sep",
+    "start_date": "2024-09-19",
+    "end_date": "2024-09-23"
+  },
+  {
+    "week": 4,
+    "start_day": "26",
+    "end_day": "30",
+    "month": "Sep",
+    "start_date": "2024-09-26",
+    "end_date": "2024-09-30"
+  },
+  {
+    "week": 5,
+    "start_day": "03",
+    "end_day": "07",
+    "month": "Oct",
+    "start_date": "2024-10-03",
+    "end_date": "2024-10-07"
+  },
+  {
+    "week": 6,
+    "start_day": "10",
+    "end_day": "14",
+    "month": "Oct",
+    "start_date": "2024-10-10",
+    "end_date": "2024-10-14"
+  },
+  {
+    "week": 7,
+    "start_day": "17",
+    "end_day": "21",
+    "month": "Oct",
+    "start_date": "2024-10-17",
+    "end_date": "2024-10-21"
+  },
+  {
+    "week": 8,
+    "start_day": "24",
+    "end_day": "28",
+    "month": "Oct",
+    "start_date": "2024-10-24",
+    "end_date": "2024-10-28"
+  },
+  {
+    "week": 9,
+    "start_day": "31",
+    "end_day": "04",
+    "month": "Oct/Nov",
+    "start_date": "2024-10-31",
+    "end_date": "2024-11-04"
+  },
+  {
+    "week": 10,
+    "start_day": "07",
+    "end_day": "11",
+    "month": "Nov",
+    "start_date": "2024-11-07",
+    "end_date": "2024-11-11"
+  },
+  {
+    "week": 11,
+    "start_day": "14",
+    "end_day": "18",
+    "month": "Nov",
+    "start_date": "2024-11-14",
+    "end_date": "2024-11-18"
+  },
+  {
+    "week": 12,
+    "start_day": "21",
+    "end_day": "25",
+    "month": "Nov",
+    "start_date": "2024-11-21",
+    "end_date": "2024-11-25"
+  },
+  {
+    "week": 13,
+    "start_day": "28",
+    "end_day": "02",
+    "month": "Nov/Dec",
+    "start_date": "2024-11-28",
+    "end_date": "2024-12-02"
+  },
+  {
+    "week": 14,
+    "start_day": "05",
+    "end_day": "09",
+    "month": "Dec",
+    "start_date": "2024-12-05",
+    "end_date": "2024-12-09"
+  },
+  {
+    "week": 15,
+    "start_day": "12",
+    "end_day": "16",
+    "month": "Dec",
+    "start_date": "2024-12-12",
+    "end_date": "2024-12-16"
+  },
+  {
+    "week": 16,
+    "start_day": "19",
+    "end_day": "23",
+    "month": "Dec",
+    "start_date": "2024-12-19",
+    "end_date": "2024-12-23"
+  },
+  {
+    "week": 17,
+    "start_day": "26",
+    "end_day": "30",
+    "month": "Dec",
+    "start_date": "2024-12-26",
+    "end_date": "2024-12-30"
+  },
+  {
+    "week": 18,
+    "start_day": "02",
+    "end_day": "06",
+    "month": "Jan",
+    "start_date": "2025-01-02",
+    "end_date": "2025-01-06"
+  }
+]

@@ -1,0 +1,145 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300;400;500;700;900&display=swap');
+
+.card {
+  margin-right: 0.5rem;
+  margin-left: 0.5rem;
+  margin-top: 0.5rem;
+  border-radius: 0.75rem;
+}
+
+.card > img {
+  border-top-left-radius: 0.75rem;
+  border-top-right-radius: 0.75rem;
+}
+
+.date-before {
+  background-color: lightgray;
+}
+
+.date-current {
+}
+
+.date-after {
+  background-color: blueviolet;
+}
+
+.card-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+.card-date {
+  font-size: medium;
+  margin-bottom: 0.5rem;
+}
+
+drag-scroll {
+  height: 12rem;
+  width: 100%;
+}
+
+.main-title {
+  margin-top: 1rem;
+  color: #2e2e2e;
+  font-family: 'Noto Sans SC', sans-serif;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.sub-title {
+  color: #2e2e2e;
+  font-family: 'Noto Sans SC', sans-serif;
+  text-align: center;
+  text-decoration: underline;
+  font-size: small;
+  margin: 0;
+}
+.sub-title:hover {
+  cursor: pointer;
+}
+
+.search-wrapper {
+  padding: 0.5rem;
+  transition: 0.5s;
+}
+
+.selectedItem {
+  background-color: green;
+}
+
+.cart-wrapper {
+  padding: 0.5rem;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.input-search {
+  border-radius: 1.5rem;
+  background-color: #3a3636;
+  border-color: #3a3636;
+}
+
+.input-search::placeholder {
+  color: rgb(192, 192, 192);
+  text-align: center;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+.input-search {
+  color: white;
+  height: 2.5rem;
+  margin-top: .5rem;
+}
+
+.date-future {
+  background-color: lightgray;
+}
+
+.btn-search {
+  border-radius: 50% !important;
+  padding: 0;
+  border-width: 2px;
+}
+
+.btn-search > i {
+  margin: 0.75rem;
+}
+
+.btn-cart {
+  font-family: 'Noto Sans SC', sans-serif;
+  width: 25rem;
+}
+
+.author {
+  color: rgba(65, 65, 65, 0.5);
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+.author-link {
+  color: black;
+}
+
+.bottom-placeholder {
+  height: 10rem;
+}
+
+.img-logo {
+  width: 170px;
+}
+
+ngb-carousel {
+  margin-top: -115px;
+}
+
+.picsum-img-wrapper > img {
+  width: 100%;
+  height: 30rem;
+}
+
+.nav-icon {
+  font-size: 1.5rem;
+  vertical-align: middle;
+  cursor: pointer;
+}
