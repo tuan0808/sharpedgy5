@@ -8,4 +8,11 @@ export const content: Routes = [
         },
         loadChildren: () => import('../../../app/components/dashboard/dashboard.routes').then(r => r.dashboard)
     },
+    {
+        path: 'nfl',
+        loadChildren: () => import('../../nfl/nfl.routes').then(r=>r.nflRoutes),
+        data: {
+            breadcrumb: "NFL"
+        }
+    },
 ]

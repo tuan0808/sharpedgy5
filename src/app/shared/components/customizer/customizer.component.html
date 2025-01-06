@@ -1,3 +1,9 @@
+<div class="customizer-links" [class.open]="customizer" id="inner-dashboard">
+    <div class="nav flex-column nac-pills" id="c-pills-tab2" role="tablist" aria-orientation="vertical">
+
+    </div>
+</div>
+
 <div class="customizer-links" [class.open]="customizer" id="inner-customizer">
    <div class="nav flex-column nac-pills" id="c-pills-tab" role="tablist" aria-orientation="vertical">
       <a href="javascript:void(0)" class="nav-link" [ngClass]="{'active show': customizer == 'settings' }"
@@ -8,8 +14,16 @@
          id="c-pills-profile-tab" (click)="openCustomizerSetting('color')">
          <div class="settings color-settings"> <i class="icofont icofont-color-bucket"></i> </div>
       </a>
+       @if (router.url == '/dashboard') {
+           <a href="javascript:void(0)" class="nav-link" [ngClass]="{'active show': customizer == 'dashboard' }"
+              id="c-pills-profile-tab2"(click)="openCustomizerSetting('dashboard')">
+               <div class="settings color-settings"> <i class="icofont icofont-dashboard-web"></i> </div>
+           </a>
+       }
+
    </div>
 </div>
+
 <div class="customizer-contain" [class.open]="customizer">
    <div class="tab-content" id="c-pills-tabContent">
       <div class="customizer-header">

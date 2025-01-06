@@ -1,14 +1,32 @@
-<div class="container-fluid vh-100">
-    <h2 class="text-center mt-2">
-        <button (click)="onSaveEvent()">Save (FOR THE TESTS)</button>
-        <button (click)="toggleDraggable()">Toggle Drag</button>
-    </h2>
-    <gridster [options]="options" class="h-100">
-        <gridster-item *ngFor="let item of dashboard" [item]="item" class="bg-primary text-white">
-            <div class="mt-5">            <ng-template appDynamicHost></ng-template>
-            </div>
-
-<!-- <div class="text-center p-2">Item {{ item | json }}</div> -->
-        </gridster-item>
-    </gridster>
+<div class="container-fluid">
+    <div class="dashboard-header d-flex justify-content-between align-items-center p-3">
+        <h1>Dashboard</h1>
+        <div class="btn-group">
+            <button   class="btn btn-primary">
+                <i class="icofont icofont-undo"></i>
+            </button>
+            <button  class="btn btn-primary">
+                <i class="icofont icofont-redo"></i>
+            </button>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-primary" (click)="onSave()">
+                <i class="icofont icofont-edit"></i>
+            </button>
+            <button class="btn btn-secondary">
+                <i class="icofont icofont-copy"></i>
+            </button>
+            <button class="btn btn-danger">
+                <i class="icofont icofont-ui-delete"></i>
+            </button>
+        </div>
+    </div>
+    <!-- Gridster Section -->
+    <div class="row g-4 p-3">
+        <gridster class="gridster-container" [options]="options">
+            <gridster-item [item]="item" *ngFor="let item of gridItems">
+                <ng-template appDynamicComponent></ng-template>
+            </gridster-item>
+        </gridster>
+    </div>
 </div>

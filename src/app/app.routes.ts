@@ -37,6 +37,7 @@ export const routes: Routes = [
         //canActivate: [AdminGuard],
         children: content,
     },
+
     {
         path: '',
         component: FullLayoutComponent,

@@ -3,6 +3,7 @@ import { CustomizerService } from '../../services/customizer.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { CommonModule } from '@angular/common';
+import {Router} from "@angular/router";
 
 
 @Component({
@@ -22,12 +23,14 @@ export class CustomizerComponent implements OnInit {
   public data: any;
 
   constructor(public customize: CustomizerService,
+    protected router : Router,
     private modalService: NgbModal,
     private toastrService: ToastrService) { 
       this.customize.data.color.layout_version = localStorage.getItem("layoutVersion")
       this.customize.data.color.color = localStorage.getItem("color")
       this.customize.data.color.primary_color = localStorage.getItem("primary_color")
       this.customize.data.color.secondary_color = localStorage.getItem("secondary_color")
+    console.log(router.url)
     }
 
   // Open customizer
@@ -93,6 +96,7 @@ export class CustomizerComponent implements OnInit {
   }
 
   //Copy config
+
   copyText(data:any) {
     let selBox = document.createElement('textarea');
     selBox.style.position = 'fixed';
@@ -110,4 +114,7 @@ export class CustomizerComponent implements OnInit {
   ngOnInit() { }
 
 
+  openDashboardSettings() {
+
+  }
 }

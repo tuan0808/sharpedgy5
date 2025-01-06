@@ -1,0 +1,57 @@
+<div class="resizable-container" [class.locked]="isLocked">
+    <!-- Header -->
+    <div class="container-header">
+        <div class="title">{{ title }}</div>
+        <div class="controls">
+            <button class="control-button" (click)="onLockToggle()">
+                <i class="fas" [class.fa-lock]="isLocked" [class.fa-unlock]="!isLocked"></i>
+            </button>
+            <button class="control-button" (click)="onResetSize()">
+                <i class="fas fa-square"></i>
+            </button>
+            <button class="control-button" (click)="onRemove()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="container-content">
+        <ng-content></ng-content>
+    </div>
+
+    <!-- Resize handles (only shown when not locked) -->
+    @if (!isLocked) {
+        <div class="resize-handles">
+            <!-- Right resize handle -->
+            <div
+                    class="resize-handle right"
+                    (mousedown)="onResizeStart($event, 'right')"
+            >
+                <div class="grip-pattern">
+                    <div class="grip-line"></div>
+                    <div class="grip-line"></div>
+                    <div class="grip-line"></div>
+                </div>
+            </div>
+
+            <!-- Bottom resize handle -->
+            <div
+                    class="resize-handle bottom"
+                    (mousedown)="onResizeStart($event, 'bottom')"
+            >
+                <div class="grip-pattern horizontal">
+                    <div class="grip-line"></div>
+                    <div class="grip-line"></div>
+                    <div class="grip-line"></div>
+                </div>
+            </div>
+
+            <!-- Corner resize handle -->
+            <div
+                    class="resize-handle corner"
+                    (mousedown)="onResizeStart($event, 'corner')"
+            ></div>
+        </div>
+    }
+</div>

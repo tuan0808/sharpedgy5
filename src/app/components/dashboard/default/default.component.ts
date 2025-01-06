@@ -1,21 +1,31 @@
-import {Component, ComponentRef, OnInit, QueryList, ViewChildren, ViewEncapsulation} from "@angular/core";
+import {
+  Component,
+  ComponentRef, Input,
+  OnInit,
+  QueryList,
+  Type,
+  ViewChild,
+  ViewChildren,
+  ViewEncapsulation
+} from "@angular/core";
 import { ChartistModule } from "ng-chartist";
 import { CommonModule } from "@angular/common";
 import { FeatherIconsComponent } from "../../../shared/components/feather-icons/feather-icons.component";
 import { NgApexchartsModule } from "ng-apexcharts";
 import {
-  DisplayGrid,
-  GridsterComponent,
-  GridsterConfig,
-  GridsterItem,
-  GridsterItemComponent,
+  CompactType, DisplayGrid, GridsterComponent, GridsterConfig, GridsterItem, GridsterItemComponent,
   GridType
-} from "angular-gridster2";
-import {PlayersComponent} from "../../../nfl/players/players.component";
-import {DynamicHostDirective} from "../../../shared/directives/dynamic-host.directive";
+} from "angular-gridster2";import {DynamicHostDirective} from "../../../shared/directives/dynamic-host.directive";
+import {SidenavComponent} from "../sidenav/sidenav.component";
+import {GridItemComponent} from "../grid-item/grid-item.component";
+
+import {FormsModule} from "@angular/forms";
+import {DynamicComponentDirective} from "../../../shared/directives/dynamic-component.directive";
 import {ComponentRegistryService} from "../../../shared/services/component-registry.service";
-import {DashboardService} from "../../../shared/services/dashboard.service";
+import {DashboardItem} from "../../../shared/data/dashboard/DashboardItem";
+import {AngularFireAuth} from "@angular/fire/compat/auth";
 declare var require: any;
+
 // var Knob = require('knob')// browserify require
 
 var primary = localStorage.getItem("primary_color") || "#4466f2";
@@ -24,70 +34,68 @@ var secondary = localStorage.getItem("secondary_color") || "#1ea6ec";
 @Component({
   selector: "app-default",
   standalone: true,
-  imports: [CommonModule, FeatherIconsComponent, ChartistModule, NgApexchartsModule, GridsterItemComponent, GridsterComponent, DynamicHostDirective],
+    imports: [CommonModule, FeatherIconsComponent, ChartistModule, NgApexchartsModule, GridsterItemComponent, GridsterComponent, DynamicHostDirective, GridItemComponent, SidenavComponent, FormsModule, DynamicComponentDirective],
   templateUrl: "./default.component.html",
   styleUrls: ["./default.component.scss"],
   encapsulation: ViewEncapsulation.None,
 })
 export class DefaultComponent {
-  @ViewChildren(DynamicHostDirective) dynamicHosts: QueryList<DynamicHostDirective>;
-  constructor(private componentRegistry : ComponentRegistryService, private dashboardService : DashboardService) {
+  options: GridsterConfig;
+  gridItems: DashboardItem[] = [];
+
+  constructor(private componentRegistry: ComponentRegistryService) {
     this.options = {
-      gridType: GridType.Fit, // Fills the container
-      compactType: null, // No auto-compacting
-      margin: 10, // Margin between grid items
-      outerMargin: true,
-      minCols: 12,
-      maxCols: 12,
-      minRows: 12,
-      maxRows: 12,
+      gridType: 'fixed',
+      fixedColWidth: 100,
+      fixedRowHeight: 100,
+      displayGrid: 'always',
+      pushItems: true,
       draggable: {
-        enabled: false // Allow drag
+        enabled: true
       },
       resizable: {
-        enabled: true // Allow resize
+        enabled: true
       },
-      displayGrid: 'always', // Show grid lines
+      margin: 10,
+      outerMargin: true,
+      minCols: 6,
+      maxCols: 12,
+      minRows: 6,
+      maxRows: 12,
+      defaultItemCols: 2,
+      defaultItemRows: 2,
+      mobileBreakpoint: 640
     };
+  }
 
-    this.dashboard = [
-      { cols: 2, rows: 2, y: 0, x: 0, component: 'playerInfo' }, // Item 1
-      { cols: 2, rows: 1, y: 0, x: 2, component: 'teams' }, // Item 2
-      { cols: 1, rows: 2, y: 1, x: 4, component: 'scores'}, // Item 3
-      { cols: 3, rows: 2, y: 2, x: 1, component: 'standing' }  // Item 4
+  ngOnInit() {
+    this.gridItems = [
+      { cols: 2, rows: 2, y: 0, x: 0, component: 'ComponentA', id: '1' },
+      { cols: 3, rows: 2, y: 0, x: 2, component: 'ComponentB', id: '2' }
     ];
-
   }
 
-  ngAfterViewInit() {
-    this.loadComponents();
-  }
-
-
-  options: GridsterConfig;
-  dashboard: Array<GridsterItem>;
-
-  onSaveEvent() {
-    console.log(JSON.stringify(this.dashboard))
-    this.dashboardService.saveDashboard(this.dashboard)
-  }
-
-  loadComponents() {
-    this.dynamicHosts.forEach((dynamicHost, index) => {
-     const componentName = this.dashboard[index]['component'];
-      const componentType = this.componentRegistry.getComponent(componentName);
-
-      const viewContainerRef = dynamicHost.viewContainerRef;
-      viewContainerRef.clear();
-
-      const componentRef = viewContainerRef.createComponent(componentType);
-      // Pass data to component instance if necessary
+  addItem() {
+    this.gridItems.push({
+      cols: 2,
+      rows: 2,
+      y: 0,
+      x: 0,
+      component: 'ComponentA',
+      id: Date.now().toString()
     });
   }
-  toggleDraggable() {
-    this.options.draggable.enabled = !this.options.draggable.enabled;
-    if (this.options.api && this.options.api.optionsChanged) {
-      this.options.api.optionsChanged();
+
+  onSave() {
+    this.componentRegistry.save('9fa8b1c2-3456-78de-f901-23456abc9999', this.gridItems).then(r =>
+    console.log('hi?'))
+  }
+
+  loadLayout() {
+    const savedLayout = localStorage.getItem('gridsterLayout');
+    if (savedLayout) {
+      const layout = JSON.parse(savedLayout);
+      this.gridItems = layout.items;
     }
   }
 }

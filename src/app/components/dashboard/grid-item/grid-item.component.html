@@ -1,0 +1,19 @@
+<div class="grid-item">
+    <div class="item-header" *ngIf="editMode">
+        <span>{{component}}</span>
+        <div class="btn-group">
+            <button class="btn btn-sm btn-outline-secondary" (click)="onLockMove.emit()">
+                <i class="bi" [ngClass]="moveEnabled ? 'bi-unlock' : 'bi-lock'"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" (click)="onLockResize.emit()">
+                <i class="bi" [ngClass]="resizeEnabled ? 'bi-arrows-angle-expand' : 'bi-lock'"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" (click)="onDelete.emit()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+    </div>
+    <div class="item-content">
+        <!-- Dynamic component content goes here -->
+    </div>
+</div>

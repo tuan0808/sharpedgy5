@@ -1,0 +1,20 @@
+.grid-item {
+  height: 100%;
+  background: #fff;
+  border-radius: 0.25rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 0.25rem 0.25rem 0 0;
+}
+
+.item-content {
+  padding: 1rem;
+  height: calc(100% - 48px);
+}
