@@ -1,0 +1,43 @@
+{
+  "gridType": "fit",
+  "compactType": "compactUp",
+  "margin": 10,
+  "outerMargin": true,
+  "useTransformPositioning": true,
+  "mobileBreakpoint": 640,
+  "minCols": 12,
+  "maxCols": 12,
+  "minRows": 1,
+  "maxRows": 100,
+  "maxItemCols": 12,
+  "minItemCols": 1,
+  "maxItemRows": 50,
+  "minItemRows": 1,
+  "maxItemArea": 2500,
+  "minItemArea": 1,
+  "defaultItemCols": 3,
+  "defaultItemRows": 2,
+  "fixedColWidth": 105,
+  "fixedRowHeight": 105,
+  "draggable": {
+    "enabled": true,
+    "ignoreContent": true,
+    "dragHandleClass": "gridster-drag-handle"
+  },
+  "resizable": {
+    "enabled": true,
+    "handles": {
+      "s": true,
+      "e": true,
+      "n": true,
+      "w": true,
+      "se": true,
+      "ne": true,
+      "sw": true,
+      "nw": true
+    }
+  },
+  "swap": false,
+  "pushItems": true,
+  "displayGrid": "onDrag&Resize"
+}

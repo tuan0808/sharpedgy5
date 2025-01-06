@@ -27,11 +27,12 @@ export class ComponentRegistryService {
         return this.registryMap.get(name);
     }
 
-    async save(uuid: any, item: DashboardItem[]) {
+    async save(uuid: any, dashboardId : number, item: DashboardItem[]) {
         console.log(JSON.stringify(item))
-        console.log(`${this.endpoint}/dashboard/v1/${uuid}/saveDashboard`)
-        return this.httpClient.post<any[]>(`${this.endpoint}/dashboard/v1/${uuid}/saveDashboard`, item)
+        console.log(`${this.endpoint}/dashboard/v1/${uuid}/${dashboardId}/saveDashboard`)
+        return this.httpClient.post<any[]>(`${this.endpoint}/dashboard/v1/${uuid}/${dashboardId}/saveDashboard`, item)
             .pipe(
+                map(m=>true),
                 catchError(error => {
                     // Handle the error here
                     console.error('Error:', error);
