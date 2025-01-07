@@ -11,6 +11,7 @@ import {ChartistModule} from "ng-chartist";
 import {CommonModule} from "@angular/common";
 import {FeatherIconsComponent} from "../../../shared/components/feather-icons/feather-icons.component";
 import {NgApexchartsModule} from "ng-apexcharts";
+import {GridState} from "../../../shared/model/GridState"
 import {
     DisplayGrid,
     GridsterComponent,
@@ -40,9 +41,13 @@ import {DashboardItem} from "../../../shared/data/dashboard/DashboardItem";
 })
 export class DefaultComponent implements OnInit, OnDestroy, AfterViewInit {
     @ViewChild(GridsterComponent) gridster: GridsterComponent;
-    options: GridsterConfig;
-    gridItems: DashboardItem[] = [];
-    popupWindow: Window | null = null;
+    protected options: GridsterConfig;
+    protected gridItems: DashboardItem[] = [];
+    protected popupWindow: Window | null = null;
+    private gridHistory: GridState[] = [];
+    private currentHistoryIndex: number = -1;
+    private maxHistorySize: number = 20;
+    private isUndoRedoOperation: boolean = false;
 
     private popupCheckInterval: number | null = null;
 
@@ -95,7 +100,11 @@ export class DefaultComponent implements OnInit, OnDestroy, AfterViewInit {
             initCallback: () => {
                 console.log('Popup grid initialized');
             },
+
             itemChangeCallback: () => {
+                if (!this.isUndoRedoOperation) {
+                    this.addToHistory();
+                }
                 this.sendGridUpdate();
             }
         };
@@ -117,6 +126,9 @@ export class DefaultComponent implements OnInit, OnDestroy, AfterViewInit {
             {cols: 4, rows: 4, y: 0, x: 0, component: 'ComponentA', id: '1'},
             {cols: 4, rows: 4, y: 0, x: 4, component: 'ComponentB', id: '2'}
         ];
+
+        // Initialize history with initial state
+        this.addToHistory();
 
         window.addEventListener('message', this.handlePopupMessage.bind(this));
     }
@@ -218,6 +230,64 @@ export class DefaultComponent implements OnInit, OnDestroy, AfterViewInit {
                 this.handlePopupClosed();
                 break;
         }
+    }
+
+    private addToHistory() {
+        // Remove any future states if we're not at the latest point
+        if (this.currentHistoryIndex < this.gridHistory.length - 1) {
+            this.gridHistory = this.gridHistory.slice(0, this.currentHistoryIndex + 1);
+        }
+
+        // Create a deep copy of the current state
+        const newState: GridState = {
+            items: this.gridItems.map(item => ({...item})),
+            timestamp: Date.now()
+        };
+
+        // Add new state to history
+        this.gridHistory.push(newState);
+        this.currentHistoryIndex = this.gridHistory.length - 1;
+
+        // Limit history size
+        if (this.gridHistory.length > this.maxHistorySize) {
+            this.gridHistory.shift();
+            this.currentHistoryIndex--;
+        }
+    }
+
+    canUndo(): boolean {
+        return this.currentHistoryIndex > 0;
+    }
+
+    canRedo(): boolean {
+        return this.currentHistoryIndex < this.gridHistory.length - 1;
+    }
+
+    undo() {
+        if (this.canUndo()) {
+            this.isUndoRedoOperation = true;
+            this.currentHistoryIndex--;
+            this.applyHistoryState(this.gridHistory[this.currentHistoryIndex]);
+            this.isUndoRedoOperation = false;
+        }
+    }
+
+    redo() {
+        if (this.canRedo()) {
+            this.isUndoRedoOperation = true;
+            this.currentHistoryIndex++;
+            this.applyHistoryState(this.gridHistory[this.currentHistoryIndex]);
+            this.isUndoRedoOperation = false;
+        }
+    }
+
+    private applyHistoryState(state: GridState) {
+        this.gridItems = state.items.map(item => ({...item}));
+        if (this.options.api) {
+            this.options.api.optionsChanged();
+        }
+        this.sendGridUpdate();
+        this.cdr.detectChanges();
     }
 
     onSave() {

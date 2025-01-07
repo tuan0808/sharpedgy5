@@ -2,11 +2,23 @@
     <div class="dashboard-header d-flex justify-content-between align-items-center p-3">
         <h1>Dashboard</h1>
         <div class="btn-group">
-            <button class="btn btn-primary">
-                <i class="icofont icofont-undo"></i>
+            <button
+                    class="btn"
+                    [class.btn-primary]="canUndo()"
+                    [class.btn-secondary]="!canUndo()"
+                    [disabled]="!canUndo()"
+                    (click)="undo()"
+                    [title]="canUndo() ? 'Undo last action' : 'No more actions to undo'">
+                <i class="icofont icofont-undo" [class.text-muted]="!canUndo()"></i>
             </button>
-            <button class="btn btn-primary">
-                <i class="icofont icofont-redo"></i>
+            <button
+                    class="btn"
+                    [class.btn-primary]="canRedo()"
+                    [class.btn-secondary]="!canRedo()"
+                    [disabled]="!canRedo()"
+                    (click)="redo()"
+                    [title]="canRedo() ? 'Redo last action' : 'No more actions to redo'">
+                <i class="icofont icofont-redo" [class.text-muted]="!canRedo()"></i>
             </button>
         </div>
         <div class="btn-group">
