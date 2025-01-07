@@ -1,105 +1,130 @@
 import {
     Component,
-    ComponentRef, Input,
-    OnInit,
-    QueryList,
-    Type,
     ViewChild,
-    ViewChildren,
-    ViewEncapsulation
+    ViewEncapsulation,
+    OnInit
 } from "@angular/core";
 import {ChartistModule} from "ng-chartist";
 import {CommonModule} from "@angular/common";
 import {FeatherIconsComponent} from "../../../shared/components/feather-icons/feather-icons.component";
 import {NgApexchartsModule} from "ng-apexcharts";
 import {
-    CompactType, DisplayGrid, GridsterComponent, GridsterConfig, GridsterItem, GridsterItemComponent,
-    GridType
+    DisplayGrid,
+    GridsterComponent,
+    GridsterConfig,
+    GridsterItemComponent,
+    GridType,
+    CompactType,
 } from "angular-gridster2";
 import {DynamicHostDirective} from "../../../shared/directives/dynamic-host.directive";
 import {SidenavComponent} from "../sidenav/sidenav.component";
 import {GridItemComponent} from "../grid-item/grid-item.component";
-
 import {FormsModule} from "@angular/forms";
 import {DynamicComponentDirective} from "../../../shared/directives/dynamic-component.directive";
 import {ComponentRegistryService} from "../../../shared/services/component-registry.service";
 import {DashboardItem} from "../../../shared/data/dashboard/DashboardItem";
-import {AngularFireAuth} from "@angular/fire/compat/auth";
-
-declare var require: any;
-
-// var Knob = require('knob')// browserify require
-
-var primary = localStorage.getItem("primary_color") || "#4466f2";
-var secondary = localStorage.getItem("secondary_color") || "#1ea6ec";
 
 @Component({
     selector: "app-default",
     standalone: true,
-    imports: [CommonModule, FeatherIconsComponent, ChartistModule, NgApexchartsModule, GridsterItemComponent, GridsterComponent, DynamicHostDirective, GridItemComponent, SidenavComponent, FormsModule, DynamicComponentDirective],
+    imports: [CommonModule, FeatherIconsComponent, ChartistModule, NgApexchartsModule,
+        GridsterItemComponent, GridsterComponent, DynamicHostDirective,
+        GridItemComponent, SidenavComponent, FormsModule, DynamicComponentDirective],
     templateUrl: "./default.component.html",
     styleUrls: ["./default.component.scss"],
     encapsulation: ViewEncapsulation.None,
 })
-export class DefaultComponent {
+export class DefaultComponent implements OnInit {
     options: GridsterConfig;
     gridItems: DashboardItem[] = [];
 
     constructor(private componentRegistry: ComponentRegistryService) {
+        this.initializeGridster();
+    }
+
+    private initializeGridster() {
+        const headerHeight = 60; // Height of your header in pixels
+        const availableHeight = window.innerHeight - headerHeight;
+        const rowHeight = Math.floor(availableHeight / 12); // Divide available height into 12 rows
+
         this.options = {
-            gridType: 'fixed',
-            fixedColWidth: 100,
-            fixedRowHeight: 100,
-            displayGrid: 'always',
+            gridType: GridType.Fit, // Changed to Fit to ensure content stays within viewport
+            displayGrid: DisplayGrid.Always,
             pushItems: true,
             draggable: {
-                enabled: true
+                enabled: true,
+                dragHandleClass: 'drag-handler', // Optional: add if you want specific drag zones
             },
             resizable: {
                 enabled: true
             },
-            margin: 10,
+            minCols: 24,
+            maxCols: 24,
+            minRows: 12,
+            maxRows: 12, // Set equal to minRows to prevent vertical expansion
+            fixedRowHeight: rowHeight,
+            fixedColWidth: Math.floor(window.innerWidth / 24),
+            margin: 5,
             outerMargin: true,
-            minCols: 6,
-            maxCols: 12,
-            minRows: 6,
-            maxRows: 12,
-            defaultItemCols: 2,
-            defaultItemRows: 2,
-            mobileBreakpoint: 640
+            useTransformPositioning: true,
+            mobileBreakpoint: 640,
+            defaultItemCols: 4,
+            defaultItemRows: 4,
+            keepFixedHeightInMobile: true,
+            keepFixedWidthInMobile: true,
+            compactType: CompactType.None,
+            enableEmptyCellClick: false,
+            enableEmptyCellContextMenu: false,
+            enableEmptyCellDrop: false,
+            enableEmptyCellDrag: false,
+            emptyCellDragMaxCols: 50,
+            emptyCellDragMaxRows: 50,
+            enableOccupiedCellDrop: false,
+            swap: true,
+            swapWhileDragging: false,
+            pushDirections: { north: true, east: true, south: true, west: true },
+            pushResizeItems: true,
+            disableWindowResize: false,
+            disableAutoPositionOnConflict: false,
+            scrollToNewItems: false, // Disabled scrolling
+            itemResizeCallback: item => {
+                // Ensure grid updates properly after resize
+                if (this.options.api && this.options.api.optionsChanged) {
+                    this.options.api.optionsChanged();
+                }
+            },
+            itemChangeCallback: item => {
+                // Ensure grid updates properly after changes
+                if (this.options.api && this.options.api.optionsChanged) {
+                    this.options.api.optionsChanged();
+                }
+            }
         };
+
+        // Add window resize handler
+        window.addEventListener('resize', () => {
+            if (this.options.api && this.options.api.optionsChanged) {
+                const newAvailableHeight = window.innerHeight - headerHeight;
+                const newRowHeight = Math.floor(newAvailableHeight / 12);
+
+                this.options.fixedRowHeight = newRowHeight;
+                this.options.fixedColWidth = Math.floor(window.innerWidth / 24);
+                this.options.api.optionsChanged();
+            }
+        });
     }
 
     ngOnInit() {
         this.gridItems = [
-            {cols: 2, rows: 2, y: 0, x: 0, component: 'ComponentA', id: '1'},
-            {cols: 3, rows: 2, y: 0, x: 2, component: 'ComponentB', id: '2'}
+            {cols: 4, rows: 4, y: 0, x: 0, component: 'ComponentA', id: '1'},
+            {cols: 4, rows: 4, y: 0, x: 4, component: 'ComponentB', id: '2'}
         ];
-    }
-
-    addItem() {
-        this.gridItems.push({
-            cols: 2,
-            rows: 2,
-            y: 0,
-            x: 0,
-            component: 'ComponentA',
-            id: Date.now().toString()
-        });
     }
 
     onSave() {
         this.componentRegistry.save('9fa8b1c2-3456-78de-f901-23456abc9999', 10, this.gridItems)
-            .then(r =>
-                r.subscribe(s=>console.log(s))
-            )
+            .then(r => r.subscribe(s => console.log(s)));
     }
 
-    loadLayout() {
-        const savedLayout = localStorage.getItem('gridsterLayout');
-        if (savedLayout) {
-            const layout = JSON.parse(savedLayout);
-            this.gridItems = layout.items;
-        }
-    }
+
 }
