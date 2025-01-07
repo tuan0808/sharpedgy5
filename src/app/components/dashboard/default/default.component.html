@@ -16,14 +16,28 @@
             <button class="btn btn-secondary">
                 <i class="icofont icofont-copy"></i>
             </button>
+            <button class="btn btn-primary" (click)="openPopupGrid()">
+                <i class="icofont icofont-external-link"></i>
+            </button>
             <button class="btn btn-danger">
                 <i class="icofont icofont-ui-delete"></i>
             </button>
         </div>
     </div>
-    <gridster [options]="options" class="gridster-container">
-        <gridster-item [item]="item" *ngFor="let item of gridItems">
-            <ng-template appDynamicComponent></ng-template>
-        </gridster-item>
-    </gridster>
+
+    @if (!popupWindow) {
+        <div class="gridster-container">
+            <gridster [options]="options">
+                <gridster-item [item]="item" *ngFor="let item of gridItems">
+                    <ng-template appDynamicComponent></ng-template>
+                </gridster-item>
+            </gridster>
+        </div>
+    } @else {
+        <div class="popup-message p-4 text-center">
+            <div class="alert alert-info">
+                Dashboard is currently open in another window
+            </div>
+        </div>
+    }
 </div>

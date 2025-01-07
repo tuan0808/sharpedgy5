@@ -8,6 +8,7 @@ import { LoginComponent } from './auth/login/login.component';
 import {RegisterComponent} from "./auth/register/register.component";
 import {VerificationComponent} from "./auth/verification/verification.component";
 import {ResetPwdComponent} from "./auth/reset-pwd/reset-pwd.component";
+import {PopupGridComponent} from "./components/dashboard/popup-grid/popup-grid.component";
 
 export const routes: Routes = [
     {
@@ -37,11 +38,15 @@ export const routes: Routes = [
         //canActivate: [AdminGuard],
         children: content,
     },
-
     {
         path: '',
         component: FullLayoutComponent,
         //canActivate: [AdminGuard],
         children: fullRoutes,
     },
+    {
+        path: 'popup-grid',
+        component: PopupGridComponent,
+        children: content
+    }
 ];

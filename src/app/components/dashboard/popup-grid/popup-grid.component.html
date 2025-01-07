@@ -1,0 +1,10 @@
+<div class="popup-container">
+    <div class="popup-header">
+        <h1>Dashboard Grid</h1>
+    </div>
+    <gridster [options]="options" class="gridster-container">
+        <gridster-item [item]="item" *ngFor="let item of gridItems">
+            <ng-template appDynamicComponent></ng-template>
+        </gridster-item>
+    </gridster>
+</div>
