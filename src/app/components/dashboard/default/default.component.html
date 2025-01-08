@@ -23,10 +23,10 @@
         </div>
         <div class="btn-group">
             <button class="btn btn-primary" (click)="onSave()">
-                <i class="icofont icofont-edit"></i>
+                <i class="icofont icofont-save"></i>
             </button>
-            <button class="btn btn-secondary">
-                <i class="icofont icofont-copy"></i>
+            <button class="btn btn-secondary" (click)="toggleGrid()">
+                <i class="icofont icofont-grid-advance"></i>
             </button>
             <button class="btn btn-primary" (click)="openPopupGrid()">
                 <i class="icofont icofont-external-link"></i>
@@ -39,7 +39,10 @@
 
     @if (!popupWindow) {
         <div class="gridster-container">
-            <gridster [options]="options">
+            <gridster [options]="options"
+                      (dragover)="$event.preventDefault()"
+                      (drop)="onDrop($event)">
+            >
                 <gridster-item [item]="item" *ngFor="let item of gridItems">
                     <ng-template appDynamicComponent></ng-template>
                 </gridster-item>

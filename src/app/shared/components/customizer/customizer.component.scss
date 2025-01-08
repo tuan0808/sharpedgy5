@@ -2,3 +2,35 @@
     display: block;
     border-bottom: none;
 }
+
+.component-list {
+    padding: 1rem;
+}
+
+.component-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    cursor: move;
+    transition: all 0.3s ease;
+}
+
+.component-item:hover {
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.component-item i {
+    font-size: 1.2rem;
+    color: #6c757d;
+}
+
+.component-item span {
+    font-size: 0.9rem;
+    color: #495057;
+}

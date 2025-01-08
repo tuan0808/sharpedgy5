@@ -28,6 +28,7 @@ import {FormsModule} from "@angular/forms";
 import {DynamicComponentDirective} from "../../../shared/directives/dynamic-component.directive";
 import {ComponentRegistryService} from "../../../shared/services/component-registry.service";
 import {DashboardItem} from "../../../shared/data/dashboard/DashboardItem";
+import gridOptions from "../../../../assets/data/dashboard.json"
 
 @Component({
     selector: "app-default",
@@ -41,6 +42,7 @@ import {DashboardItem} from "../../../shared/data/dashboard/DashboardItem";
 })
 export class DefaultComponent implements OnInit, OnDestroy, AfterViewInit {
     @ViewChild(GridsterComponent) gridster: GridsterComponent;
+    showGrid = true;
     protected options: GridsterConfig;
     protected gridItems: DashboardItem[] = [];
     protected popupWindow: Window | null = null;
@@ -121,6 +123,8 @@ export class DefaultComponent implements OnInit, OnDestroy, AfterViewInit {
         });
     }
 
+
+
     ngOnInit() {
         this.gridItems = [
             {cols: 4, rows: 4, y: 0, x: 0, component: 'ComponentA', id: '1'},
@@ -132,6 +136,49 @@ export class DefaultComponent implements OnInit, OnDestroy, AfterViewInit {
 
         window.addEventListener('message', this.handlePopupMessage.bind(this));
     }
+
+    onDrop(event: DragEvent) {
+        event.preventDefault();
+        if (!event.dataTransfer) return;
+
+        const componentType = event.dataTransfer.getData('componentType');
+        const componentSize = JSON.parse(event.dataTransfer.getData('componentSize'));
+
+        // Get gridster element using querySelector since it's the container
+        const gridsterElement = document.querySelector('.gridster-container');
+        if (!gridsterElement) return;
+
+        const rect = gridsterElement.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+        // Calculate drop position relative to the grid
+        const x = event.clientX + scrollLeft - rect.left;
+        const y = event.clientY + scrollTop - rect.top;
+
+        // Convert pixel coordinates to grid coordinates
+        const colWidth = rect.width / this.options.minCols;
+        const rowHeight = rect.height / this.options.minRows;
+
+        const gridX = Math.floor(x / colWidth);
+        const gridY = Math.floor(y / rowHeight);
+
+        // Create new grid item
+        const newItem: DashboardItem = {
+            id: `widget-${Date.now()}`,
+            cols: componentSize.cols,
+            rows: componentSize.rows,
+            x: Math.min(gridX, this.options.minCols - componentSize.cols),
+            y: Math.min(gridY, this.options.minRows - componentSize.rows),
+            component: componentType
+        };
+
+        // Add to grid items
+        this.gridItems = [...this.gridItems, newItem];
+        this.addToHistory();
+        this.cdr.detectChanges();
+    }
+
 
     ngAfterViewInit() {
         if (this.gridster && this.gridster.options && this.gridster.options.api) {
@@ -293,5 +340,13 @@ export class DefaultComponent implements OnInit, OnDestroy, AfterViewInit {
     onSave() {
         this.componentRegistry.save('9fa8b1c2-3456-78de-f901-23456abc9999', 10, this.gridItems)
             .then(r => r.subscribe(s => console.log(s)));
+    }
+
+    toggleGrid() {
+        this.showGrid = !this.showGrid;
+        this.options = {
+            ...this.options,
+            displayGrid: this.showGrid ? 'always' : 'none'
+        };
     }
 }
