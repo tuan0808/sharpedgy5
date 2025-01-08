@@ -2,9 +2,35 @@
     <div class="popup-header">
         <h1>Dashboard Grid</h1>
     </div>
-    <gridster [options]="options" class="gridster-container">
-        <gridster-item [item]="item" *ngFor="let item of gridItems">
-            <ng-template appDynamicComponent></ng-template>
-        </gridster-item>
-    </gridster>
+    <div class="main-content">
+        <gridster [options]="options"
+                  class="gridster-container"
+                  (dragover)="$event.preventDefault()"
+                  (drop)="onDrop($event)">
+            <gridster-item [item]="item" *ngFor="let item of gridItems">
+                <ng-template appDynamicComponent></ng-template>
+            </gridster-item>
+        </gridster>
+
+        <!-- Toggle button for sidenav -->
+        <button class="sidenav-toggle" (click)="toggleSidenav()">
+            <i [class]="sidenavOpen ? 'fas fa-chevron-right' : 'fas fa-chevron-left'"></i>
+        </button>
+
+        <!-- Sidenav -->
+        <div class="sidenav" [class.open]="sidenavOpen">
+            <h3>Available Components</h3>
+            <div class="component-list">
+                <div
+                        *ngFor="let comp of availableComponents"
+                        class="component-item"
+                        draggable="true"
+                        (dragstart)="onDragStart($event, comp)"
+                >
+                    <i [class]="comp.icon"></i>
+                    <span>{{ comp.name }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
