@@ -1,28 +1,41 @@
 <div class="gridster-wrapper">
+    <app-dashboard-switcher
+            (dashboardSelected)="onDashboardChange($event)">
+    </app-dashboard-switcher>
+
+    <!-- Dashboard Header -->
     <div class="dashboard-header d-flex justify-content-between align-items-center p-3">
-        <h1>Dashboard</h1>
+        @if (currentDashboard()) {
+            <h1>{{ currentDashboard()?.name }}</h1>
+        }
+
+        <!-- Undo/Redo buttons -->
+        @if (!popupWindow()) {
+            <div class="btn-group">
+                <button
+                        class="btn"
+                        [class.btn-primary]="canUndo()"
+                        [class.btn-secondary]="!canUndo()"
+                        [disabled]="!canUndo()"
+                        (click)="undo()"
+                        [title]="canUndo() ? 'Undo last action' : 'No more actions to undo'">
+                    <i class="icofont icofont-undo" [class.text-muted]="!canUndo()"></i>
+                </button>
+                <button
+                        class="btn"
+                        [class.btn-primary]="canRedo()"
+                        [class.btn-secondary]="!canRedo()"
+                        [disabled]="!canRedo()"
+                        (click)="redo()"
+                        [title]="canRedo() ? 'Redo last action' : 'No more actions to redo'">
+                    <i class="icofont icofont-redo" [class.text-muted]="!canRedo()"></i>
+                </button>
+            </div>
+        }
+
+        <!-- Action buttons -->
         <div class="btn-group">
-            <button
-                    class="btn"
-                    [class.btn-primary]="canUndo()"
-                    [class.btn-secondary]="!canUndo()"
-                    [disabled]="!canUndo()"
-                    (click)="undo()"
-                    [title]="canUndo() ? 'Undo last action' : 'No more actions to undo'">
-                <i class="icofont icofont-undo" [class.text-muted]="!canUndo()"></i>
-            </button>
-            <button
-                    class="btn"
-                    [class.btn-primary]="canRedo()"
-                    [class.btn-secondary]="!canRedo()"
-                    [disabled]="!canRedo()"
-                    (click)="redo()"
-                    [title]="canRedo() ? 'Redo last action' : 'No more actions to redo'">
-                <i class="icofont icofont-redo" [class.text-muted]="!canRedo()"></i>
-            </button>
-        </div>
-        <div class="btn-group">
-            <button class="btn btn-primary" (click)="onSave()">
+            <button class="btn btn-primary" (click)="saveDashboardState()">
                 <i class="icofont icofont-save"></i>
             </button>
             <button class="btn btn-secondary" (click)="toggleGrid()">
@@ -31,28 +44,30 @@
             <button class="btn btn-primary" (click)="openPopupGrid()">
                 <i class="icofont icofont-external-link"></i>
             </button>
-            <button class="btn btn-danger">
-                <i class="icofont icofont-ui-delete"></i>
-            </button>
         </div>
     </div>
 
-    @if (!popupWindow) {
+    <!-- Main Content -->
+    @if (!popupWindow()) {
         <div class="gridster-container">
-            <gridster [options]="options"
+            <gridster [options]="options()"
                       (dragover)="$event.preventDefault()"
                       (drop)="onDrop($event)">
-            >
-                <gridster-item [item]="item" *ngFor="let item of gridItems">
-                    <ng-template appDynamicComponent></ng-template>
-                </gridster-item>
+                @for (item of gridItems(); track item.id) {
+                    <gridster-item [item]="item">
+                        <ng-template appDynamicComponent></ng-template>
+                    </gridster-item>
+                }
             </gridster>
         </div>
     } @else {
         <div class="popup-message p-4 text-center">
-            <div class="alert alert-info">
-                Dashboard is currently open in another window
-            </div>
+            <button
+                    *ngIf="isPopupOpen()"
+                    (click)="closePopupGrid()"
+                    class="btn btn-primary">
+                Close Dashboard Window
+            </button>
         </div>
     }
 </div>

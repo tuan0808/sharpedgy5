@@ -6,7 +6,8 @@ import {TeamsComponent} from "../../nfl/teams/teams.component";
 import {HttpClient} from "@angular/common/http";
 import {DashboardItem} from "../data/dashboard/DashboardItem";
 import {catchError, map} from "rxjs/operators";
-import {throwError} from "rxjs";
+import {Observable, throwError} from "rxjs";
+import {Dashboard} from "../data/dashboard/Dashboard";
 
 @Injectable({
     providedIn: 'root'
@@ -15,6 +16,7 @@ export class ComponentRegistryService {
     private registerDirectories: String[] = [""]
     private registryMap: Map<String, any> = new Map<String, any>()
     private endpoint = "http://localhost:8080"
+
     constructor(private httpClient: HttpClient) {
         this.registryMap.set("playerInfo", PlayersComponent)
         this.registryMap.set("scores", ScoresComponent)
@@ -26,13 +28,20 @@ export class ComponentRegistryService {
     getComponent(name: string) {
         return this.registryMap.get(name);
     }
+    
+    async getDefaultDashboard(uuid: any): Promise<Observable<Dashboard>> {
+        return this.httpClient.get<any>(`${this.endpoint}/dashboard/v1/${uuid}/saveDashboard`)
+            .pipe(
+                map(m => m.defaultDashboard)
+            )
+    }
 
-    async save(uuid: any, dashboardId : number, item: DashboardItem[]) {
+    async save(uuid: any, dashboardId: number, item: DashboardItem[]) {
         console.log(JSON.stringify(item))
         console.log(`${this.endpoint}/dashboard/v1/${uuid}/${dashboardId}/saveDashboard`)
         return this.httpClient.post<any[]>(`${this.endpoint}/dashboard/v1/${uuid}/${dashboardId}/saveDashboard`, item)
             .pipe(
-                map(m=>true),
+                map(m => true),
                 catchError(error => {
                     // Handle the error here
                     console.error('Error:', error);
@@ -44,8 +53,13 @@ export class ComponentRegistryService {
             );
     }
 
+    async loadComponents(dashboardId: number): Promise<Observable<DashboardItem[]>> {
+        const response = await this.httpClient.get<DashboardItem[]>(`${this.endpoint}/dashboard/v1/${dashboardId}/loadDashboard`);
+        console.log(response)
+        return response;
+    }
 
-    private async registerDashboardComponets() {
-
+    async getDashboards(uuid: any): Promise<Observable<Dashboard[]>> {
+        return this.httpClient.get<Dashboard[]>(`${this.endpoint}/dashboard/v1/${uuid}/getDashboards`);
     }
 }

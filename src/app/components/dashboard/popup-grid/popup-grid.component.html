@@ -1,36 +1,69 @@
 <div class="popup-container">
-    <div class="popup-header">
-        <h1>Dashboard Grid</h1>
+    <div class="dashboard-header d-flex justify-content-between align-items-center p-3">
+        <h1>Dashboard</h1>
+        <div class="btn-group">
+            <button
+                    class="btn"
+                    [class]="canUndo() ? 'btn-primary' : 'btn-secondary'"
+                    [disabled]="!canUndo()"
+                    (click)="undo()"
+                    [title]="canUndo() ? 'Undo last action' : 'No more actions to undo'">
+                <i class="icofont icofont-undo" [class.text-muted]="!canUndo()"></i>
+            </button>
+            <button
+                    class="btn"
+                    [class]="canRedo() ? 'btn-primary' : 'btn-secondary'"
+                    [disabled]="!canRedo()"
+                    (click)="redo()"
+                    [title]="canRedo() ? 'Redo last action' : 'No more actions to redo'">
+                <i class="icofont icofont-redo" [class.text-muted]="!canRedo()"></i>
+            </button>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-primary" (click)="saveDashboardState()">
+                <i class="icofont icofont-save"></i>
+            </button>
+            <button class="btn btn-secondary" (click)="toggleGrid()">
+                <i class="icofont icofont-grid-advance"></i>
+            </button>
+            <button class="btn btn-danger">
+                <i class="icofont icofont-ui-delete"></i>
+            </button>
+        </div>
     </div>
     <div class="main-content">
-        <gridster [options]="options"
+        <gridster [options]="options()"
                   class="gridster-container"
                   (dragover)="$event.preventDefault()"
                   (drop)="onDrop($event)">
-            <gridster-item [item]="item" *ngFor="let item of gridItems">
-                <ng-template appDynamicComponent></ng-template>
-            </gridster-item>
+            @for (item of gridItems(); track item.id) {
+                <gridster-item [item]="item">
+                    <ng-template appDynamicComponent></ng-template>
+                </gridster-item>
+            }
         </gridster>
 
         <!-- Toggle button for sidenav -->
-        <button class="sidenav-toggle" (click)="toggleSidenav()">
-            <i [class]="sidenavOpen ? 'fas fa-chevron-right' : 'fas fa-chevron-left'"></i>
-        </button>
+<!--        <button class="sidenav-toggle" (click)="toggleSidenav()">-->
+<!--            <i [class]="sidenavOpen() ? 'fas fa-chevron-right' : 'fas fa-chevron-left'"></i>-->
+<!--        </button>-->
 
-        <!-- Sidenav -->
-        <div class="sidenav" [class.open]="sidenavOpen">
-            <h3>Available Components</h3>
-            <div class="component-list">
-                <div
-                        *ngFor="let comp of availableComponents"
-                        class="component-item"
-                        draggable="true"
-                        (dragstart)="onDragStart($event, comp)"
-                >
-                    <i [class]="comp.icon"></i>
-                    <span>{{ comp.name }}</span>
-                </div>
-            </div>
-        </div>
+<!--        &lt;!&ndash; Sidenav &ndash;&gt;-->
+<!--        <div class="sidenav" [class.open]="sidenavOpen()">-->
+<!--            <h3>Available Components</h3>-->
+<!--            <div class="component-list">-->
+<!--                @for (comp of availableComponents(); track comp.type) {-->
+<!--                    <div-->
+<!--                            class="component-item"-->
+<!--                            draggable="true"-->
+<!--                            (dragstart)="onDragStart($event, comp)"-->
+<!--                    >-->
+<!--                        <i [class]="comp.icon"></i>-->
+<!--                        <span>{{ comp.name }}</span>-->
+<!--                    </div>-->
+<!--                }-->
+<!--            </div>-->
+<!--        </div>-->
     </div>
 </div>

@@ -2,203 +2,113 @@ import {
     Component,
     ViewChild,
     ViewEncapsulation,
-    OnInit,
-    OnDestroy,
+    ChangeDetectorRef,
     AfterViewInit,
-    ChangeDetectorRef
+    afterNextRender, afterRender, effect, signal, computed, DestroyRef
 } from "@angular/core";
-import {ChartistModule} from "ng-chartist";
-import {CommonModule} from "@angular/common";
-import {FeatherIconsComponent} from "../../../shared/components/feather-icons/feather-icons.component";
-import {NgApexchartsModule} from "ng-apexcharts";
-import {GridState} from "../../../shared/model/GridState"
-import {
-    DisplayGrid,
-    GridsterComponent,
-    GridsterConfig,
-    GridsterItem,
-    GridsterItemComponent,
-    GridType,
-    CompactType,
-} from "angular-gridster2";
-import {DynamicHostDirective} from "../../../shared/directives/dynamic-host.directive";
-import {SidenavComponent} from "../sidenav/sidenav.component";
-import {GridItemComponent} from "../grid-item/grid-item.component";
-import {FormsModule} from "@angular/forms";
-import {DynamicComponentDirective} from "../../../shared/directives/dynamic-component.directive";
-import {ComponentRegistryService} from "../../../shared/services/component-registry.service";
-import {DashboardItem} from "../../../shared/data/dashboard/DashboardItem";
-import gridOptions from "../../../../assets/data/dashboard.json"
+import { CommonModule } from "@angular/common";
+import { ChartistModule } from "ng-chartist";
+import { FeatherIconsComponent } from "../../../shared/components/feather-icons/feather-icons.component";
+import { NgApexchartsModule } from "ng-apexcharts";
+import { GridsterComponent, GridsterItemComponent } from "angular-gridster2";
+import { DynamicHostDirective } from "../../../shared/directives/dynamic-host.directive";
+import { SidenavComponent } from "../sidenav/sidenav.component";
+import { GridItemComponent } from "../grid-item/grid-item.component";
+import { FormsModule } from "@angular/forms";
+import { DynamicComponentDirective } from "../../../shared/directives/dynamic-component.directive";
+import { ComponentRegistryService } from "../../../shared/services/component-registry.service";
+import { BaseGridComponent } from '../BaseGridComponent';
+import {DashboardSwitcherComponent} from "../dashboard-switcher/dashboard-switcher.component";
+import {Dashboard} from "../../../shared/data/dashboard/Dashboard";
+import {AuthService} from "../../../shared/services/auth.service";
+import {Auth} from "@angular/fire/auth";
 
 @Component({
     selector: "app-default",
     standalone: true,
-    imports: [CommonModule, FeatherIconsComponent, ChartistModule, NgApexchartsModule,
-        GridsterItemComponent, GridsterComponent, DynamicHostDirective,
-        GridItemComponent, SidenavComponent, FormsModule, DynamicComponentDirective],
+    imports: [
+        CommonModule,
+        FeatherIconsComponent,
+        ChartistModule,
+        NgApexchartsModule,
+        GridsterItemComponent,
+        GridsterComponent,
+        DynamicHostDirective,
+        GridItemComponent,
+        SidenavComponent,
+        FormsModule,
+        DynamicComponentDirective,
+        DashboardSwitcherComponent
+    ],
     templateUrl: "./default.component.html",
     styleUrls: ["./default.component.scss"],
     encapsulation: ViewEncapsulation.None,
 })
-export class DefaultComponent implements OnInit, OnDestroy, AfterViewInit {
+export class DefaultComponent extends BaseGridComponent {
     @ViewChild(GridsterComponent) gridster: GridsterComponent;
-    showGrid = true;
-    protected options: GridsterConfig;
-    protected gridItems: DashboardItem[] = [];
-    protected popupWindow: Window | null = null;
-    private gridHistory: GridState[] = [];
-    private currentHistoryIndex: number = -1;
-    private maxHistorySize: number = 20;
-    private isUndoRedoOperation: boolean = false;
+    protected popupWindow = signal<Window | null>(null);
+    private popupCheckInterval = signal<number | null>(null);
 
-    private popupCheckInterval: number | null = null;
+    // Computed value for popup state
+    protected isPopupOpen = computed(() => this.popupWindow() !== null);
 
-    constructor(private componentRegistry: ComponentRegistryService,
-                private cdr: ChangeDetectorRef
+    constructor(
+        componentRegistry: ComponentRegistryService,
+        cdr: ChangeDetectorRef,
+        auth: Auth
     ) {
-        this.initializeGridster();
+        super(componentRegistry, cdr, auth);
     }
 
-    private initializeGridster() {
-        const headerHeight = 50;
-        const availableHeight = window.innerHeight - headerHeight;
-        const rowHeight = Math.floor(availableHeight / 12);
+    protected initializeComponent(): void {
+        afterNextRender(() => {
+            // Set initial items after render
+            this.gridItems.set([
+                {cols: 4, rows: 4, y: 0, x: 0, component: 'ComponentA', id: '1'},
+                {cols: 4, rows: 4, y: 0, x: 4, component: 'ComponentB', id: '2'}
+            ]);
 
-        this.options = {
-            gridType: GridType.Fit,
-            displayGrid: DisplayGrid.Always,
-            pushItems: true,
-            draggable: {
-                enabled: true,
-                dragHandleClass: 'drag-handler',
-            },
-            resizable: {
-                enabled: true
-            },
-            minCols: 24,
-            maxCols: 24,
-            minRows: 12,
-            maxRows: 12,
-            fixedRowHeight: rowHeight,
-            fixedColWidth: Math.floor(window.innerWidth / 24),
-            margin: 5,
-            outerMargin: true,
-            useTransformPositioning: true,
-            mobileBreakpoint: 640,
-            setGridSize: true,
-            compactType: CompactType.None,
-            disableWindowResize: false,
-            disableAutoPositionOnConflict: false,
-            keepFixedHeightInMobile: false,
-            keepFixedWidthInMobile: false,
-            enableEmptyCellClick: false,
-            enableEmptyCellContextMenu: false,
-            enableEmptyCellDrop: false,
-            enableEmptyCellDrag: false,
-            enableOccupiedCellDrop: false,
-            enableOccupiedCellDrag: false,
-            scrollSensitivity: 10,
-            scrollSpeed: 20,
-            initCallback: () => {
-                console.log('Popup grid initialized');
-            },
+            // Add to history after items are set
+            this.addToHistory();
 
-            itemChangeCallback: () => {
-                if (!this.isUndoRedoOperation) {
-                    this.addToHistory();
-                }
-                this.sendGridUpdate();
-            }
-        };
+            // Set up event listener
+            window.addEventListener('message', this.handlePopupMessage.bind(this));
 
-        window.addEventListener('resize', () => {
-            if (this.options.api && this.options.api.optionsChanged) {
-                const newAvailableHeight = window.innerHeight - headerHeight;
-                const newRowHeight = Math.floor(newAvailableHeight / 12);
-
-                this.options.fixedRowHeight = newRowHeight;
-                this.options.fixedColWidth = Math.floor(window.innerWidth / 24);
-                this.options.api.optionsChanged();
+            // Update gridster options after everything is initialized
+            if (this.gridster?.options?.api) {
+                this.gridster.options.api.optionsChanged();
             }
         });
     }
 
+    async closePopupGrid(): Promise<void> {
+        if (this.popupWindow() && !this.popupWindow()?.closed) {
+            // Save the current dashboard state
+            await this.saveDashboardState();
 
-
-    ngOnInit() {
-        this.gridItems = [
-            {cols: 4, rows: 4, y: 0, x: 0, component: 'ComponentA', id: '1'},
-            {cols: 4, rows: 4, y: 0, x: 4, component: 'ComponentB', id: '2'}
-        ];
-
-        // Initialize history with initial state
-        this.addToHistory();
-
-        window.addEventListener('message', this.handlePopupMessage.bind(this));
-    }
-
-    onDrop(event: DragEvent) {
-        event.preventDefault();
-        if (!event.dataTransfer) return;
-
-        const componentType = event.dataTransfer.getData('componentType');
-        const componentSize = JSON.parse(event.dataTransfer.getData('componentSize'));
-
-        // Get gridster element using querySelector since it's the container
-        const gridsterElement = document.querySelector('.gridster-container');
-        if (!gridsterElement) return;
-
-        const rect = gridsterElement.getBoundingClientRect();
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-
-        // Calculate drop position relative to the grid
-        const x = event.clientX + scrollLeft - rect.left;
-        const y = event.clientY + scrollTop - rect.top;
-
-        // Convert pixel coordinates to grid coordinates
-        const colWidth = rect.width / this.options.minCols;
-        const rowHeight = rect.height / this.options.minRows;
-
-        const gridX = Math.floor(x / colWidth);
-        const gridY = Math.floor(y / rowHeight);
-
-        // Create new grid item
-        const newItem: DashboardItem = {
-            id: `widget-${Date.now()}`,
-            cols: componentSize.cols,
-            rows: componentSize.rows,
-            x: Math.min(gridX, this.options.minCols - componentSize.cols),
-            y: Math.min(gridY, this.options.minRows - componentSize.rows),
-            component: componentType
-        };
-
-        // Add to grid items
-        this.gridItems = [...this.gridItems, newItem];
-        this.addToHistory();
-        this.cdr.detectChanges();
-    }
-
-
-    ngAfterViewInit() {
-        if (this.gridster && this.gridster.options && this.gridster.options.api) {
-            this.gridster.options.api.optionsChanged();
+            // Close the popup window
+            this.popupWindow()?.close();
+            this.handlePopupClosed();
         }
     }
 
-    ngOnDestroy() {
+    protected handleItemChange(): void {
+        this.sendGridUpdate();
+    }
+
+     protected override cleanup(): void {
         window.removeEventListener('message', this.handlePopupMessage.bind(this));
-        if (this.popupWindow) {
-            this.popupWindow.close();
+        if (this.popupWindow()) {
+            this.popupWindow()?.close();
         }
-        if (this.popupCheckInterval) {
-            window.clearInterval(this.popupCheckInterval);
+        if (this.popupCheckInterval()) {
+            window.clearInterval(this.popupCheckInterval());
         }
     }
 
     openPopupGrid() {
-        if (this.popupWindow && !this.popupWindow.closed) {
-            this.popupWindow.close();
+        if (this.popupWindow() && !this.popupWindow()?.closed) {
+            this.popupWindow()?.close();
         }
 
         const width = Math.min(1200, window.innerWidth * 0.8);
@@ -206,147 +116,75 @@ export class DefaultComponent implements OnInit, OnDestroy, AfterViewInit {
         const left = (window.innerWidth - width) / 2;
         const top = (window.innerHeight - height) / 2;
 
-        this.popupWindow = window.open('/popup-grid', 'DashboardGrid',
+        const newPopup = window.open('/popup-grid', 'DashboardGrid',
             `width=${width},height=${height},left=${left},top=${top}`);
 
-        if (this.popupWindow) {
-            // Start checking if popup is closed
-            this.popupCheckInterval = window.setInterval(() => {
-                if (this.popupWindow && this.popupWindow.closed) {
-                    this.handlePopupClosed();
-                }
-            }, 500);
+        this.popupWindow.set(newPopup);
 
-            this.popupWindow.onbeforeunload = () => {
+        // Set up popup checks after opening
+        this.setupPopupChecks();
+    }
+
+    private setupPopupChecks() {
+        if (this.popupCheckInterval()) {
+            window.clearInterval(this.popupCheckInterval());
+        }
+
+        const intervalId = window.setInterval(() => {
+            if (this.popupWindow()?.closed) {
+                this.handlePopupClosed();
+            }
+        }, 500);
+
+        this.popupCheckInterval.set(intervalId);
+
+        if (this.popupWindow()) {
+            this.popupWindow().onbeforeunload = () => {
                 this.handlePopupClosed();
             };
-
-            // Trigger change detection to update the view
-            this.cdr.detectChanges();
         }
     }
 
     private handlePopupClosed() {
-        this.popupWindow = null;
-        if (this.popupCheckInterval) {
-            window.clearInterval(this.popupCheckInterval);
-            this.popupCheckInterval = null;
-        }
-        this.cdr.detectChanges();
-    }
-
-    private handleParentMessage(event: MessageEvent) {
-        if (event.data.type === 'gridData') {
-            this.gridItems = event.data.items;
-            if (this.options.api) {
-                this.options.api.optionsChanged();
-            }
-            this.cdr.detectChanges();
-        }
-    }
-
-    private sendGridUpdate() {
-        if (this.popupWindow && !this.popupWindow.closed) {
-            this.popupWindow.postMessage({
-                type: 'gridUpdate',
-                items: this.gridItems
-            }, '*');
+        this.popupWindow.set(null);
+        if (this.popupCheckInterval()) {
+            window.clearInterval(this.popupCheckInterval());
+            this.popupCheckInterval.set(null);
         }
     }
 
     private handlePopupMessage(event: MessageEvent) {
         switch (event.data.type) {
             case 'requestInitialData':
-                if (this.popupWindow) {
-                    this.popupWindow.postMessage({
+                if (this.popupWindow()) {
+                    this.popupWindow()?.postMessage({
                         type: 'gridData',
-                        items: this.gridItems
+                        items: this.gridItems()
                     }, '*');
                 }
                 break;
-
             case 'gridUpdate':
-                this.gridItems = event.data.items;
-                if (this.options.api) {
-                    this.options.api.optionsChanged();
+                // Uncomment and update this section to handle grid updates from popup
+                this.gridItems.set(event.data.items);
+                if (this.gridster?.options?.api) {
+                    this.gridster.options.api.optionsChanged();
                 }
-                this.cdr.detectChanges();
                 break;
-
             case 'popupClosing':
-                this.handlePopupClosed();
+                this.gridItems.set(event.data.items);
+                this.saveDashboardState().then(() => {
+                    this.handlePopupClosed();
+                });
                 break;
         }
     }
 
-    private addToHistory() {
-        // Remove any future states if we're not at the latest point
-        if (this.currentHistoryIndex < this.gridHistory.length - 1) {
-            this.gridHistory = this.gridHistory.slice(0, this.currentHistoryIndex + 1);
+    private sendGridUpdate() {
+        if (this.popupWindow() && !this.popupWindow()?.closed) {
+            this.popupWindow()?.postMessage({
+                type: 'gridUpdate',
+                items: this.gridItems()
+            }, '*');
         }
-
-        // Create a deep copy of the current state
-        const newState: GridState = {
-            items: this.gridItems.map(item => ({...item})),
-            timestamp: Date.now()
-        };
-
-        // Add new state to history
-        this.gridHistory.push(newState);
-        this.currentHistoryIndex = this.gridHistory.length - 1;
-
-        // Limit history size
-        if (this.gridHistory.length > this.maxHistorySize) {
-            this.gridHistory.shift();
-            this.currentHistoryIndex--;
-        }
-    }
-
-    canUndo(): boolean {
-        return this.currentHistoryIndex > 0;
-    }
-
-    canRedo(): boolean {
-        return this.currentHistoryIndex < this.gridHistory.length - 1;
-    }
-
-    undo() {
-        if (this.canUndo()) {
-            this.isUndoRedoOperation = true;
-            this.currentHistoryIndex--;
-            this.applyHistoryState(this.gridHistory[this.currentHistoryIndex]);
-            this.isUndoRedoOperation = false;
-        }
-    }
-
-    redo() {
-        if (this.canRedo()) {
-            this.isUndoRedoOperation = true;
-            this.currentHistoryIndex++;
-            this.applyHistoryState(this.gridHistory[this.currentHistoryIndex]);
-            this.isUndoRedoOperation = false;
-        }
-    }
-
-    private applyHistoryState(state: GridState) {
-        this.gridItems = state.items.map(item => ({...item}));
-        if (this.options.api) {
-            this.options.api.optionsChanged();
-        }
-        this.sendGridUpdate();
-        this.cdr.detectChanges();
-    }
-
-    onSave() {
-        this.componentRegistry.save('9fa8b1c2-3456-78de-f901-23456abc9999', 10, this.gridItems)
-            .then(r => r.subscribe(s => console.log(s)));
-    }
-
-    toggleGrid() {
-        this.showGrid = !this.showGrid;
-        this.options = {
-            ...this.options,
-            displayGrid: this.showGrid ? 'always' : 'none'
-        };
     }
 }
