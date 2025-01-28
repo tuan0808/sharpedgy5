@@ -6,22 +6,20 @@ import {
     AfterViewInit,
     afterNextRender, afterRender, effect, signal, computed, DestroyRef
 } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { ChartistModule } from "ng-chartist";
-import { FeatherIconsComponent } from "../../../shared/components/feather-icons/feather-icons.component";
-import { NgApexchartsModule } from "ng-apexcharts";
-import { GridsterComponent, GridsterItemComponent } from "angular-gridster2";
-import { DynamicHostDirective } from "../../../shared/directives/dynamic-host.directive";
-import { SidenavComponent } from "../sidenav/sidenav.component";
-import { GridItemComponent } from "../grid-item/grid-item.component";
-import { FormsModule } from "@angular/forms";
-import { DynamicComponentDirective } from "../../../shared/directives/dynamic-component.directive";
-import { ComponentRegistryService } from "../../../shared/services/component-registry.service";
-import { BaseGridComponent } from '../BaseGridComponent';
-import {DashboardSwitcherComponent} from "../dashboard-switcher/dashboard-switcher.component";
-import {Dashboard} from "../../../shared/data/dashboard/Dashboard";
-import {AuthService} from "../../../shared/services/auth.service";
+import {CommonModule} from "@angular/common";
+import {ChartistModule} from "ng-chartist";
+import {FeatherIconsComponent} from "../../../shared/components/feather-icons/feather-icons.component";
+import {NgApexchartsModule} from "ng-apexcharts";
+import {GridsterComponent, GridsterItemComponent} from "angular-gridster2";
+import {DynamicHostDirective} from "../../../shared/directives/dynamic-host.directive";
+import {SidenavComponent} from "../sidenav/sidenav.component";
+import {GridItemComponent} from "../grid-item/grid-item.component";
+import {FormsModule} from "@angular/forms";
+import {DynamicComponentDirective} from "../../../shared/directives/dynamic-component.directive";
+import {ComponentRegistryService} from "../../../shared/services/component-registry.service";
+import {BaseGridComponent} from '../BaseGridComponent';
 import {Auth} from "@angular/fire/auth";
+import {Observable} from "rxjs";
 
 @Component({
     selector: "app-default",
@@ -38,7 +36,6 @@ import {Auth} from "@angular/fire/auth";
         SidenavComponent,
         FormsModule,
         DynamicComponentDirective,
-        DashboardSwitcherComponent
     ],
     templateUrl: "./default.component.html",
     styleUrls: ["./default.component.scss"],
@@ -48,8 +45,6 @@ export class DefaultComponent extends BaseGridComponent {
     @ViewChild(GridsterComponent) gridster: GridsterComponent;
     protected popupWindow = signal<Window | null>(null);
     private popupCheckInterval = signal<number | null>(null);
-
-    // Computed value for popup state
     protected isPopupOpen = computed(() => this.popupWindow() !== null);
 
     constructor(
@@ -58,23 +53,17 @@ export class DefaultComponent extends BaseGridComponent {
         auth: Auth
     ) {
         super(componentRegistry, cdr, auth);
+
+        // Initialize dashboard subscription properly
+
     }
 
     protected initializeComponent(): void {
         afterNextRender(() => {
-            // Set initial items after render
-            this.gridItems.set([
-                {cols: 4, rows: 4, y: 0, x: 0, component: 'ComponentA', id: '1'},
-                {cols: 4, rows: 4, y: 0, x: 4, component: 'ComponentB', id: '2'}
-            ]);
-
-            // Add to history after items are set
-            this.addToHistory();
-
-            // Set up event listener
+            // Only set up event listeners here
             window.addEventListener('message', this.handlePopupMessage.bind(this));
 
-            // Update gridster options after everything is initialized
+            // Initialize gridster options
             if (this.gridster?.options?.api) {
                 this.gridster.options.api.optionsChanged();
             }
@@ -96,7 +85,7 @@ export class DefaultComponent extends BaseGridComponent {
         this.sendGridUpdate();
     }
 
-     protected override cleanup(): void {
+    protected override cleanup(): void {
         window.removeEventListener('message', this.handlePopupMessage.bind(this));
         if (this.popupWindow()) {
             this.popupWindow()?.close();

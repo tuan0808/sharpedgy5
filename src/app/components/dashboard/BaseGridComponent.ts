@@ -19,10 +19,7 @@ import { DashboardItem } from '../../shared/data/dashboard/DashboardItem';
 import { ComponentRegistryService } from '../../shared/services/component-registry.service';
 import { GridState } from '../../shared/model/GridState';
 import {Dashboard} from "../../shared/data/dashboard/Dashboard";
-import {AuthService} from "../../shared/services/auth.service";
-import {map} from "rxjs/operators";
 import {Auth} from "@angular/fire/auth";
-import {Observable} from "rxjs";
 
 @Directive()
 export abstract class BaseGridComponent {
@@ -81,10 +78,52 @@ export abstract class BaseGridComponent {
                 }
             }
         }));
+        this.componentRegistry.getDefaultDashboard('a1c68108-50df-45bd-8d60-72e7db8894b6')
+            .then(dashboardObservable => {
+                dashboardObservable.subscribe({
+                    next: (dashboard) => {
+                        console.log('Dashboard received:', dashboard);
+
+                        // Update the currentDashboard signal
+                        this.currentDashboard.set(dashboard);
+
+                        if (dashboard?.components) {
+                            // Validate and adjust component positions
+                            const validatedComponents = dashboard.components.map(comp => ({
+                                ...comp,
+                                // Ensure all required GridsterItem properties are present
+                                x: Math.min(Math.max(0, comp.x), 20),
+                                y: Math.min(Math.max(0, comp.y), 8),
+                                cols: comp.cols || comp.defaultCols || 4,
+                                rows: comp.rows || comp.defaultRows || 4,
+                                // Ensure the component name matches what's registered
+                                component: this.componentRegistry.getComponent(comp.component)
+                                    ? comp.component
+                                    : 'defaultComponent'
+                            }));
+
+                            console.log('Setting validated components:', validatedComponents);
+                            this.gridItems.set(validatedComponents);
+                            this.addToHistory();
+                            this.cdr.detectChanges();
+                        }
+                    },
+                    error: (error) => {
+                        console.error('Dashboard subscription error:', error);
+                        // Reset signals on error
+                        this.currentDashboard.set(null);
+                        this.gridItems.set([]);
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Failed to get dashboard observable:', error);
+                this.currentDashboard.set(null);
+                this.gridItems.set([]);
+            });
 
         // Then initialize gridster
         this.initializeGridster();
-
         // Finally initialize the component
         this.initializeComponent();
 
@@ -228,17 +267,20 @@ export abstract class BaseGridComponent {
         const gridX = Math.floor(x / colWidth);
         const gridY = Math.floor(y / rowHeight);
 
-        const newItem: DashboardItem = {
-            id: `widget-${Date.now()}`,
-            cols: componentSize.cols,
-            rows: componentSize.rows,
-            x: Math.min(gridX, (this.options().minCols || 24) - componentSize.cols),
-            y: Math.min(gridY, (this.options().minRows || 12) - componentSize.rows),
-            component: componentType
-        };
-
-        // Update grid items
-        this.gridItems.update(items => [...items, newItem]);
+        // const newItem: DashboardItem = {
+        //     id: `widget-${Date.now()}`,
+        //     cols: componentSize.cols,
+        //     rows: componentSize.rows,
+        //     x: Math.min(gridX, (this.options().minCols || 24) - componentSize.cols),
+        //     y: Math.min(gridY, (this.options().minRows || 12) - componentSize.rows),
+        //     component: componentType
+        //     category: ''
+        //     defaultCols: 0,
+        //     defaultRows: 0,
+        // };
+        //
+        // // Update grid items
+        // this.gridItems.update(items => [...items, newItem]);
 
         // Explicitly add to history after adding the new item
         this.addToHistory();
@@ -255,15 +297,46 @@ export abstract class BaseGridComponent {
         }));
     }
 
+    protected validateGridPosition(item: DashboardItem): DashboardItem {
+        return {
+            ...item,
+            x: Math.min(Math.max(0, item.x), (this.options().maxCols || 24) - item.cols),
+            y: Math.min(Math.max(0, item.y), (this.options().maxRows || 12) - item.rows)
+        };
+    }
+
 
     protected async saveDashboardState(): Promise<void> {
-        const dashboard = this.currentDashboard();
-        if (dashboard && this.auth?.currentUser) {
-            await this.componentRegistry.save(
-                this.auth.currentUser.uid,
+        try {
+            const dashboard = this.currentDashboard();
+            const currentUser = this.auth.currentUser;
+            console.log(`dashboard ${JSON.stringify(dashboard)}`)
+            // if (!dashboard || !currentUser) {
+            //     console.warn('Cannot save: missing dashboard or user');
+            //     return;
+            // }
+
+            // Map grid items to dashboard components
+            const components = this.gridItems().map(item => ({
+                id: item.id,
+                dashboardId: dashboard.id,
+                x: Math.min(Math.max(0, item.x), this.options().maxCols! - (item.cols || 1)),
+                y: Math.min(Math.max(0, item.y), this.options().maxRows! - (item.rows || 1)),
+                cols: item.cols || item.defaultCols || 4,
+                rows: item.rows || item.defaultRows || 4,
+                component: item.component
+            }));
+
+            console.log(`components ${JSON.stringify(components)}`)
+
+            await this.componentRegistry. updateComponents(
                 dashboard.id,
-                this.gridItems()
+                components
             );
+
+        } catch (error) {
+            console.error('Error saving dashboard state:', error);
+            throw error;
         }
     }
 

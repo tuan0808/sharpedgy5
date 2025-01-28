@@ -10,7 +10,8 @@ export const environment = {
     projectId: "ussb-c8d8f",
     storageBucket: "ussb-c8d8f.appspot.com",
     messagingSenderId: "688825740425"
-  }
+  },
+  apiUrl: "http://localhost:8080"
 }
 
 /*
