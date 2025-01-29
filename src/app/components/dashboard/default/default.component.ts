@@ -86,6 +86,14 @@ export class DefaultComponent extends BaseGridComponent {
     }
 
     protected override cleanup(): void {
+        if (this.hasUnsavedChanges()) {
+            const shouldContinue = window.confirm('You have unsaved changes. Do you want to continue without saving?');
+            if (!shouldContinue) {
+                return;
+            }
+        }
+
+        super.cleanup();
         window.removeEventListener('message', this.handlePopupMessage.bind(this));
         if (this.popupWindow()) {
             this.popupWindow()?.close();
@@ -95,7 +103,11 @@ export class DefaultComponent extends BaseGridComponent {
         }
     }
 
-    openPopupGrid() {
+    async openPopupGrid() {
+        if (!await this.checkUnsavedChanges()) {
+            return;
+        }
+
         if (this.popupWindow() && !this.popupWindow()?.closed) {
             this.popupWindow()?.close();
         }
@@ -109,10 +121,10 @@ export class DefaultComponent extends BaseGridComponent {
             `width=${width},height=${height},left=${left},top=${top}`);
 
         this.popupWindow.set(newPopup);
-
-        // Set up popup checks after opening
         this.setupPopupChecks();
     }
+
+
 
     private setupPopupChecks() {
         if (this.popupCheckInterval()) {

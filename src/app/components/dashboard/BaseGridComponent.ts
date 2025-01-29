@@ -21,6 +21,7 @@ import { GridState } from '../../shared/model/GridState';
 import {Dashboard} from "../../shared/data/dashboard/Dashboard";
 import {Auth} from "@angular/fire/auth";
 import {firstValueFrom} from "rxjs";
+import {ToastrService} from "ngx-toastr";
 
 @Directive()
 export abstract class BaseGridComponent {
@@ -54,6 +55,12 @@ export abstract class BaseGridComponent {
     protected currentHistoryIndex = signal(-1);
     protected isUndoRedoOperation = signal(false);
 
+    //Save Index
+    protected movesSinceLastSave = signal(0);
+    protected readonly movesBeforeAutoSave = 20;
+    protected hasUnsavedChanges = signal(false);
+    protected lastSaveHistoryIndex = signal(0);
+
     // Constants
     protected readonly maxHistorySize = 20;
 
@@ -64,12 +71,12 @@ export abstract class BaseGridComponent {
     );
 
     private destroyRef = inject(DestroyRef);
-
+    protected toastr = inject(ToastrService)
     protected constructor(
         protected componentRegistry: ComponentRegistryService,
         protected cdr: ChangeDetectorRef,
-        protected auth: Auth
-    ) {
+        protected auth: Auth,
+                                      ) {
         // Set up the options first
         this.options.update(current => ({
             ...current,
@@ -140,15 +147,22 @@ export abstract class BaseGridComponent {
 
     private handleGridChange(): void {
         if (!this.isUndoRedoOperation()) {
-            // Ensure we're not duplicating history entries
             const lastHistoryState = this.gridHistory()[this.currentHistoryIndex()];
             const currentItems = this.gridItems();
 
-            // Only add to history if the grid state has actually changed
             if (!lastHistoryState ||
                 JSON.stringify(lastHistoryState.items) !== JSON.stringify(currentItems)) {
                 this.addToHistory();
+                this.hasUnsavedChanges.set(true);
                 this.handleItemChange();
+
+                // Increment moves counter
+                this.movesSinceLastSave.update(count => count + 1);
+
+                // Check if we need to auto-save
+                if (this.movesSinceLastSave() >= this.movesBeforeAutoSave) {
+                    this.autoSaveDashboard();
+                }
             }
         }
     }
@@ -173,6 +187,8 @@ export abstract class BaseGridComponent {
         this.gridHistory.set(history);
     }
 
+    
+
     undo(): void {
         if (this.canUndo()) {
             this.isUndoRedoOperation.set(true);
@@ -186,8 +202,14 @@ export abstract class BaseGridComponent {
                 this.options().api.optionsChanged();
             }
 
+            this.movesSinceLastSave.update(count => count + 1);
             this.handleItemChange();
             this.isUndoRedoOperation.set(false);
+
+            // Check if we need to auto-save
+            if (this.movesSinceLastSave() >= this.movesBeforeAutoSave) {
+                this.autoSaveDashboard();
+            }
         }
     }
 
@@ -204,8 +226,14 @@ export abstract class BaseGridComponent {
                 this.options().api.optionsChanged();
             }
 
+            this.movesSinceLastSave.update(count => count + 1);
             this.handleItemChange();
             this.isUndoRedoOperation.set(false);
+
+            // Check if we need to auto-save
+            if (this.movesSinceLastSave() >= this.movesBeforeAutoSave) {
+                this.autoSaveDashboard();
+            }
         }
     }
 
@@ -308,16 +336,14 @@ export abstract class BaseGridComponent {
 
 
     protected async saveDashboardState(): Promise<void> {
+        // If we haven't made any moves since last save, don't save again
+        if (this.movesSinceLastSave() === 0) {
+            this.toastr.info('No changes to save');
+            return;
+        }
+
         try {
             const dashboard = this.currentDashboard();
-            const currentUser = this.auth.currentUser;
-            console.log(`dashboard ${JSON.stringify(dashboard)}`)
-            // if (!dashboard || !currentUser) {
-            //     console.warn('Cannot save: missing dashboard or user');
-            //     return;
-            // }
-
-            // Map grid items to dashboard components
             const components = this.gridItems().map(item => ({
                 id: item.id,
                 dashboardId: dashboard.id,
@@ -328,17 +354,72 @@ export abstract class BaseGridComponent {
                 component: item.component
             }));
 
-            console.log(`components ${JSON.stringify(components)}`)
-
-            await firstValueFrom(this.componentRegistry. updateComponents(
+            await firstValueFrom(this.componentRegistry.updateComponents(
                 dashboard.id,
                 components
             ));
 
+            // Reset moves counter and saved state
+            this.movesSinceLastSave.set(0);
+            this.hasUnsavedChanges.set(false);
+            this.lastSaveHistoryIndex.set(this.currentHistoryIndex());
+
+            // Show manual save notification
+            this.toastr.success('Dashboard saved');
+
         } catch (error) {
             console.error('Error saving dashboard state:', error);
+            this.toastr.error('Failed to save dashboard');
             throw error;
         }
+    }
+
+
+
+    private async autoSaveDashboard(): Promise<void> {
+        try {
+            const dashboard = this.currentDashboard();
+            const components = this.gridItems().map(item => ({
+                id: item.id,
+                dashboardId: dashboard.id,
+                x: Math.min(Math.max(0, item.x), this.options().maxCols! - (item.cols || 1)),
+                y: Math.min(Math.max(0, item.y), this.options().maxRows! - (item.rows || 1)),
+                cols: item.cols || item.defaultCols || 4,
+                rows: item.rows || item.defaultRows || 4,
+                component: item.component
+            }));
+
+            await firstValueFrom(this.componentRegistry.updateComponents(
+                dashboard.id,
+                components
+            ));
+
+            // Reset moves counter and saved state
+            this.movesSinceLastSave.set(0);
+            this.hasUnsavedChanges.set(false);
+            this.lastSaveHistoryIndex.set(this.currentHistoryIndex());
+
+            // Show auto-save notification
+            this.toastr.info('Dashboard auto-saved');
+
+        } catch (error) {
+            console.error('Error auto-saving dashboard state:', error);
+            this.toastr.error('Failed to auto-save dashboard');
+            throw error;
+        }
+    }
+
+
+
+    // Add method to check for unsaved changes
+    protected async checkUnsavedChanges(): Promise<boolean> {
+        if (this.hasUnsavedChanges()) {
+            return new Promise((resolve) => {
+                const result = window.confirm('You have unsaved changes. Do you want to continue without saving?');
+                resolve(result);
+            });
+        }
+        return true;
     }
 
     onDashboardChange(dashboard: Dashboard): void {
