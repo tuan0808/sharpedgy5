@@ -6,7 +6,7 @@ import {TeamsComponent} from "../../nfl/teams/teams.component";
 import {HttpClient} from "@angular/common/http";
 import {DashboardItem} from "../data/dashboard/DashboardItem";
 import {catchError, map, tap} from "rxjs/operators";
-import {Observable, throwError} from "rxjs";
+import {Observable, shareReplay, throwError} from "rxjs";
 import {Dashboard} from "../data/dashboard/Dashboard";
 
 @Injectable({
@@ -46,7 +46,8 @@ export class  ComponentRegistryService {
             catchError(error => {
                 console.error('Error updating components:', error);
                 return throwError(() => error);
-            })
+            }),
+            shareReplay(1)
         );
     }
 

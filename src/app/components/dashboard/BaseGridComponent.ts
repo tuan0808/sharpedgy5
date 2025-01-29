@@ -20,6 +20,7 @@ import { ComponentRegistryService } from '../../shared/services/component-regist
 import { GridState } from '../../shared/model/GridState';
 import {Dashboard} from "../../shared/data/dashboard/Dashboard";
 import {Auth} from "@angular/fire/auth";
+import {firstValueFrom} from "rxjs";
 
 @Directive()
 export abstract class BaseGridComponent {
@@ -329,10 +330,10 @@ export abstract class BaseGridComponent {
 
             console.log(`components ${JSON.stringify(components)}`)
 
-            await this.componentRegistry. updateComponents(
+            await firstValueFrom(this.componentRegistry. updateComponents(
                 dashboard.id,
                 components
-            );
+            ));
 
         } catch (error) {
             console.error('Error saving dashboard state:', error);
