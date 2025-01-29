@@ -9,7 +9,8 @@ export const environment = {
     authDomain: "ussb-c8d8f.firebaseapp.com",
     projectId: "ussb-c8d8f",
     storageBucket: "ussb-c8d8f.appspot.com",
-    messagingSenderId: "688825740425"
+    messagingSenderId: "688825740425",
+    appId: "1:688825740425:web:ca365bc25406874030ea58"
   },
   apiUrl: "http://localhost:8080"
 }

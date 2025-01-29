@@ -20,6 +20,7 @@ import {ComponentRegistryService} from "../../../shared/services/component-regis
 import {BaseGridComponent} from '../BaseGridComponent';
 import {Auth} from "@angular/fire/auth";
 import {Observable} from "rxjs";
+import {AuthService} from "../../../shared/services/auth.service";
 
 @Component({
     selector: "app-default",
@@ -50,10 +51,10 @@ export class DefaultComponent extends BaseGridComponent {
     constructor(
         componentRegistry: ComponentRegistryService,
         cdr: ChangeDetectorRef,
-        auth: Auth
+        auth: AuthService
     ) {
         super(componentRegistry, cdr, auth);
-
+        console.log(JSON.stringify(auth.currentUser))
         // Initialize dashboard subscription properly
 
     }

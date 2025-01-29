@@ -36,17 +36,17 @@ export class RegisterComponent implements OnInit {
   }
 
   async twitterLogin() {
-    await this.auth.signInWithPopup(new TwitterAuthProvider())
+    await this.auth.signInWithRedirect(new TwitterAuthProvider())
   }
 
   async facebookLogin() {
-    await this.auth.signInWithPopup(new FacebookAuthProvider())
+    await this.auth.signInWithRedirect(new FacebookAuthProvider())
   }
 
   async githubLogin() {
-    await this.auth.signInWithPopup(new GithubAuthProvider())
+    await this.auth.signInWithRedirect(new GithubAuthProvider())
   }
   async googleLogin(){
-    await this.auth.signInWithPopup(new GoogleAuthProvider())
+    await this.auth.signInWithRedirect(new GoogleAuthProvider())
   }
 }
