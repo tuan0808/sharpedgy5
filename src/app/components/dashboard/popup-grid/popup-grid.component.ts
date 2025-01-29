@@ -6,6 +6,7 @@ import {ComponentRegistryService} from '../../../shared/services/component-regis
 import {AvailableComponent} from "../../../shared/model/dashboards/AvailableContent";
 import {BaseGridComponent} from '../BaseGridComponent';
 import {Auth} from "@angular/fire/auth";
+import {AuthService} from "../../../shared/services/auth.service";
 
 @Component({
     selector: 'app-popup-grid',
@@ -39,7 +40,7 @@ export class PopupGridComponent extends BaseGridComponent {
     constructor(
         componentRegistry: ComponentRegistryService,
         cdr: ChangeDetectorRef,
-        auth: Auth
+        auth: AuthService
     ) {
         super(componentRegistry, cdr, auth);
     }

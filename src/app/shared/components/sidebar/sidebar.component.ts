@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, ViewEncapsulation } from '@angular/core';
+import {Component, computed, Input, signal, Signal, ViewEncapsulation} from '@angular/core';
 import { Router, NavigationEnd, RouterModule } from '@angular/router';
 import { NavService, Menu } from '../../services/nav.service';
 import { FeatherIconsComponent } from '../feather-icons/feather-icons.component';
@@ -17,18 +17,16 @@ import {async, Observable} from "rxjs";
   styleUrls: ['./sidebar.component.scss'],
 })
 export class SidebarComponent {
-  protected isLoggedIn : boolean = false
-  protected currentUser : Observable<User>
+  protected isLoggedIn : Signal<boolean> = signal(false)
+  protected currentUser : Signal<User>
   public menuItems: Menu[] | any;
   public url: any;
   public fileurl: any;
 
   constructor(private auth : AuthService, private router: Router, public navServices: NavService) {
-    auth.isLoggedIn.subscribe(s=>{
-      this.isLoggedIn = s
-      this.currentUser = auth.currentUser
+    this.isLoggedIn = computed(() => this.auth.isLoggedIn());
+    this.currentUser = computed(() => this.auth.currentUser());
 
-    })
     console.log(this.currentUser)
     this.navServices.items.subscribe(menuItems => {
       this.menuItems = menuItems

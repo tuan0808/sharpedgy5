@@ -1,4 +1,4 @@
-import {Component, OnInit, Output, EventEmitter, Inject} from '@angular/core';
+import {Component, OnInit, Output, EventEmitter, Inject, effect} from '@angular/core';
 import {NavService, Menu} from '../../services/nav.service';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {CommonModule, DOCUMENT} from '@angular/common';
@@ -34,7 +34,7 @@ export class HeaderComponent implements OnInit {
     public isOpenMobile: boolean = false
     @Output() rightSidebarEvent = new EventEmitter<boolean>();
     protected isLoggedin: boolean
-    protected currentUser: Observable<User>
+    protected currentUser: User
     private currentDate = new Date()
     private currentGames: Observable<any[]>;
 
@@ -44,10 +44,10 @@ export class HeaderComponent implements OnInit {
         private nflService: NflDataService,
         @Inject(DOCUMENT) private document: any,
         private translate: TranslateService) {
-        auth.isLoggedIn.subscribe(s => {
-            this.isLoggedin = s
-            this.currentUser = auth.currentUser
-        })
+        effect(() => {
+            this.isLoggedin = this.auth.isLoggedIn();
+            this.currentUser = this.auth.currentUser();
+        });
 
 
     }

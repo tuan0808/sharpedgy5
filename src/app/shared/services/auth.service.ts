@@ -1,66 +1,217 @@
-import {Injectable, Optional} from '@angular/core';
+import { computed, Injectable } from '@angular/core';
 import {
     Auth,
     signInWithEmailAndPassword,
-    signInWithPopup,
+    signInWithRedirect,
     GoogleAuthProvider,
     signOut,
     createUserWithEmailAndPassword,
-    User,UserInfo, sendPasswordResetEmail
+    User,
+    onAuthStateChanged,
+    getRedirectResult,
+    setPersistence,
+    browserLocalPersistence,
+    AuthProvider,
+    AuthError
 } from "@angular/fire/auth";
-import {Router} from "@angular/router";
-import {BehaviorSubject, EMPTY, Observable, of} from "rxjs";
-
-
+import { Router } from "@angular/router";
+import { Observable } from "rxjs";
+import { toSignal } from "@angular/core/rxjs-interop";
 
 @Injectable({
     providedIn: 'root'
 })
 export class AuthService {
-    currentUser : Observable<User> = of()
-    isLoggedIn : BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false)
-    constructor(@Optional() private auth: Auth, private router: Router) {
+    // Single source of truth for auth state using signals
+    private readonly authState = toSignal(
+        new Observable<User | null>(subscriber =>
+            onAuthStateChanged(this.auth, subscriber)
+        ),
+        { initialValue: null }
+    );
 
+    // Public computed signals for auth state
+    readonly currentUser = computed(() => this.authState());
+    readonly isLoggedIn = computed(() => !!this.currentUser());
+
+    constructor(
+        private auth: Auth,
+        private router: Router
+    ) {
+        this.initializeAuth();
     }
 
-    async loginWithEmail(email: string, password: string, redirect = '/home'): Promise<boolean> {
-        await signInWithEmailAndPassword(this.auth, email, password).then(uc => {
-            this.isLoggedIn.next(true)
-            this.currentUser = of(uc.user)
-            this.router.navigate(["/dashboard/default"])
-            return true
-        }).catch(e => console.log(e))
-        return false
+    private async initializeAuth(): Promise<void> {
+        try {
+            if (!this.auth?.app) {
+                throw new Error('Auth instance not initialized!');
+            }
+
+            // Log initialization details
+            console.log('Auth service initializing...', {
+                isInitialized: !!this.auth.app,
+                authDomain: this.auth.app.options.authDomain,
+                projectId: this.auth.app.options.projectId
+            });
+
+            // Set persistence to local
+            await setPersistence(this.auth, browserLocalPersistence);
+
+            // Single auth state listener
+            onAuthStateChanged(
+                this.auth,
+                (user) => {
+                    console.log('Auth state changed:', user?.email ?? 'No user');
+                    this.handleAuthStateChange(user);
+                },
+                (error) => {
+                    console.error('Auth state change error:', error);
+                    this.handleAuthError(error);
+                }
+            );
+
+            // Handle any pending redirect results
+            await this.handleRedirectResult();
+
+        } catch (error) {
+            console.error('Auth initialization failed:', error);
+            throw error;
+        }
     }
 
-    async recoverAccount(email : string) {
-        await sendPasswordResetEmail(this.auth, email).then(s=>
-            this.router.navigate(["/auth/login"])
-        )
+    async signInWithRedirect(provider: AuthProvider): Promise<void> {
+        try {
+            console.log('Starting sign in process:', {
+                timestamp: new Date().toISOString(),
+                providerType: provider.constructor.name
+            });
+
+            if (provider instanceof GoogleAuthProvider) {
+                this.configureGoogleProvider(provider);
+            }
+
+            await signInWithRedirect(this.auth, provider);
+            console.log('Redirect initiated successfully');
+        } catch (error) {
+            console.error('Social login redirect failed:', this.formatError(error));
+            throw error;
+        }
     }
 
-
-    async signInWithPopup(provider: any) {
-        await signInWithPopup(this.auth, provider).then(uc => {
-            this.isLoggedIn.next(true)
-            this.currentUser = of(uc.user)
-            this.router.navigate(["/dashboard/default"])
-            return true
-        }).catch(e => console.log(e))
+    private configureGoogleProvider(provider: GoogleAuthProvider): void {
+        provider.addScope('email');
+        provider.addScope('profile');
+        provider.setCustomParameters({
+            prompt: 'select_account'
+        });
+        console.log('Google provider configured with scopes and parameters');
     }
 
+    private async handleRedirectResult(): Promise<void> {
+        try {
+            console.log('Processing redirect result');
+            const result = await getRedirectResult(this.auth);
 
-    async logout() {
-        this.isLoggedIn.next(false)
-        this.currentUser = of()
+            if (result?.user) {
+                // Wait for auth state to be fully updated
+                await this.waitForAuthStateUpdate();
 
-        await signOut(this.auth)
+                console.log('Redirect sign-in successful:', {
+                    uid: result.user.uid,
+                    email: result.user.email,
+                    provider: result.providerId
+                });
 
+                await this.handleSuccessfulLogin();
+            }
+        } catch (error) {
+            console.error('Redirect result handling failed:', this.formatError(error));
+            throw error;
+        }
     }
 
-    async register(email: string, password: string) {
-        await createUserWithEmailAndPassword(this.auth, email, password).then(uc => {
-            this.router.navigate(['auth/convinceUrNotARobot'])
-        })
+    private async waitForAuthStateUpdate(): Promise<void> {
+        return new Promise<void>((resolve) => {
+            const unsubscribe = onAuthStateChanged(this.auth, (user) => {
+                if (user) {
+                    unsubscribe();
+                    resolve();
+                }
+            });
+        });
+    }
+
+    async getUUID(): Promise<string | null> {
+        return this.currentUser()?.uid ?? null;
+    }
+
+    async loginWithEmail(email: string, password: string): Promise<boolean> {
+        try {
+            const result = await signInWithEmailAndPassword(this.auth, email, password);
+
+            if (result.user) {
+                await this.waitForAuthStateUpdate();
+                await this.handleSuccessfulLogin();
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Email login failed:', this.formatError(error));
+            return false;
+        }
+    }
+
+    async register(email: string, password: string): Promise<void> {
+        try {
+            const result = await createUserWithEmailAndPassword(this.auth, email, password);
+            if (result.user) {
+                await this.router.navigate(['auth/convinceUrNotARobot']);
+            }
+        } catch (error) {
+            console.error('Registration failed:', this.formatError(error));
+            throw error;
+        }
+    }
+
+    async logout(): Promise<void> {
+        try {
+            await signOut(this.auth);
+            await this.router.navigate(['/auth/login']);
+        } catch (error) {
+            console.error('Logout failed:', this.formatError(error));
+            throw error;
+        }
+    }
+
+    private async handleSuccessfulLogin(): Promise<void> {
+        try {
+            await this.router.navigate(['/dashboard']);
+        } catch (error) {
+            console.error('Post-login navigation failed:', error);
+            await this.router.navigate(['/']);
+        }
+    }
+
+    private handleAuthStateChange(user: User | null): void {
+        if (!user) {
+            // Uncomment and modify based on your requirements
+            // this.router.navigate(['/auth/login'])
+            //     .catch(error => console.error('Auth state change navigation failed:', error));
+        }
+    }
+
+    private handleAuthError(error: Error): void {
+        // Handle specific auth errors here
+        console.error('Authentication error:', this.formatError(error));
+        // Implement specific error handling logic as needed
+    }
+
+    private formatError(error: any): object {
+        return {
+            name: error?.name,
+            code: error?.code,
+            message: error?.message,
+            stack: error?.stack
+        };
     }
 }

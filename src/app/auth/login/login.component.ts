@@ -14,41 +14,81 @@ import {GoogleAuthProvider, TwitterAuthProvider, GithubAuthProvider, FacebookAut
 })
 export class LoginComponent implements OnInit {
   public newUser = false;
-  // public user: firebase.User;
   public loginForm: FormGroup;
-  protected loginFailed = false
+  protected loginFailed = false;
 
-  public errorMessage: any;
-
-  constructor(private auth : AuthService, private fb: FormBuilder, public router: Router) {
+  constructor(
+      private auth: AuthService,
+      private fb: FormBuilder,
+      public router: Router
+  ) {
     this.loginForm = this.fb.group({
-      email: ["", [Validators.required, Validators.email]],
-      password: ["", Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', Validators.required],
     });
   }
 
-  ngOnInit() {}
-
   async login() {
-     await this.auth.loginWithEmail(this.loginForm.value['email'], this.loginForm.value['password'])
+    try {
+      const success = await this.auth.loginWithEmail(
+          this.loginForm.value['email'],
+          this.loginForm.value['password']
+      );
+      this.loginFailed = !success;
+    } catch (error) {
+      console.error('Login error:', error);
+      this.loginFailed = true;
+    }
   }
 
-  async logout() {
-    await this.auth.logout()
-  }
-
-  async twitterLogin() {
-    await this.auth.signInWithPopup(new TwitterAuthProvider())
+  async googleLogin() {
+    try {
+      console.log('LoginComponent: Starting Google login flow');
+      const provider = new GoogleAuthProvider();
+      // Force Google to show account picker
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      console.log('LoginComponent: Provider configured, calling signInWithRedirect');
+      await this.auth.signInWithRedirect(provider);
+      console.log('LoginComponent: signInWithRedirect completed'); // May not see this due to redirect
+    } catch (error: any) {
+      console.error('LoginComponent: Google login error:', {
+        code: error?.code,
+        message: error?.message,
+        stack: error?.stack
+      });
+      this.loginFailed = true;
+    }
   }
 
   async facebookLogin() {
-    await this.auth.signInWithPopup(new FacebookAuthProvider())
+    try {
+      await this.auth.signInWithRedirect(new FacebookAuthProvider());
+    } catch (error) {
+      console.error('Facebook login failed:', error);
+      this.loginFailed = true;
+    }
+  }
+
+  async twitterLogin() {
+    try {
+      await this.auth.signInWithRedirect(new TwitterAuthProvider());
+    } catch (error) {
+      console.error('Twitter login failed:', error);
+      this.loginFailed = true;
+    }
   }
 
   async githubLogin() {
-    await this.auth.signInWithPopup(new GithubAuthProvider())
+    try {
+      await this.auth.signInWithRedirect(new GithubAuthProvider());
+    } catch (error) {
+      console.error('Github login failed:', error);
+      this.loginFailed = true;
+    }
   }
-  async googleLogin(){
-    await this.auth.signInWithPopup(new GoogleAuthProvider())
+
+  ngOnInit(): void {
   }
 }

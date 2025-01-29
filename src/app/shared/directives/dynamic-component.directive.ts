@@ -32,24 +32,6 @@ export class DynamicComponentDirective {
       mobileBreakpoint: 640
     };
   }
-
-  ngOnInit() {
-    this.gridItems = [
-      { cols: 2, rows: 2, y: 0, x: 0, component: 'ComponentA', id: '1' },
-      { cols: 3, rows: 2, y: 0, x: 2, component: 'ComponentB', id: '2' }
-    ];
-  }
-
-  addItem() {
-    this.gridItems.push({
-      cols: 2,
-      rows: 2,
-      y: 0,
-      x: 0,
-      component: 'ComponentA',
-      id: Date.now().toString()
-    });
-  }
 }
 
 
