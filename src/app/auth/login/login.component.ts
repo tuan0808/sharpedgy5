@@ -43,17 +43,11 @@ export class LoginComponent implements OnInit {
 
   async googleLogin() {
     try {
-      console.log('LoginComponent: Starting Google login flow');
-      const provider = new GoogleAuthProvider();
-      // Force Google to show account picker
-      provider.setCustomParameters({
-        prompt: 'select_account'
-      });
-      console.log('LoginComponent: Provider configured, calling signInWithRedirect');
-      await this.auth.signInWithRedirect(provider);
-      console.log('LoginComponent: signInWithRedirect completed'); // May not see this due to redirect
+      console.log('Starting Google login flow...');
+      await this.auth.signInWithGoogle();
+      // Note: We won't reach this point due to redirect
     } catch (error: any) {
-      console.error('LoginComponent: Google login error:', {
+      console.error('Google login error:', {
         code: error?.code,
         message: error?.message,
         stack: error?.stack

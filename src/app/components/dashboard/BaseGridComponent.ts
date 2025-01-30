@@ -23,6 +23,7 @@ import { ComponentRegistryService } from '../../shared/services/component-regist
 import { GridState } from '../../shared/model/GridState';
 import { Dashboard } from "../../shared/data/dashboard/Dashboard";
 import {AuthService} from "../../shared/services/auth.service";
+import {UIDFormatter} from "../../shared/utils/UUIDFormatter";
 
 /**
  * Base class for grid-based dashboard components.
@@ -118,20 +119,28 @@ export abstract class BaseGridComponent {
     }
 
     private initializeDashboard(): void {
-        effect((() => {
-            if (this.auth.isLoggedIn) {
-                var currentUser = this.auth.currentUser
-                console.log(currentUser)
+        var uuid = computed(() => console.log(`UUID ` + JSON.stringify(this.auth.currentUser())))
+        uuid()
+        effect(() => {
+            if (this.auth.isAuthReady()) {
+                const user = this.auth.currentUser();
+                if (user) {
+                    this.componentRegistry.getDefaultDashboard(user.uid)
+                        .then(dashboardObservable => {
+                            dashboardObservable.subscribe({
+                                next: this.handleDashboardLoad.bind(this),
+                                error: this.handleDashboardError.bind(this)
+                            });
+                        })
+                        .catch(this.handleDashboardError.bind(this));
+                    console.log('User UUID:', UIDFormatter.format(user.uid));
+
+                }
+            } else {
+
             }
-        }))
-        this.componentRegistry.getDefaultDashboard('a1c68108-50df-45bd-8d60-72e7db8894b6')
-            .then(dashboardObservable => {
-                dashboardObservable.subscribe({
-                    next: this.handleDashboardLoad.bind(this),
-                    error: this.handleDashboardError.bind(this)
-                });
-            })
-            .catch(this.handleDashboardError.bind(this));
+        });
+
     }
 
     protected initializeGridster(): void {

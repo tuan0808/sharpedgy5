@@ -1,4 +1,4 @@
-import { computed, Injectable } from '@angular/core';
+import {computed, Injectable, signal} from '@angular/core';
 import {
     Auth,
     signInWithEmailAndPassword,
@@ -12,17 +12,19 @@ import {
     setPersistence,
     browserLocalPersistence,
     AuthProvider,
-    AuthError
+    AuthError,
+    getAuth
 } from "@angular/fire/auth";
 import { Router } from "@angular/router";
-import { Observable } from "rxjs";
+import {Observable, BehaviorSubject, firstValueFrom, interval, take} from "rxjs";
 import { toSignal } from "@angular/core/rxjs-interop";
+import {filter} from "rxjs/operators";
 
 @Injectable({
     providedIn: 'root'
 })
 export class AuthService {
-    // Single source of truth for auth state using signals
+    // Create the auth state observable and convert to signal
     private readonly authState = toSignal(
         new Observable<User | null>(subscriber =>
             onAuthStateChanged(this.auth, subscriber)
@@ -30,9 +32,11 @@ export class AuthService {
         { initialValue: null }
     );
 
-    // Public computed signals for auth state
+    private redirectInProgress = new BehaviorSubject<boolean>(false);
     readonly currentUser = computed(() => this.authState());
     readonly isLoggedIn = computed(() => !!this.currentUser());
+    private readonly authReady = signal(false);
+    readonly isAuthReady = computed(() => this.authReady());
 
     constructor(
         private auth: Auth,
@@ -47,40 +51,52 @@ export class AuthService {
                 throw new Error('Auth instance not initialized!');
             }
 
-            // Log initialization details
-            console.log('Auth service initializing...', {
-                isInitialized: !!this.auth.app,
-                authDomain: this.auth.app.options.authDomain,
-                projectId: this.auth.app.options.projectId
-            });
+            console.log('Auth service initializing...');
 
-            // Set persistence to local
-            await setPersistence(this.auth, browserLocalPersistence);
+            // Handle any pending redirect results immediately
+            await this.handleRedirectResult();
 
-            // Single auth state listener
+            // Set up auth state listener
             onAuthStateChanged(
                 this.auth,
                 (user) => {
                     console.log('Auth state changed:', user?.email ?? 'No user');
                     this.handleAuthStateChange(user);
+                    if (!this.authReady()) {
+                        this.authReady.set(true);
+                    }
                 },
                 (error) => {
                     console.error('Auth state change error:', error);
                     this.handleAuthError(error);
+                    if (!this.authReady()) {
+                        this.authReady.set(true);
+                    }
                 }
             );
 
-            // Handle any pending redirect results
-            await this.handleRedirectResult();
-
         } catch (error) {
             console.error('Auth initialization failed:', error);
+            this.authReady.set(true);
             throw error;
         }
     }
 
+    async getUUID(): Promise<string | null> {
+        // Wait for auth to be ready before returning UUID
+        if (!this.authReady()) {
+            await firstValueFrom(interval(100).pipe(
+                filter(() => this.authReady()),
+                take(1)
+            ));
+        }
+        return this.currentUser()?.uid ?? null;
+    }
+
+
     async signInWithRedirect(provider: AuthProvider): Promise<void> {
         try {
+            this.redirectInProgress.next(true);
             console.log('Starting sign in process:', {
                 timestamp: new Date().toISOString(),
                 providerType: provider.constructor.name
@@ -90,10 +106,34 @@ export class AuthService {
                 this.configureGoogleProvider(provider);
             }
 
+            // Store the intended redirect URL
+            sessionStorage.setItem('authRedirectUrl', '/dashboard');
+
             await signInWithRedirect(this.auth, provider);
             console.log('Redirect initiated successfully');
         } catch (error) {
+            this.redirectInProgress.next(false);
             console.error('Social login redirect failed:', this.formatError(error));
+            throw error;
+        }
+    }
+
+    async signInWithGoogle(): Promise<void> {
+        try {
+            const provider = new GoogleAuthProvider();
+            provider.setCustomParameters({
+                prompt: 'select_account'
+            });
+
+            // Add desired scopes
+            provider.addScope('email');
+            provider.addScope('profile');
+
+            console.log('Starting Google sign-in redirect...');
+            await signInWithRedirect(this.auth, provider);
+            // Note: Code after this line won't execute immediately due to redirect
+        } catch (error) {
+            console.error('Failed to start Google sign-in:', error);
             throw error;
         }
     }
@@ -102,31 +142,41 @@ export class AuthService {
         provider.addScope('email');
         provider.addScope('profile');
         provider.setCustomParameters({
-            prompt: 'select_account'
+            prompt: 'select_account',
+            access_type: 'offline'
         });
         console.log('Google provider configured with scopes and parameters');
     }
 
     private async handleRedirectResult(): Promise<void> {
+        if (!this.redirectInProgress.value) {
+            return;
+        }
+
         try {
             console.log('Processing redirect result');
             const result = await getRedirectResult(this.auth);
 
             if (result?.user) {
-                // Wait for auth state to be fully updated
-                await this.waitForAuthStateUpdate();
-
                 console.log('Redirect sign-in successful:', {
                     uid: result.user.uid,
                     email: result.user.email,
                     provider: result.providerId
                 });
 
-                await this.handleSuccessfulLogin();
+                // Get stored redirect URL
+                const redirectUrl = sessionStorage.getItem('authRedirectUrl') || '/dashboard';
+                sessionStorage.removeItem('authRedirectUrl');
+
+                // Wait for auth state to be fully updated
+                await this.waitForAuthStateUpdate();
+                await this.router.navigate([redirectUrl]);
             }
         } catch (error) {
             console.error('Redirect result handling failed:', this.formatError(error));
-            throw error;
+            await this.router.navigate(['/auth/login']);
+        } finally {
+            this.redirectInProgress.next(false);
         }
     }
 
@@ -138,12 +188,15 @@ export class AuthService {
                     resolve();
                 }
             });
+
+            // Add timeout to prevent hanging
+            setTimeout(() => {
+                unsubscribe();
+                resolve();
+            }, 5000);
         });
     }
 
-    async getUUID(): Promise<string | null> {
-        return this.currentUser()?.uid ?? null;
-    }
 
     async loginWithEmail(email: string, password: string): Promise<boolean> {
         try {
@@ -201,9 +254,7 @@ export class AuthService {
     }
 
     private handleAuthError(error: Error): void {
-        // Handle specific auth errors here
         console.error('Authentication error:', this.formatError(error));
-        // Implement specific error handling logic as needed
     }
 
     private formatError(error: any): object {
