@@ -1,8 +1,8 @@
 import {Injectable} from '@angular/core';
-import {PlayersComponent} from "../../nfl/players/players.component";
-import {ScoresComponent} from "../../nfl/scores/scores.component";
-import {StandingComponent} from "../../nfl/standing/standing.component";
-import {TeamsComponent} from "../../nfl/teams/teams.component";
+import {PlayersComponent} from "../../components/nfl/players/players.component";
+import {ScoresComponent} from "../../components/nfl/scores/scores.component";
+import {StandingComponent} from "../../components/nfl/standing/standing.component";
+import {TeamsComponent} from "../../components/nfl/teams/teams.component";
 import {HttpClient} from "@angular/common/http";
 import {DashboardItem} from "../data/dashboard/DashboardItem";
 import {catchError, map, tap} from "rxjs/operators";
@@ -69,7 +69,7 @@ export class  ComponentRegistryService {
             );
     }
 
-    async loadComponents(dashboardId: number): Promise<Observable<DashboardItem[]>> {
+    async loadComponents(dashboardId: string): Promise<Observable<DashboardItem[]>> {
         const response = await this.httpClient.get<DashboardItem[]>(`${this.endpoint}/dashboard/v1/${dashboardId}/loadDashboard`);
         console.log(response)
         return response;

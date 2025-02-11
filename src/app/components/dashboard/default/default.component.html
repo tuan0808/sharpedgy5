@@ -1,12 +1,11 @@
 <div class="gridster-wrapper">
-    <!-- Dashboard Header -->
     <div class="dashboard-header d-flex justify-content-between align-items-center p-3">
         @if (currentDashboard()) {
             <h1>{{ currentDashboard()?.name }}</h1>
         }
 
-        <!-- Undo/Redo buttons -->
-        @if (!popupWindow()) {
+        <!-- Undo/Redo buttons - Only show when user is logged in -->
+        @if (!popupWindow() && auth.isAuthenticated()) {
             <div class="btn-group">
                 <button
                         class="btn"
@@ -29,41 +28,31 @@
             </div>
         }
 
-        <!-- Action buttons -->
-        <div class="btn-group">
-            <button class="btn btn-primary" (click)="saveDashboardState()">
-                <i class="icofont icofont-save"></i>
-            </button>
-            <button class="btn btn-secondary" (click)="toggleGrid()">
-                <i class="icofont icofont-grid-advance"></i>
-            </button>
-            <button class="btn btn-primary" (click)="openPopupGrid()">
-                <i class="icofont icofont-external-link"></i>
-            </button>
-        </div>
+        <!-- Action buttons - Only show when user is logged in -->
+        @if (auth.isAuthenticated()) {
+            <div class="btn-group">
+                <button class="btn btn-primary" (click)="saveDashboardState()">
+                    <i class="icofont icofont-save"></i>
+                </button>
+                <button class="btn btn-secondary" (click)="toggleGrid()">
+                    <i class="icofont icofont-grid-advance"></i>
+                </button>
+                <button class="btn btn-primary" (click)="openPopupGrid()">
+                    <i class="icofont icofont-external-link"></i>
+                </button>
+            </div>
+        }
     </div>
 
-    <!-- Main Content -->
-    @if (!popupWindow()) {
-        <div class="gridster-container">
-            <gridster [options]="options()"
-                      (dragover)="$event.preventDefault()"
-                      (drop)="onDrop($event)">
-                @for (item of gridItems(); track item.id) {
-                    <gridster-item [item]="item">
-                        <ng-template appDynamicComponent></ng-template>
-                    </gridster-item>
-                }
-            </gridster>
-        </div>
-    } @else {
-        <div class="popup-message p-4 text-center">
-            <button
-                    *ngIf="isPopupOpen()"
-                    (click)="closePopupGrid()"
-                    class="btn btn-primary">
-                Close Dashboard Window
-            </button>
-        </div>
-    }
+    <div class="gridster-container">
+        <gridster [options]="getGridOptions()"
+                  (dragover)="$event.preventDefault()"
+                  (drop)="onDrop($event)">
+            @for (item of gridItems(); track item.id) {
+                <gridster-item [item]="item">
+                    <ng-template appDynamicComponent></ng-template>
+                </gridster-item>
+            }
+        </gridster>
+    </div>
 </div>

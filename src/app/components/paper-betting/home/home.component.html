@@ -1,0 +1,64 @@
+<!-- home.component.html -->
+<div class="header">
+    <h1>Bet Simulator</h1>
+    <div class="right">
+        <span class="balance">
+            <i class="bi bi-wallet2"></i> ${{balance()}}
+        </span>
+        <i class="bi bi-bell notification"></i>
+    </div>
+</div>
+
+<div class="top-container">
+    <div class="achievement">
+        <div>
+            <i class="bi bi-trophy-fill badge"></i>
+            Recent Achievement:
+            <span class="badge">Hot Streak! 🔥 Won 5 bets in a row</span>
+        </div>
+        <a href="#" class="badge">View All Achievements</a>
+    </div>
+
+    <div class="sports-scroll border-bottom  card">
+        <div class="container-fluid px-4 position-relative">
+            <div class="d-flex overflow-auto py-2" #scrollContainer>
+                @for (sport of sports(); track sport.name) {
+                    <button class="btn sport-tab"
+                            [class.active]="selectedSport() === sport.type"
+                            (click)="onSportSelect(sport.type)">
+                        {{sport.icon}}{{sport.name}}<span class="badge"></span>
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="games-container">
+    <div class="games-header">
+        <h2 class="title">Today's Games</h2>
+        <app-pagination
+                [currentPage]="currentPage()"
+                [totalPages]="totalPages()"
+                [pageSize]="pageSize()"
+                (pageChange)="onPageChange($event)"
+                (pageSizeChange)="onPageSizeChange($event)">
+        </app-pagination>
+    </div>
+
+    <div class="games">
+        @for (game of displayedGames(); track game.gameId) {
+            <app-game-card [gameData]="game" (betClick)="onBetPlaced(game, $event)"></app-game-card>
+        }
+    </div>0
+
+    <div class="games-footer">
+        <app-pagination
+                [currentPage]="currentPage()"
+                [totalPages]="totalPages()"
+                [pageSize]="pageSize()"
+                (pageChange)="onPageChange($event)"
+                (pageSizeChange)="onPageSizeChange($event)">
+        </app-pagination>
+    </div>
+</div>

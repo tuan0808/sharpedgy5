@@ -1,0 +1,45 @@
+<nav aria-label="Page navigation">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <select
+                    class="form-select form-select-sm"
+                    style="width: auto"
+                    [(ngModel)]="pageSize"
+                    (change)="onPageSizeChange($event)">
+                <option [value]="5">5 per page</option>
+                <option [value]="10">10 per page</option>
+                <option [value]="20">20 per page</option>
+            </select>
+        </div>
+
+        <ul class="pagination pagination-circle mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 1">
+                <a class="page-link" mdbRipple (click)="onPageChange(currentPage - 1)">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+
+            @for (page of visiblePages(); track page) {
+                @if (page === -1) {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                } @else {
+                    <li class="page-item" [class.active]="currentPage === page">
+                        <a class="page-link" mdbRipple (click)="onPageChange(page)">{{page}}</a>
+                    </li>
+                }
+            }
+
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+                <a class="page-link" mdbRipple (click)="onPageChange(currentPage + 1)">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="text-muted small">
+            Page {{currentPage}} of {{totalPages}}
+        </div>
+    </div>
+</nav>
