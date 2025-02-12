@@ -7,6 +7,7 @@ import {BetFormComponent} from "../../bet-form/bet-form.component";
 import {getDatabase} from "@angular/fire/database";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {BetFormData} from "../../../../shared/model/paper-betting/BetFormData";
+import {BetTypes} from "../../../../shared/model/enums/BetTypes";
 
 @Component({
   selector: 'app-game-card',
@@ -41,10 +42,13 @@ export class GameCardComponent {
   }
 
   viewMatchupDetails() {
+
     console.log('Viewing Matchup Details', this.gameData());
   }
 
   getImageByName(name: string): string {
     return `./assets/images/NFL/${name.concat('_', '_')}_logo.svg`;
   }
+
+  protected readonly BetTypes = BetTypes;
 }

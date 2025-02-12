@@ -11,8 +11,8 @@ export class BetHistory implements BetFormData {
     datetime : Date
     // Representing enums as strings here; adjust as needed.
     sport: SportType
-    amount: number;
     betType: BetTypes;
-    betValue: number;
+    wagerValue: number;
+    wagerAmount: number;
 
 }

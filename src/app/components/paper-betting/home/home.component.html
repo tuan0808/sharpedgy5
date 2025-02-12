@@ -3,7 +3,7 @@
     <h1>Bet Simulator</h1>
     <div class="right">
         <span class="balance">
-            <i class="bi bi-wallet2"></i> ${{balance()}}
+            <i class="bi bi-wallet2"></i> ${{ balance() }}
         </span>
         <i class="bi bi-bell notification"></i>
     </div>
@@ -26,7 +26,7 @@
                     <button class="btn sport-tab"
                             [class.active]="selectedSport() === sport.type"
                             (click)="onSportSelect(sport.type)">
-                        {{sport.icon}}{{sport.name}}<span class="badge"></span>
+                        {{ sport.icon }}{{ sport.name }}<span class="badge"></span>
                     </button>
                 }
             </div>
@@ -48,9 +48,13 @@
 
     <div class="games">
         @for (game of displayedGames(); track game.gameId) {
-            <app-game-card [gameData]="game" (betClick)="onBetPlaced(game, $event)"></app-game-card>
+            <app-game-card
+                    [gameData]="game"
+                    (betClick)="onBetPlaced(game, $event)">  
+            </app-game-card>
         }
-    </div>0
+    </div>
+    0
 
     <div class="games-footer">
         <app-pagination

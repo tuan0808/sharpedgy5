@@ -1,10 +1,10 @@
-import {Component, OnInit, Signal, signal} from '@angular/core';
+import {Component, OnInit, Signal, signal, WritableSignal} from '@angular/core';
 import {MdbAccordionModule} from "mdb-angular-ui-kit/accordion";
 import {GameCardComponent} from "./game-card/game-card.component";
 import {SportType} from "../../../shared/model/SportType";
 import {GameService} from "../../../shared/services/game.service";
 import {Game} from "../../../shared/model/paper-betting/Game";
-import {BehaviorSubject} from "rxjs";
+import {BehaviorSubject, firstValueFrom} from "rxjs";
 import {DatePipe} from "@angular/common";
 import {SportDetail} from "../../../shared/model/SportDetail";
 import {PaginationComponent} from "../../../shared/components/pagination/pagination.component";
@@ -29,10 +29,10 @@ import {BetTypes} from "../../../shared/model/enums/BetTypes";
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-// home.component.ts
   private gamesSubject = new BehaviorSubject<Game[]>([]);
-  protected balance = signal<number>(0)
+  protected balance = signal<number>(0);
   protected sportsData = signal<Game[]>([]);
+  protected recentBetHistory = signal<BetHistory[]>([]);
   protected displayedGames = signal<Game[]>([]);
   protected sports = signal<SportDetail[]>([
     new SportDetail("NFL", "🏈", SportType.NFL),
@@ -50,34 +50,60 @@ export class HomeComponent implements OnInit {
       private gameService: GameService,
       private auth: AuthService,
       private modalService: NgbModal
-  ) {
-  }
+  ) {}
 
   async ngOnInit() {
-    this.loadGames(SportType.NFL);
-    this.gameService.getBalance(await this.auth.getUID()).subscribe({
-      next: (value) => {
-        console.log(value)
-        this.balance.set(value);
-      },
-      error: (error) => {
-        console.error('Error fetching balance:', error);
-        this.balance.set(0);
+    try {
+      console.log('hi waiting for UID')
+      // Wait for UID first
+      const uid = await this.auth.getUID();
+      console.log(uid)
+      if (!uid) {
+        console.error('No UID available');
+        return;
       }
-    });
+
+      // Execute all async operations in parallel
+      await Promise.all([
+        this.initializeGames(uid),
+        this.initializeBalance(uid),
+        this.initializeRecentBets(uid)
+      ]);
+    } catch (error) {
+      console.error('Error during initialization:', error);
+    }
   }
 
-  private loadGames(sportType: SportType) {
-    this.gameService.getSportsByNFL(sportType).subscribe({
-      next: (games) => {
-        this.sportsData.set(games);
-        this.updatePagination();
-      },
-      error: (error) => {
-        this.sportsData.set([]);
-        this.updatePagination();
-      }
-    });
+  private async initializeGames(uid: string): Promise<void> {
+    try {
+      const games = await firstValueFrom(this.gameService.getSportsByNFL(uid, this.selectedSport()));
+      this.sportsData.set(games);
+      this.updatePagination();
+    } catch (error) {
+      console.error('Error loading games:', error);
+      this.sportsData.set([]);
+      this.updatePagination();
+    }
+  }
+
+  private async initializeBalance(uid: string): Promise<void> {
+    try {
+      const balance = await firstValueFrom(this.gameService.getBalance(uid));
+      this.balance.set(balance);
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+      this.balance.set(0);
+    }
+  }
+
+  private async initializeRecentBets(uid: string): Promise<void> {
+    try {
+      const recentBets = await firstValueFrom(this.gameService.getRecentBetsByUid(uid));
+      this.recentBetHistory.set(recentBets);
+    } catch (error) {
+      console.error('Error fetching recent bets:', error);
+      this.recentBetHistory.set([]);
+    }
   }
 
   private updatePagination(): void {
@@ -88,6 +114,15 @@ export class HomeComponent implements OnInit {
     const startIndex = (this.currentPage() - 1) * this.pageSize();
     const endIndex = Math.min(startIndex + this.pageSize(), totalItems);
     this.displayedGames.set(allGames.slice(startIndex, endIndex));
+  }
+
+  async onSportSelect(type: SportType) {
+    this.selectedSport.set(type);
+    this.currentPage.set(1);
+    const uid = await this.auth.getUID();
+    if (uid) {
+      await this.initializeGames(uid);
+    }
   }
 
   onPageChange(page: number): void {
@@ -101,25 +136,31 @@ export class HomeComponent implements OnInit {
     this.updatePagination();
   }
 
-  onSportSelect(type: SportType) {
-    this.selectedSport.set(type);
-    this.currentPage.set(1);
-    this.loadGames(type);
-  }
-
   async onBetPlaced(game: Game, betFormData: BetFormData) {
-    console.log(JSON.stringify(betFormData))
-    let bet = new BetHistory()
-    bet.id = 0
-    bet.userId = await this.auth.getUID()
-    bet.betType = betFormData.betType
-    bet.sport = this.selectedSport()
-    bet.datetime = new Date()
-    bet.amount = betFormData.amount
-    bet.homeTeam = game.homeTeam.name
-    bet.awayTeam = game.awayTeam.name
-    this.gameService.addHistory(bet)
-    console.log('Hello World', JSON.stringify(bet));
+    const uid = await this.auth.getUID();
+    console.log(uid)
+    if (!uid) {
+      console.error('No UID available for placing bet');
+      return;
+    }
+
+    const bet = new BetHistory();
+    bet.id = game.gameId;
+    bet.userId = uid;
+    bet.betType = betFormData.betType;
+    bet.sport = this.selectedSport();
+    bet.datetime = new Date();
+    bet.wagerValue = betFormData.wagerValue
+    bet.wagerValue = betFormData.wagerAmount;
+    bet.homeTeam = game.homeTeam.name;
+    bet.awayTeam = game.awayTeam.name;
+
+    try {
+      await this.gameService.addHistory(bet);
+      // Optionally refresh recent bets after placing a new one
+      await this.initializeRecentBets(uid);
+    } catch (error) {
+      console.error('Error placing bet:', error);
+    }
   }
 }
-

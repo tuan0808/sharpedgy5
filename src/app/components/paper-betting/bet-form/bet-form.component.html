@@ -27,7 +27,7 @@ Updated Bet Form Template
                     <div class="range-container">
                         <label class="form-label">Select Value</label>
                         <mdb-range
-                                formControlName="betValue"
+                                formControlName="wagerValue"
                                 [min]="-50"
                                 [max]="50"
                                 [step]="1">
@@ -39,7 +39,7 @@ Updated Bet Form Template
                         <label class="form-label">Enter Value</label>
                         <input type="number"
                                class="form-control"
-                               formControlName="betValue"
+                               formControlName="wagerValue"
                                min="10"
                                max="100">
                     </div>
@@ -48,7 +48,7 @@ Updated Bet Form Template
                     <div class="range-container">
                         <label class="form-label">Select Value</label>
                         <mdb-range
-                                formControlName="betValue"
+                                formControlName="wagerValue"
                                 [min]="10"
                                 [max]="100"
                                 [step]="0.5">
@@ -61,14 +61,14 @@ Updated Bet Form Template
                 <label class="form-label">Bet Amount</label>
                 <input type="number"
                        class="form-control"
-                       formControlName="amount"
+                       formControlName="wagerAmount"
                        placeholder="Enter amount (max $5000)"
                        min="0"
                        max="5000">
-                @if (betForm.get('amount')?.errors?.['min']) {
+                @if (betForm.get('wagerAmount')?.errors?.['min']) {
                     <div class="error-message">Amount must be greater than 0</div>
                 }
-                @if (betForm.get('amount')?.errors?.['max']) {
+                @if (betForm.get('wagerAmount')?.errors?.['max']) {
                     <div class="error-message">Amount must be less than 5000</div>
                 }
             </div>

@@ -35,8 +35,8 @@ export class BetFormComponent {
 
   betForm: FormGroup<{
     betType: FormControl<BetTypes | null>;
-    betValue: FormControl<number | null>;
-    amount: FormControl<number | null>;
+    wagerValue: FormControl<number | null>;
+    wagerAmount: FormControl<number | null>;
   }>;
 
   constructor(
@@ -46,12 +46,12 @@ export class BetFormComponent {
   ) {
     this.betForm = this.fb.group<{
       betType: FormControl<BetTypes | null>;
-      betValue: FormControl<number | null>;
-      amount: FormControl<number | null>;
+      wagerValue: FormControl<number | null>;
+      wagerAmount: FormControl<number | null>;
     }>({
       betType: this.fb.control<BetTypes | null>(null, Validators.required),
-      betValue: this.fb.control<number | null>(null, Validators.required),
-      amount: this.fb.control<number | null>(null, [
+      wagerValue: this.fb.control<number | null>(null, Validators.required),
+      wagerAmount: this.fb.control<number | null>(null, [
         Validators.required,
         Validators.min(0),
         Validators.max(5000)
@@ -59,7 +59,7 @@ export class BetFormComponent {
     });
 
     this.betForm.get('betType')?.valueChanges.subscribe(() => {
-      this.betForm.get('betValue')?.reset();
+      this.betForm.get('wagerValue')?.reset();
     });
   }
 
