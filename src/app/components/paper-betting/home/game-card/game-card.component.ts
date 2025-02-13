@@ -8,6 +8,7 @@ import {getDatabase} from "@angular/fire/database";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {BetFormData} from "../../../../shared/model/paper-betting/BetFormData";
 import {BetTypes} from "../../../../shared/model/enums/BetTypes";
+import {SportType} from "../../../../shared/model/SportType";
 
 @Component({
   selector: 'app-game-card',
@@ -23,26 +24,23 @@ import {BetTypes} from "../../../../shared/model/enums/BetTypes";
 })
 export class GameCardComponent {
   gameData = input.required<Game>();
-  currentBet = signal<BetFormData | null>(null);
-  @Output() betClick = new EventEmitter<BetFormData>();
+  sportType = input.required<SportType>();
+  @Output() betPlaced = new EventEmitter<{game: Game, balance: number}>();
 
   constructor(private modalService: NgbModal) {}
 
   placePaperBet() {
     const modalRef = this.modalService.open(BetFormComponent);
     modalRef.componentInstance.game = this.gameData();
+    modalRef.componentInstance.sportType = this.sportType();
 
-    modalRef.result.then((betData: BetFormData) => {
-      this.currentBet.set(betData);
-      // Emit the form data directly
-      this.betClick.emit(betData);
-    }, (reason) => {
-      console.log('Modal dismissed');
+    // Subscribe to betPlaced event from BetFormComponent
+    modalRef.componentInstance.betPlaced.subscribe((result: {game: Game, balance: number}) => {
+      this.betPlaced.emit(result);
     });
   }
 
   viewMatchupDetails() {
-
     console.log('Viewing Matchup Details', this.gameData());
   }
 

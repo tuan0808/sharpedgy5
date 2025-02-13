@@ -1,12 +1,10 @@
-Updated Bet Form Template
-
 <div class="modal-header">
     <h4 class="modal-title">Place Bet</h4>
     <button type="button" class="btn-close" (click)="activeModal.dismiss()"></button>
 </div>
 <div class="modal-body">
     <div class="form-section">
-        <form [formGroup]="betForm" (submit)="onSubmit()" class="bet-form">
+        <form [formGroup]="betForm" (ngSubmit)="onSubmit()" class="bet-form">
             <div class="bet-type-selection">
                 @for (betType of betTypes; track betType.type) {
                     <div class="form-check">
@@ -58,18 +56,25 @@ Updated Bet Form Template
             }
 
             <div class="amount-input">
-                <label class="form-label">Bet Amount</label>
+                <label class="form-label">Bet Amount ($)</label>
                 <input type="number"
                        class="form-control"
                        formControlName="wagerAmount"
                        placeholder="Enter amount (max $5000)"
-                       min="0"
-                       max="5000">
-                @if (betForm.get('wagerAmount')?.errors?.['min']) {
+                       [min]="0"
+                       [max]="5000"
+                       (input)="betForm.get('wagerAmount')?.updateValueAndValidity()">
+                @if (betForm.get('wagerAmount')?.touched && betForm.get('wagerAmount')?.errors?.['required']) {
+                    <div class="error-message">Amount is required</div>
+                }
+                @if (betForm.get('wagerAmount')?.touched && betForm.get('wagerAmount')?.errors?.['min']) {
                     <div class="error-message">Amount must be greater than 0</div>
                 }
-                @if (betForm.get('wagerAmount')?.errors?.['max']) {
+                @if (betForm.get('wagerAmount')?.touched && betForm.get('wagerAmount')?.errors?.['max']) {
                     <div class="error-message">Amount must be less than 5000</div>
+                }
+                @if (betForm.get('wagerAmount')?.touched && betForm.get('wagerAmount')?.errors?.['insufficientFunds']) {
+                    <div class="error-message">Insufficient funds (Balance: {{balance() | currency}})</div>
                 }
             </div>
         </form>
@@ -94,6 +99,6 @@ Updated Bet Form Template
     </div>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" (click)="onSubmit()" [disabled]="!betForm.valid">Submit</button>
-    <button class="btn btn-secondary" (click)="activeModal.dismiss()">Cancel</button>
+    <button type="submit" class="btn btn-primary" [disabled]="!betForm.valid" (click)="onSubmit()">Place Bet</button>
+    <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">Cancel</button>
 </div>

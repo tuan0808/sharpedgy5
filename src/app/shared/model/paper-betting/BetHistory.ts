@@ -4,11 +4,11 @@ import {SportType} from "../SportType";
 import {BetTypes} from "../enums/BetTypes";
 
 export class BetHistory implements BetFormData {
-    id : number
+    gameId : string
     userId : string
     homeTeam : string
     awayTeam: string
-    datetime : Date
+    gameStart : Date
     // Representing enums as strings here; adjust as needed.
     sport: SportType
     betType: BetTypes;

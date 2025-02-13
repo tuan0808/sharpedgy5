@@ -3,7 +3,7 @@
     <h1>Bet Simulator</h1>
     <div class="right">
         <span class="balance">
-            <i class="bi bi-wallet2"></i> ${{ balance() }}
+            <i class="bi bi-wallet2"></i> ${{ balance() | currency}}
         </span>
         <i class="bi bi-bell notification"></i>
     </div>
@@ -47,10 +47,10 @@
     </div>
 
     <div class="games">
-        @for (game of displayedGames(); track game.gameId) {
+        @for (game of displayedGames(); track game.id) {
             <app-game-card
-                    [gameData]="game"
-                    (betClick)="onBetPlaced(game, $event)">  
+                    [sportType]="selectedSport()"
+                    [gameData]="game">
             </app-game-card>
         }
     </div>
