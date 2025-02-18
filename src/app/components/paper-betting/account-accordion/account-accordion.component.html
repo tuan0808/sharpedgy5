@@ -1,0 +1,70 @@
+@if (account(); as account) {
+    <div class="bg-white rounded-lg shadow mb-4">
+        <div
+                class="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50"
+                (click)="toggle.emit()"
+        >
+            <div class="flex-1">
+                <div class="flex items-center">
+                    <h3 class="text-xl font-bold">
+                        Account #{{ account.id }}
+                        <span [class]="'ml-2 px-2 py-0.5 text-sm rounded ' + (account.activeAccount ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800')">
+                            {{ account.activeAccount ? 'Active' : 'Closed' }}
+                        </span>
+                    </h3>
+                    <div class="ml-4 text-sm text-gray-500">
+                        {{ account.betHistory.length }} bets
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 mt-1">
+                    Created: {{ account.creationDate | date:'M/d/yyyy, h:mm:ss a' }}
+                    @if (account.closedDate) {
+                        • Closed: {{ account.closedDate | date:'M/d/yyyy, h:mm:ss a' }}
+                    }
+                </p>
+            </div>
+            <div class="flex items-center gap-8">
+                <div class="text-right">
+                    <p class="text-sm text-gray-500">Balance</p>
+                    <p [class]="account.balance > 0 ? 'text-green-600' : 'text-red-600'">
+                        ${{ account.balance.toFixed(2) }}
+                    </p>
+                </div>
+                <i class="h-6 w-6 text-gray-400">
+                    @if (isExpanded) {
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                        </svg>
+                    } @else {
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    }
+                </i>
+            </div>
+        </div>
+
+        @if (isExpanded) {
+            <div class="border-t p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-500">Total Bets</p>
+                        <p class="text-lg font-bold">{{ account.betHistory.length }}</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-500">Total Wagered</p>
+                        <p class="text-lg font-bold">{{ account.balance | currency }}</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-500">Profit/Loss</p>
+                        <p [class]="0 >= 0 ? 'text-green-600' : 'text-red-600'">
+                            {{ 0 | currency }}
+                        </p>
+                    </div>
+                </div>
+
+               <!-- <app-bet-history-table [betHistory]="account.betHistory"/>-->
+            </div>
+        }
+    </div>
+}
