@@ -10,7 +10,7 @@ import {CommonModule} from "@angular/common";
 import {ChartistModule} from "ng-chartist";
 import {FeatherIconsComponent} from "../../../shared/components/feather-icons/feather-icons.component";
 import {NgApexchartsModule} from "ng-apexcharts";
-import {GridsterComponent, GridsterItemComponent} from "angular-gridster2";
+import {GridsterComponent, GridsterConfig, GridsterItemComponent} from "angular-gridster2";
 import {DynamicHostDirective} from "../../../shared/directives/dynamic-host.directive";
 import {SidenavComponent} from "../sidenav/sidenav.component";
 import {GridItemComponent} from "../grid-item/grid-item.component";
@@ -18,9 +18,9 @@ import {FormsModule} from "@angular/forms";
 import {DynamicComponentDirective} from "../../../shared/directives/dynamic-component.directive";
 import {ComponentRegistryService} from "../../../shared/services/component-registry.service";
 import {BaseGridComponent} from '../BaseGridComponent';
-import {Auth} from "@angular/fire/auth";
-import {Observable} from "rxjs";
+
 import {AuthService} from "../../../shared/services/auth.service";
+import {ToastrService} from "ngx-toastr";
 
 @Component({
     selector: "app-default",
@@ -51,12 +51,32 @@ export class DefaultComponent extends BaseGridComponent {
     constructor(
         componentRegistry: ComponentRegistryService,
         cdr: ChangeDetectorRef,
-        auth: AuthService
+        protected override readonly auth: AuthService,
+        private toastrService: ToastrService
     ) {
         super(componentRegistry, cdr, auth);
-        console.log(JSON.stringify(auth.currentUser))
-        // Initialize dashboard subscription properly
 
+        effect(() => {
+            if (!this.auth.isAuthenticated()) {
+                this.toastrService.info(
+                    'Log in to unlock full customization features.',
+                    'Read-Only Mode'
+                );
+            }
+        });
+    }
+
+    protected getGridOptions(): GridsterConfig {
+        const baseOptions = this.options();
+        if (!this.auth.isAuthenticated()) {
+            return {
+                ...baseOptions,
+                draggable: { enabled: false },
+                resizable: { enabled: false },
+                pushItems: false
+            };
+        }
+        return baseOptions;
     }
 
     protected initializeComponent(): void {
@@ -86,25 +106,22 @@ export class DefaultComponent extends BaseGridComponent {
         this.sendGridUpdate();
     }
 
-    protected override cleanup(): void {
+    protected override async cleanup() {
         if (this.hasUnsavedChanges()) {
             const shouldContinue = window.confirm('You have unsaved changes. Do you want to continue without saving?');
             if (!shouldContinue) {
                 return;
             }
         }
-
-        super.cleanup();
-        window.removeEventListener('message', this.handlePopupMessage.bind(this));
-        if (this.popupWindow()) {
-            this.popupWindow()?.close();
-        }
-        if (this.popupCheckInterval()) {
-            window.clearInterval(this.popupCheckInterval());
-        }
+        await super.saveDashboardState();
     }
 
     async openPopupGrid() {
+        if (!this.auth.isAuthenticated()) {
+            this.toastrService.warning('Please log in to open in new window');
+            return;
+        }
+
         if (!await this.checkUnsavedChanges()) {
             return;
         }

@@ -1,0 +1,250 @@
+
+.form-section {
+  overflow-y: auto;
+
+  .bet-type-selection {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+
+    .form-check {
+      margin: 0;
+
+      .form-check-label {
+        color: #333;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .bet-value-input {
+    margin: 0 2rem 1.5rem;
+
+    .range-container, .input-container {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 6px;
+    }
+
+    mdb-range {
+      width: 100%;
+    }
+  }
+
+  .amount-input {
+    margin: 0 2rem;
+
+    .form-control {
+      width: 100%;
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      padding: 0.75rem;
+      border-radius: 6px;
+      color: #333;
+
+      &::placeholder {
+        color: #adb5bd;
+      }
+    }
+
+    .error-message {
+      color: #dc3545;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+  }
+}
+
+.betting-section {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+
+  .bet-col {
+    text-align: center;
+
+    .bet-label {
+      font-size: 0.875rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+
+    .value {
+      font-weight: bold;
+    }
+
+    .lines {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
+}
+.card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  max-width: 1000px;
+  margin: auto;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  .time {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .network {
+    color: #666;
+  }
+}
+
+.teams-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  .team {
+    text-align: center;
+
+    .team-logo {
+      width: 100px;
+      height: 100px;
+      background: #eee;
+      margin: 0 auto 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+    }
+
+    .team-name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+  }
+
+  .vs {
+    font-size: 18px;
+    color: #666;
+  }
+}
+
+.betting-section {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+
+  .bet-col {
+    .bet-label {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .bet-value {
+      &.lines {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+    }
+  }
+}
+
+.injury-section {
+  margin-bottom: 24px;
+
+  .injury-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+
+    i {
+      color: #fbbf24;
+    }
+  }
+
+  .injury-teams {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .injury-list {
+      .injury-item {
+        background: #fee2e2;
+        padding: 12px;
+        border-radius: 4px;
+        margin-bottom: 8px;
+
+        .player {
+          font-weight: 600;
+        }
+
+        .status {
+          color: #dc2626;
+
+          &.out {
+            color: #b91c1c;
+          }
+        }
+      }
+    }
+
+    .healthy {
+      color: #10b981;
+    }
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 16px;
+
+  button {
+    flex: 1;
+    padding: 12px 24px;
+    border-radius: 6px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+
+    &.btn-bet {
+      background: #3b82f6;
+      color: white;
+
+      &:hover {
+        background: #2563eb;
+      }
+    }
+
+    &.btn-view {
+      background: #f3f4f6;
+      color: #374151;
+
+      &:hover {
+        background: #e5e7eb;
+      }
+    }
+  }
+}
+

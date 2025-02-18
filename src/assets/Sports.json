@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Basketball",
+    "icon": "🏀",
+    "upcoming": 12
+  },
+  {
+    "name": "Football",
+    "icon": "🏈",
+    "upcoming": 8
+  },
+  {
+    "name": "Baseball",
+    "icon": "⚾",
+    "upcoming": 15
+  },
+  {
+    "name": "Hockey",
+    "icon": "🏒",
+    "upcoming": 6
+  },
+  {
+    "name": "Soccer",
+    "icon": "⚽",
+    "upcoming": 20
+  }
+]

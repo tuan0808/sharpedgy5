@@ -157,6 +157,15 @@ export class NavService {
 
         },
         {
+            title: 'Paper Betting', icon: 'golf', type: 'sub', active: false, children: [
+                {path: 'paper-betting/home', title: 'Home', type: 'link'},
+                {path: 'paper-betting/history', title: 'History', type: 'link'},
+                {path: 'paper-betting/achievements', title: 'Achievements', type: 'link'},
+                {path: 'paper-betting/virtual-wallet', title: 'Virtual Wallet', type: 'link'},
+                {path: 'paper-betting/educational-content', title: 'Presidents Cup', type: 'Educational Content'}
+                ]
+        },
+        {
             title: 'Other', icon: 'slack', type: 'sub', active: false, children: [
                 {
                     title: 'UI-Elements', icon: 'slack', type: 'sub', active: false, children: [

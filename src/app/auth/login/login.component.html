@@ -1,61 +1,80 @@
+<!-- login.component.html -->
 <div class="page-wrapper">
-  <div class="auth-bg">
-    <div class="authentication-box">
-      <div class="text-center"><img src="assets/images/logo.png" alt="" /></div>
-      <div class="card mt-4">
-        <div class="card-body">
-          <div class="text-center">
-            <h4>LOGIN</h4>
-            <h6>Enter your Username and Password</h6>
-              <div class="text text-danger mtz-1" *ngIf="loginFailed">Your username or password is incorrect.</div>
+    <div class="auth-bg">
+        <div class="authentication-box">
+            <div class="text-center">
+                <img src="assets/images/logo.png" alt="Logo" />
+                <h4 class="mt-4">LOGIN Test</h4>
 
-          </div>
+                @if(loginError()){
+                    <div class="alert alert-danger mt-3">{{ loginError() }}</div>
+                }
+            </div>
 
-            @if(!newUser){
-          <form class="theme-form" [formGroup]="loginForm">
-            <div class="form-group">
-              <label class="col-form-label pt-0">Email</label>
-              <input class="form-control" formControlName="email" type="email" required="" />
-              @if(loginForm.controls['email'].touched && loginForm.controls['email'].errors?.['required']){
-              <div class="text text-danger mt-1">Email is required</div>
-              }
+            <div class="card mt-4">
+                <div class="card-body">
+                    <form [formGroup]="loginForm" (ngSubmit)="login()">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input
+                                    id="email"
+                                    type="email"
+                                    class="form-control"
+                                    formControlName="email"
+                                    [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+                            />
+                            @if(loginForm.get('email')?.errors?.['required'] && loginForm.get('email')?.touched){
+                                <div class="invalid-feedback">Email is required</div>
+                            }
+                            @if(loginForm.get('email')?.errors?.['email'] && loginForm.get('email')?.touched){
+                                <div class="invalid-feedback">Please enter a valid email</div>
+                            }
+                        </div>
 
-                <div class="form-group">
-                    <label class="col-form-label">Password</label>
-                    <input class="form-control" type="password" formControlName="password" required="" />
-                    @if(loginForm.controls['password'].touched && loginForm.controls['password'].errors?.['required'] ){
-                        <div class="text text-danger mtz-1">Password is required</div>
-                    }
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input
+                                    id="password"
+                                    type="password"
+                                    class="form-control"
+                                    formControlName="password"
+                                    [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+                            />
+                            @if(loginForm.get('password')?.errors?.['required'] && loginForm.get('password')?.touched){
+                                <div class="invalid-feedback">Password is required</div>
+                            }
+                            @if(loginForm.get('password')?.errors?.['minlength'] && loginForm.get('password')?.touched){
+                                <div class="invalid-feedback">Password must be at least 6 characters</div>
+                            }
+                        </div>
+
+                        <div class="form-group">
+                            <button
+                                    type="submit"
+                                    class="btn btn-primary w-100"
+                                    [disabled]="loginForm.invalid || isLoading()"
+                            >
+                                @if(isLoading()){
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Login
+                            </button>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <p>Or login with</p>
+                            <button
+                                    type="button"
+                                    class="btn btn-outline-primary"
+                                    (click)="googleLogin()"
+                                    [disabled]="isLoading()"
+                            >
+                                <i class="fa fa-google me-2"></i>Google
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
-            <div class="checkbox p-0">
-              <input id="checkbox1" type="checkbox" />
-              <label for="checkbox1">Remember me</label>
-            </div>
-            <div class="form-group row mt-3 mb-0">
-              <button class="btn btn-primary btn-block btn-lg" [disabled]="!loginForm.valid" (click)="login()"
-                type="submit">
-                <span>Login</span>
-              </button>
-            </div>
-            <div class="login-divider"></div>
-            <div class="social mt-3">
-              <div class="form-group btn-showcase d-flex">
-                <button class="btn social-btn btn-fb d-inline-block" (click)="facebookLogin()">
-                    <i class="fa fa-facebook"></i>
-                  </button>
-                  <button class="btn social-btn btn-twitter d-inline-block" (click)="twitterLogin()">
-                    <i class="fa fa-twitter"></i>
-                  </button>
-                  <button class="btn social-btn btn-google d-inline-block" (click)="googleLogin()">
-                    <i class="fa fa-google"></i>
-                  </button>
-              </div>
-            </div>
-          </form>
-          }
         </div>
-      </div>
     </div>
-  </div>
 </div>

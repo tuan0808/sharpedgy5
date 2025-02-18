@@ -6,10 +6,10 @@ export const fullRoutes: Routes = [
         path: 'error',
         loadChildren: () => import('../../pages/error-pages/error-pages.routes').then(r => r.errorPages),
     },
-    {
-        path: 'authentication',
-        loadChildren: () => import('../../pages/authentication/authentication.routes').then(r => r.authentication),
-    },
+    // {
+    //     path: 'authentication',
+    //     loadChildren: () => import('../../pages/authentication/authentication.routes').then(r => r.authentication),
+    // },
 
     {
         path: 'comingsoon',

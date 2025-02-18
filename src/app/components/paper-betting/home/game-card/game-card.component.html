@@ -1,0 +1,88 @@
+@if (gameData(); as game) {
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-body">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-clock me-2"></i>
+                        <span>{{ game.scheduled | date }}</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-geo-alt me-2"></i>
+                        <span>{{ game.venue }}</span>
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="row">
+                    <!-- Teams -->
+                    <div class="col-md-4">
+                        <div class="mb-3 d-flex align-items-center">
+                            <img src="./assets/images/NFL/{{game.homeTeam.logo}}" [alt]="game.homeTeam.logo + ' logo'"
+                                 class="me-2 rounded-circle" style="width: 40px; height: 40px;">
+                            <div>
+                                <div class="fw-bold">{{ game.homeTeam.name }}</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <img src="./assets/images/NFL/{{game.awayTeam.logo}}" [alt]="game.awayTeam.name + ' logo'"
+                                 class="me-2 rounded-circle" style="width: 40px; height: 40px;">
+                            <div>
+                                <div class="fw-bold">{{ game.awayTeam.name }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Betting Info -->
+                    <div class="col-md-4">
+                        <div class="mb-3 d-flex align-items-center">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Spread:</span>
+                                    <span>{{ game.spread }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Money Line:</span>
+                                    <span>{{game.homeTeam.abbreviation}} {{game.moneylineHome}} | {{game.awayTeam.abbreviation}} {{game.moneylineAway}}</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>O/U:</span>
+                                    <span>{{game.overUnderTotal}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--Game Info-->
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                @if (game.betSettlement; as bet) {
+                                    <div class="bet-info">
+                                        <h6 class="mb-2">Your Bet</h6>
+                                        <div class="mb-1">Type: {{BetTypes[bet.betType]}}</div>
+                                        <div class="mb-1">Value: {{bet.wagerValue}}</div>
+                                        <div>Amount: ${{bet.wagerAmount}}</div>
+                                    </div>
+
+                                } @else {
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        <span>No active bets placed</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-3 mt-4">
+                    <button class="btn btn-primary flex-fill" (click)="placePaperBet()">Place Bet</button>
+                    <button class="btn btn-secondary flex-fill" (click)="viewMatchupDetails()">View Matchup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}

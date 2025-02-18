@@ -24,8 +24,7 @@ export class SidebarComponent {
   public fileurl: any;
 
   constructor(private auth : AuthService, private router: Router, public navServices: NavService) {
-    this.isLoggedIn = computed(() => this.auth.isLoggedIn());
-    this.currentUser = computed(() => this.auth.currentUser());
+
 
     console.log(this.currentUser)
     this.navServices.items.subscribe(menuItems => {

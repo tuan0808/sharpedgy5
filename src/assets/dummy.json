@@ -1,0 +1,210 @@
+[
+  {
+    "NFL": [
+      {
+        "id": "001",
+        "status": "scheduled",
+        "scheduled": "2025-11-05T19:00:00Z",
+        "venue": {
+          "name": "MetLife Stadium",
+          "city": "East Rutherford",
+          "state": "New Jersey"
+        },
+        "homeTeam": {
+          "id": "101",
+          "name": "New York Giants"
+        },
+        "awayTeam": {
+          "id": "102",
+          "name": "Dallas Cowboys"
+        },
+        "broadcast": {
+          "network": "Fox Sports"
+        },
+        "betting": {
+          "spread": {
+            "favorite": "Dallas Cowboys",
+            "points": "3.5"
+          },
+          "moneyline": {
+            "homeOdds": "150",
+            "awayOdds": "-200"
+          },
+          "overUnder": {
+            "total": "47.5"
+          }
+        }
+      },
+      {
+        "id": "002",
+        "status": "scheduled",
+        "scheduled": "2025-11-05T22:00:00Z",
+        "venue": {
+          "name": "SoFi Stadium",
+          "city": "Inglewood",
+          "state": "California"
+        },
+        "homeTeam": {
+          "id": "103",
+          "name": "Los Angeles Rams"
+        },
+        "awayTeam": {
+          "id": "104",
+          "name": "San Francisco 49ers"
+        },
+        "broadcast": {
+          "network": "NBC Sports"
+        },
+        "betting": {
+          "spread": {
+            "favorite": "Los Angeles Rams",
+            "points": "-4.5"
+          },
+          "moneyline": {
+            "homeOdds": "-180",
+            "awayOdds": "160"
+          },
+          "overUnder": {
+            "total": "44.5"
+          }
+        }
+      },
+      {
+        "id": "003",
+        "status": "scheduled",
+        "scheduled": "2025-11-06T01:00:00Z",
+        "venue": {
+          "name": "Lambeau Field",
+          "city": "Green Bay",
+          "state": "Wisconsin"
+        },
+        "homeTeam": {
+          "id": "105",
+          "name": "Green Bay Packers"
+        },
+        "awayTeam": {
+          "id": "106",
+          "name": "Chicago Bears"
+        },
+        "broadcast": {
+          "network": "CBS Sports"
+        },
+        "betting": {
+          "spread": {
+            "favorite": "Green Bay Packers",
+            "points": "-7.5"
+          },
+          "moneyline": {
+            "homeOdds": "-200",
+            "awayOdds": "175"
+          },
+          "overUnder": {
+            "total": "50.5"
+          }
+        }
+      },
+      {
+        "id": "004",
+        "status": "scheduled",
+        "scheduled": "2025-11-06T19:00:00Z",
+        "venue": {
+          "name": "Arrowhead Stadium",
+          "city": "Kansas City",
+          "state": "Missouri"
+        },
+        "homeTeam": {
+          "id": "107",
+          "name": "Kansas City Chiefs"
+        },
+        "awayTeam": {
+          "id": "108",
+          "name": "Buffalo Bills"
+        },
+        "broadcast": {
+          "network": "ESPN"
+        },
+        "betting": {
+          "spread": {
+            "favorite": "Kansas City Chiefs",
+            "points": "-5.5"
+          },
+          "moneyline": {
+            "homeOdds": "-170",
+            "awayOdds": "150"
+          },
+          "overUnder": {
+            "total": "53.0"
+          }
+        }
+      },
+      {
+        "id": "005",
+        "status": "scheduled",
+        "scheduled": "2025-11-07T00:30:00Z",
+        "venue": {
+          "name": "TIAA Bank Field",
+          "city": "Jacksonville",
+          "state": "Florida"
+        },
+        "homeTeam": {
+          "id": "109",
+          "name": "Jacksonville Jaguars"
+        },
+        "awayTeam": {
+          "id": "110",
+          "name": "Miami Dolphins"
+        },
+        "broadcast": {
+          "network": "Amazon Prime Video"
+        },
+        "betting": {
+          "spread": {
+            "favorite": "Jacksonville Jaguars",
+            "points": "-3.0"
+          },
+          "moneyline": {
+            "homeOdds": "-125",
+            "awayOdds": "105"
+          },
+          "overUnder": {
+            "total": "48.0"
+          }
+        }
+      },
+      {
+        "id": "006",
+        "status": "scheduled",
+        "scheduled": "2025-11-07T19:00:00Z",
+        "venue": {
+          "name": "Ford Field",
+          "city": "Detroit",
+          "state": "Michigan"
+        },
+        "homeTeam": {
+          "id": "111",
+          "name": "Detroit Lions"
+        },
+        "awayTeam": {
+          "id": "112",
+          "name": "Minnesota Vikings"
+        },
+        "broadcast": {
+          "network": "Fox Sports"
+        },
+        "betting": {
+          "spread": {
+            "favorite": "Detroit Lions",
+            "points": "-6.0"
+          },
+          "moneyline": {
+            "homeOdds": "-160",
+            "awayOdds": "140"
+          },
+          "overUnder": {
+            "total": "46.5"
+          }
+        }
+      }
+    ]
+  }
+]

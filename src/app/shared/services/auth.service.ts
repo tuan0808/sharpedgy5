@@ -1,217 +1,266 @@
-import { computed, Injectable } from '@angular/core';
+import {computed, effect, inject, Injectable, Signal, signal} from '@angular/core';
 import {
-    Auth,
     signInWithEmailAndPassword,
     signInWithRedirect,
     GoogleAuthProvider,
     signOut,
-    createUserWithEmailAndPassword,
     User,
     onAuthStateChanged,
-    getRedirectResult,
-    setPersistence,
-    browserLocalPersistence,
-    AuthProvider,
-    AuthError
+    Auth
 } from "@angular/fire/auth";
+import { browserSessionPersistence, setPersistence } from 'firebase/auth';
 import { Router } from "@angular/router";
-import { Observable } from "rxjs";
-import { toSignal } from "@angular/core/rxjs-interop";
+import {LoginMetrics} from "../model/auth/LoginMetrics";
+import {environment} from "../../../environments/environment";
+import {AuthErrorDetail} from "../model/auth/AuthErrorDetail";
 
 @Injectable({
     providedIn: 'root'
 })
 export class AuthService {
-    // Single source of truth for auth state using signals
-    private readonly authState = toSignal(
-        new Observable<User | null>(subscriber =>
-            onAuthStateChanged(this.auth, subscriber)
-        ),
-        { initialValue: null }
+    private readonly SESSION_DURATION = 24 * 60 * 60 * 1000;
+    private readonly MAX_LOGIN_ATTEMPTS = 3;
+    private readonly LOCKOUT_DURATION = 15 * 60 * 1000;
+    private readonly RETRY_ATTEMPTS = 3;
+    private readonly RETRY_DELAY = 1000;
+
+    // Dependency injection using inject()
+    private readonly router = inject(Router);
+    private readonly auth = inject(Auth);
+
+    // State management using signals
+    private readonly authCheckComplete = signal<boolean>(false);
+    private readonly authState = signal<User | null>(null);
+    private readonly loginMetrics = signal<LoginMetrics>({
+        attempts: 0,
+        lastAttempt: 0
+    });
+    private readonly returnUrl = signal<string | null>(null);
+
+    // Computed values
+    readonly isAuthenticated: Signal<boolean> = computed(() =>
+        this.authCheckComplete() && !!this.authState()
     );
 
-    // Public computed signals for auth state
-    readonly currentUser = computed(() => this.authState());
-    readonly isLoggedIn = computed(() => !!this.currentUser());
+    readonly displayName: Signal<string> = computed(() =>
+        this.authState()?.displayName ||
+        this.authState()?.email ||
+        'Guest'
+    );
 
-    constructor(
-        private auth: Auth,
-        private router: Router
-    ) {
-        this.initializeAuth();
+    private sessionTimeout?: number;
+    private unsubscribeAuth?: () => void;
+    private initializationPromise: Promise<void>;
+
+    constructor() {
+        this.initializationPromise = this.initAuth();
+
+        // Setup effects
+        effect(() => {
+            const user = this.authState();
+            if (user) {
+                if (this.sessionTimeout) {
+                    clearTimeout(this.sessionTimeout);
+                }
+                this.sessionTimeout = window.setTimeout(() => {
+                    this.logout();
+                    this.logSecurityEvent('session_timeout', { uid: user.uid });
+                }, this.SESSION_DURATION);
+            }
+        });
+
+        effect(() => {
+            if (this.authState()) {
+                const expectedState = sessionStorage.getItem('auth_state');
+                const actualState = new URLSearchParams(window.location.search).get('state');
+
+                if (expectedState && actualState && expectedState !== actualState) {
+                    this.logout();
+                    this.logSecurityEvent('csrf_attack_prevented');
+                }
+            }
+        });
     }
 
-    private async initializeAuth(): Promise<void> {
+    private async initAuth(): Promise<void> {
         try {
-            if (!this.auth?.app) {
-                throw new Error('Auth instance not initialized!');
+            await setPersistence(this.auth, browserSessionPersistence);
+
+            if (this.unsubscribeAuth) {
+                this.unsubscribeAuth();
             }
 
-            // Log initialization details
-            console.log('Auth service initializing...', {
-                isInitialized: !!this.auth.app,
-                authDomain: this.auth.app.options.authDomain,
-                projectId: this.auth.app.options.projectId
+            return new Promise<void>((resolve, reject) => {
+                const timeoutId = setTimeout(() => {
+                    reject(new Error('Auth initialization timeout'));
+                }, 10000);
+
+                this.unsubscribeAuth = onAuthStateChanged(
+                    this.auth,
+                    async (user) => {
+                        try {
+                            console.debug('Auth state changed:', user?.uid);
+                            this.authState.set(user);
+                            this.authCheckComplete.set(true);
+
+                            if (!user) {
+                                this.logSecurityEvent('user_signed_out');
+                                await this.router.navigate(['/login']);
+                            } else {
+                                this.logSecurityEvent('auth_state_changed', { uid: user.uid });
+                                const currentReturnUrl = this.returnUrl();
+                                if (currentReturnUrl) {
+                                    this.returnUrl.set(null);
+                                    await this.router.navigate([currentReturnUrl]);
+                                }
+                            }
+
+                            clearTimeout(timeoutId);
+                            resolve();
+                        } catch (error) {
+                            reject(error);
+                        }
+                    },
+                    (error) => {
+                        console.error('Auth state change error:', error);
+                        clearTimeout(timeoutId);
+                        this.authCheckComplete.set(true);
+                        reject(error);
+                    }
+                );
             });
-
-            // Set persistence to local
-            await setPersistence(this.auth, browserLocalPersistence);
-
-            // Single auth state listener
-            onAuthStateChanged(
-                this.auth,
-                (user) => {
-                    console.log('Auth state changed:', user?.email ?? 'No user');
-                    this.handleAuthStateChange(user);
-                },
-                (error) => {
-                    console.error('Auth state change error:', error);
-                    this.handleAuthError(error);
-                }
-            );
-
-            // Handle any pending redirect results
-            await this.handleRedirectResult();
-
         } catch (error) {
-            console.error('Auth initialization failed:', error);
+            this.logSecurityEvent('init_auth_error', { error: (error as Error).message });
+            this.authCheckComplete.set(true);
             throw error;
         }
     }
 
-    async signInWithRedirect(provider: AuthProvider): Promise<void> {
+    async getUID(): Promise<string | null> {
         try {
-            console.log('Starting sign in process:', {
-                timestamp: new Date().toISOString(),
-                providerType: provider.constructor.name
-            });
+            await Promise.race([
+                this.initializationPromise,
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Auth initialization timeout')), 5000)
+                )
+            ]);
 
-            if (provider instanceof GoogleAuthProvider) {
-                this.configureGoogleProvider(provider);
+            if (!this.authCheckComplete()) {
+                await this.initAuth();
             }
+
+            return this.auth.currentUser?.uid ?? null;
+        } catch (error) {
+            console.error('Error getting UID:', error);
+            return null;
+        }
+    }
+
+    async loginWithGoogle(): Promise<void> {
+        try {
+            this.returnUrl.set(this.router.url);
+            const provider = new GoogleAuthProvider();
+            provider.addScope('email');
+            provider.addScope('profile');
+            provider.setCustomParameters({
+                state: this.generateStateParam()
+            });
 
             await signInWithRedirect(this.auth, provider);
-            console.log('Redirect initiated successfully');
+            this.logSecurityEvent('google_login_initiated');
         } catch (error) {
-            console.error('Social login redirect failed:', this.formatError(error));
+            this.logSecurityEvent('google_login_error', { error: (error as Error).message });
             throw error;
         }
     }
 
-    private configureGoogleProvider(provider: GoogleAuthProvider): void {
-        provider.addScope('email');
-        provider.addScope('profile');
-        provider.setCustomParameters({
-            prompt: 'select_account'
-        });
-        console.log('Google provider configured with scopes and parameters');
-    }
+    async loginWithEmail(email: string, password: string): Promise<User> {
+        if (this.isLocked()) {
+            const error = new Error('Account temporarily locked');
+            this.logSecurityEvent('login_blocked_lockout', { email });
+            throw error;
+        }
 
-    private async handleRedirectResult(): Promise<void> {
         try {
-            console.log('Processing redirect result');
-            const result = await getRedirectResult(this.auth);
+            const { user } = await signInWithEmailAndPassword(this.auth, email, password);
+            this.resetLoginMetrics();
+            this.logSecurityEvent('email_login_success', { email });
 
-            if (result?.user) {
-                // Wait for auth state to be fully updated
-                await this.waitForAuthStateUpdate();
+            const savedReturnUrl = this.returnUrl() || '/';
+            this.returnUrl.set(null);
+            await this.router.navigate([savedReturnUrl]);
 
-                console.log('Redirect sign-in successful:', {
-                    uid: result.user.uid,
-                    email: result.user.email,
-                    provider: result.providerId
-                });
-
-                await this.handleSuccessfulLogin();
-            }
+            return user;
         } catch (error) {
-            console.error('Redirect result handling failed:', this.formatError(error));
-            throw error;
-        }
-    }
-
-    private async waitForAuthStateUpdate(): Promise<void> {
-        return new Promise<void>((resolve) => {
-            const unsubscribe = onAuthStateChanged(this.auth, (user) => {
-                if (user) {
-                    unsubscribe();
-                    resolve();
-                }
+            const authError = error as AuthErrorDetail;
+            this.handleFailedLogin(email);
+            this.logSecurityEvent('email_login_error', {
+                email,
+                code: authError.code,
+                attempts: this.loginMetrics().attempts
             });
+            throw authError;
+        }
+    }
+
+    // Effects are now directly in the constructor
+
+    private isLocked(): boolean {
+        const metrics = this.loginMetrics();
+        return metrics.lockoutUntil !== undefined &&
+            Date.now() < metrics.lockoutUntil;
+    }
+
+    private handleFailedLogin(email: string): void {
+        const metrics = this.loginMetrics();
+        const attempts = metrics.attempts + 1;
+
+        if (attempts >= this.MAX_LOGIN_ATTEMPTS) {
+            this.loginMetrics.set({
+                attempts: 0,
+                lastAttempt: Date.now(),
+                lockoutUntil: Date.now() + this.LOCKOUT_DURATION
+            });
+        } else {
+            this.loginMetrics.set({
+                ...metrics,
+                attempts,
+                lastAttempt: Date.now()
+            });
+        }
+    }
+
+    private resetLoginMetrics(): void {
+        this.loginMetrics.set({
+            attempts: 0,
+            lastAttempt: Date.now()
         });
     }
 
-    async getUUID(): Promise<string | null> {
-        return this.currentUser()?.uid ?? null;
+    private generateStateParam(): string {
+        const state = crypto.randomUUID();
+        sessionStorage.setItem('auth_state', state);
+        return state;
     }
 
-    async loginWithEmail(email: string, password: string): Promise<boolean> {
-        try {
-            const result = await signInWithEmailAndPassword(this.auth, email, password);
-
-            if (result.user) {
-                await this.waitForAuthStateUpdate();
-                await this.handleSuccessfulLogin();
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.error('Email login failed:', this.formatError(error));
-            return false;
+    private logSecurityEvent(event: string, data?: Record<string, any>): void {
+        if (environment.production) {
+            console.info(`Security Event: ${event}`, data);
+        } else {
+            console.debug(`Security Event: ${event}`, data);
         }
     }
 
-    async register(email: string, password: string): Promise<void> {
+    async logout() {
         try {
-            const result = await createUserWithEmailAndPassword(this.auth, email, password);
-            if (result.user) {
-                await this.router.navigate(['auth/convinceUrNotARobot']);
-            }
-        } catch (error) {
-            console.error('Registration failed:', this.formatError(error));
-            throw error;
-        }
-    }
-
-    async logout(): Promise<void> {
-        try {
+            const user = this.auth.currentUser;
             await signOut(this.auth);
-            await this.router.navigate(['/auth/login']);
+            this.authState.set(null);
+            await this.router.navigate(['/login']);
+            this.logSecurityEvent('logout_success', { uid: user?.uid });
         } catch (error) {
-            console.error('Logout failed:', this.formatError(error));
+            this.logSecurityEvent('logout_error', { error: (error as Error).message });
             throw error;
         }
-    }
-
-    private async handleSuccessfulLogin(): Promise<void> {
-        try {
-            await this.router.navigate(['/dashboard']);
-        } catch (error) {
-            console.error('Post-login navigation failed:', error);
-            await this.router.navigate(['/']);
-        }
-    }
-
-    private handleAuthStateChange(user: User | null): void {
-        if (!user) {
-            // Uncomment and modify based on your requirements
-            // this.router.navigate(['/auth/login'])
-            //     .catch(error => console.error('Auth state change navigation failed:', error));
-        }
-    }
-
-    private handleAuthError(error: Error): void {
-        // Handle specific auth errors here
-        console.error('Authentication error:', this.formatError(error));
-        // Implement specific error handling logic as needed
-    }
-
-    private formatError(error: any): object {
-        return {
-            name: error?.name,
-            code: error?.code,
-            message: error?.message,
-            stack: error?.stack
-        };
     }
 }

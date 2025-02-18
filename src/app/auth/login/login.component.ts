@@ -1,94 +1,99 @@
-import { Component, OnInit } from "@angular/core";
-import { Router, RouterModule } from "@angular/router";
-import { FormBuilder, Validators, FormGroup, FormsModule, ReactiveFormsModule } from "@angular/forms";
-import { CommonModule } from "@angular/common";
+import {Component, computed, Injectable, signal} from '@angular/core';
+import {
+  Auth,
+  signInWithEmailAndPassword,
+  signInWithRedirect,
+  GoogleAuthProvider,
+  signOut,
+  createUserWithEmailAndPassword,
+  User,
+  onAuthStateChanged,
+  getRedirectResult,
+  setPersistence,
+  browserLocalPersistence,
+  AuthProvider,
+  AuthError,
+} from "@angular/fire/auth";
+import { Router } from "@angular/router";
+import { Observable, firstValueFrom, interval } from "rxjs";
+import { toSignal } from "@angular/core/rxjs-interop";
+import { filter, take } from "rxjs/operators";
+import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
 import {AuthService} from "../../shared/services/auth.service";
-import {GoogleAuthProvider, TwitterAuthProvider, GithubAuthProvider, FacebookAuthProvider} from "@angular/fire/auth";
+
+// Type definitions for better error handling
+interface AuthErrorDetail {
+  name: string;
+  code: string;
+  message: string;
+  stack?: string;
+}
 
 @Component({
-  selector: "app-login",
+  selector: 'app-login',
+  templateUrl: './login.component.html',
   standalone: true,
-  imports: [CommonModule,RouterModule, FormsModule, ReactiveFormsModule],
-  templateUrl: "./login.component.html",
-  styleUrls: ["./login.component.scss"],
+  imports: [
+    ReactiveFormsModule
+  ],
+  styleUrls: ['./login.component.scss']
 })
-export class LoginComponent implements OnInit {
-  public newUser = false;
-  public loginForm: FormGroup;
-  protected loginFailed = false;
+export class LoginComponent {
+  loginForm: FormGroup;
+  loginError = signal<string | null>(null);
+  isLoading = signal(false);
 
   constructor(
-      private auth: AuthService,
       private fb: FormBuilder,
-      public router: Router
+      private authService: AuthService,
+      private router: Router
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required],
+      password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
   async login() {
+    if (this.loginForm.invalid) return;
+console.log('HI')
+    this.isLoading.set(true);
+    this.loginError.set(null);
+
     try {
-      const success = await this.auth.loginWithEmail(
-          this.loginForm.value['email'],
-          this.loginForm.value['password']
-      );
-      this.loginFailed = !success;
-    } catch (error) {
-      console.error('Login error:', error);
-      this.loginFailed = true;
+      const { email, password } = this.loginForm.value;
+      await this.authService.loginWithEmail(email, password);
+      await this.router.navigate(['/dashboard']);
+    } catch (error: any) {
+      this.loginError.set(this.getErrorMessage(error.code));
+    } finally {
+      this.isLoading.set(false);
     }
   }
 
   async googleLogin() {
     try {
-      console.log('LoginComponent: Starting Google login flow');
-      const provider = new GoogleAuthProvider();
-      // Force Google to show account picker
-      provider.setCustomParameters({
-        prompt: 'select_account'
-      });
-      console.log('LoginComponent: Provider configured, calling signInWithRedirect');
-      await this.auth.signInWithRedirect(provider);
-      console.log('LoginComponent: signInWithRedirect completed'); // May not see this due to redirect
+      this.isLoading.set(true);
+      this.loginError.set(null);
+      console.log('hi')
+      await this.authService.loginWithGoogle();
     } catch (error: any) {
-      console.error('LoginComponent: Google login error:', {
-        code: error?.code,
-        message: error?.message,
-        stack: error?.stack
-      });
-      this.loginFailed = true;
+      this.loginError.set(this.getErrorMessage(error.code));
+    } finally {
+      this.isLoading.set(false);
     }
   }
 
-  async facebookLogin() {
-    try {
-      await this.auth.signInWithRedirect(new FacebookAuthProvider());
-    } catch (error) {
-      console.error('Facebook login failed:', error);
-      this.loginFailed = true;
+  private getErrorMessage(code: string): string {
+    switch (code) {
+      case 'auth/invalid-credential':
+        return 'Invalid email or password';
+      case 'auth/too-many-requests':
+        return 'Too many attempts. Please try again later';
+      case 'auth/popup-closed-by-user':
+        return 'Login cancelled';
+      default:
+        return 'An error occurred during login';
     }
-  }
-
-  async twitterLogin() {
-    try {
-      await this.auth.signInWithRedirect(new TwitterAuthProvider());
-    } catch (error) {
-      console.error('Twitter login failed:', error);
-      this.loginFailed = true;
-    }
-  }
-
-  async githubLogin() {
-    try {
-      await this.auth.signInWithRedirect(new GithubAuthProvider());
-    } catch (error) {
-      console.error('Github login failed:', error);
-      this.loginFailed = true;
-    }
-  }
-
-  ngOnInit(): void {
   }
 }

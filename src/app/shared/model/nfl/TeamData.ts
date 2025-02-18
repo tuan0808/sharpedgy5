@@ -1,8 +1,8 @@
 import {Colors} from "./Colors";
 
 export class Team {
-    Abbreviation: string;
-    FullName: string;
-    Image: string;
-    Colors: Colors;
+    abbreviation: string;
+    fullName: string;
+    logo: string;
+    colors: Colors;
 }
