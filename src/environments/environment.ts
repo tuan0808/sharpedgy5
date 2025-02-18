@@ -4,6 +4,7 @@
 
 export const environment = {
   production: false,
+  WEBHOOK_SECRET: "local-development-secret-123",
   firebaseConfig: {
     apiKey: "AIzaSyCCX5UztweG67eQJBX3hMjddzrFnrQOHUs",
     authDomain: "ussb-c8d8f.firebaseapp.com",
