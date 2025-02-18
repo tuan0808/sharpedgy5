@@ -2,8 +2,12 @@ import { Routes } from '@angular/router';
 import {HomeComponent} from "./home/home.component";
 import {AchievementsComponent} from "./achievements/achievements.component";
 import {EducationalContentComponent} from "./educational-content/educational-content.component";
-import {HistoryComponent} from "./history/history.component";
 import {VirtualWalletComponent} from "./virtual-wallet/virtual-wallet.component";
+import {BettingHistoryComponent} from "./betting-history/betting-history.component";
+import {betSettlementResolver} from "../../shared/user.resolver";
+import {canActivate} from "@angular/fire/auth-guard";
+import {authGuard} from "../../shared/guard/UserGuard";
+import {LoginComponent} from "../../auth/login/login.component";
 
 export const paperBettingRoutes: Routes = [
     {
@@ -15,7 +19,8 @@ export const paperBettingRoutes: Routes = [
                 data: {
                     title: "home",
                     breadcrumb: "home"
-                }
+                },
+                resolve: { account: betSettlementResolver}
             },
             {
                 path: 'achievements',
@@ -35,7 +40,7 @@ export const paperBettingRoutes: Routes = [
             },
             {
                 path: 'history',
-                component: HistoryComponent,
+                component: BettingHistoryComponent,
                 data: {
                     title: "History",
                     breadcrumb: "history"
@@ -51,5 +56,4 @@ export const paperBettingRoutes: Routes = [
             }
         ]
     }
-
 ]

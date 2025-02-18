@@ -2,7 +2,7 @@ import {Component, EventEmitter, input, Input, Output, signal, Signal} from '@an
 import {Game} from "../../../../shared/model/paper-betting/Game";
 import {RouterLink} from "@angular/router";
 import {NFLGame} from "../../../../shared/model/paper-betting/ b23/NFLGame";
-import {DatePipe, NgIf} from "@angular/common";
+import {DatePipe, NgClass, NgIf} from "@angular/common";
 import {BetFormComponent} from "../../bet-form/bet-form.component";
 import {getDatabase} from "@angular/fire/database";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
@@ -17,7 +17,8 @@ import {SportType} from "../../../../shared/model/SportType";
     RouterLink,
     DatePipe,
     BetFormComponent,
-    NgIf
+    NgIf,
+    NgClass
   ],
   templateUrl: './game-card.component.html',
   styleUrl: './game-card.component.scss'

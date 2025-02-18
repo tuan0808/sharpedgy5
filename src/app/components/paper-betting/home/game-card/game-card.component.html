@@ -79,7 +79,8 @@
 
                 <!-- Buttons -->
                 <div class="d-flex gap-3 mt-4">
-                    <button class="btn btn-primary flex-fill" (click)="placePaperBet()">Place Bet</button>
+
+                    <button class="btn btn-primary flex-fill" [ngClass]="game.betSettlement ? 'disabled' : ''" (click)="placePaperBet()">Place Bet</button>
                     <button class="btn btn-secondary flex-fill" (click)="viewMatchupDetails()">View Matchup</button>
                 </div>
             </div>

@@ -29,8 +29,8 @@ export class AuthService {
     private readonly auth = inject(Auth);
 
     // State management using signals
-    private readonly authCheckComplete = signal<boolean>(false);
-    private readonly authState = signal<User | null>(null);
+    readonly authCheckComplete = signal<boolean>(false);
+    readonly user = signal<User | null>(null);
     private readonly loginMetrics = signal<LoginMetrics>({
         attempts: 0,
         lastAttempt: 0
@@ -39,25 +39,25 @@ export class AuthService {
 
     // Computed values
     readonly isAuthenticated: Signal<boolean> = computed(() =>
-        this.authCheckComplete() && !!this.authState()
+        this.authCheckComplete() && !!this.user()
     );
 
     readonly displayName: Signal<string> = computed(() =>
-        this.authState()?.displayName ||
-        this.authState()?.email ||
+        this.user()?.displayName ||
+        this.user()?.email ||
         'Guest'
     );
 
     private sessionTimeout?: number;
     private unsubscribeAuth?: () => void;
-    private initializationPromise: Promise<void>;
+    initializationPromise: Promise<void>;
 
     constructor() {
         this.initializationPromise = this.initAuth();
 
         // Setup effects
         effect(() => {
-            const user = this.authState();
+            const user = this.user();
             if (user) {
                 if (this.sessionTimeout) {
                     clearTimeout(this.sessionTimeout);
@@ -70,7 +70,7 @@ export class AuthService {
         });
 
         effect(() => {
-            if (this.authState()) {
+            if (this.user()) {
                 const expectedState = sessionStorage.getItem('auth_state');
                 const actualState = new URLSearchParams(window.location.search).get('state');
 
@@ -100,7 +100,7 @@ export class AuthService {
                     async (user) => {
                         try {
                             console.debug('Auth state changed:', user?.uid);
-                            this.authState.set(user);
+                            this.user.set(user);
                             this.authCheckComplete.set(true);
 
                             if (!user) {
@@ -255,7 +255,7 @@ export class AuthService {
         try {
             const user = this.auth.currentUser;
             await signOut(this.auth);
-            this.authState.set(null);
+            this.user.set(null);
             await this.router.navigate(['/login']);
             this.logSecurityEvent('logout_success', { uid: user?.uid });
         } catch (error) {
