@@ -2,8 +2,9 @@ import {BetFormComponent} from "../../../components/paper-betting/bet-form/bet-f
 import {BetFormData} from "./BetFormData";
 import {SportType} from "../SportType";
 import {BetTypes} from "../enums/BetTypes";
+import {BetSettlement} from "./BetSettlement";
 
-export class BetHistory implements BetFormData {
+export class BetHistory implements BetSettlement {
     gameId : string
     userId : string
     homeTeam : string

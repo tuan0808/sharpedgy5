@@ -23,6 +23,7 @@ export class AuthService {
     private readonly LOCKOUT_DURATION = 15 * 60 * 1000;
     private readonly RETRY_ATTEMPTS = 3;
     private readonly RETRY_DELAY = 1000;
+    private redirectUrl: string | null = null;
 
     // Dependency injection using inject()
     private readonly router = inject(Router);
@@ -81,6 +82,36 @@ export class AuthService {
             }
         });
     }
+
+
+    setRedirectUrl(url: string) {
+        this.redirectUrl = url;
+    }
+    handleSuccessfulLogin() {
+        const router = inject(Router);
+        if (this.redirectUrl) {
+            router.navigate([this.redirectUrl]);
+            this.redirectUrl = null;  // Clear it after use
+        }
+    }
+
+    private generateStateParam(): string {
+        const state = crypto.randomUUID();
+        sessionStorage.setItem('auth_state', state);
+        return state;
+    }
+
+    async showLoginForm() {
+        // Store current URL before navigation
+        const currentUrl = this.router.url;
+        this.setRedirectUrl(currentUrl);
+
+        // Navigate to login
+        await this.router.navigate(['/auth/login'], {
+            queryParams: { returnUrl: currentUrl }
+        });
+    }
+
 
     private async initAuth(): Promise<void> {
         try {
@@ -204,7 +235,6 @@ export class AuthService {
     }
 
     // Effects are now directly in the constructor
-
     private isLocked(): boolean {
         const metrics = this.loginMetrics();
         return metrics.lockoutUntil !== undefined &&
@@ -237,11 +267,6 @@ export class AuthService {
         });
     }
 
-    private generateStateParam(): string {
-        const state = crypto.randomUUID();
-        sessionStorage.setItem('auth_state', state);
-        return state;
-    }
 
     private logSecurityEvent(event: string, data?: Record<string, any>): void {
         if (environment.production) {

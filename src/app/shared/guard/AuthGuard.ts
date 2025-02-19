@@ -6,9 +6,6 @@ export const authGuard: CanActivateChildFn = async (route, state) => {
     const auth = inject(AuthService);
     const router = inject(Router);
 
-    // Store the attempted URL for redirecting
-    const targetUrl = state.url;
-
     try {
         // Wait for auth check to complete using public signal
         let attempts = 0;
@@ -23,10 +20,14 @@ export const authGuard: CanActivateChildFn = async (route, state) => {
             return true;
         }
 
-        // Navigate to login with return URL in query params
-        await router.navigate(['/auth/login'], {
-            queryParams: { returnUrl: targetUrl }
-        });
+        // Capture the exact URL the user was trying to navigate to
+        const attemptedUrl = state.url;
+
+        // Store this URL in the auth service for post-login redirect
+        auth.setRedirectUrl(attemptedUrl);
+
+        // Trigger authentication flow
+        await auth.showLoginForm();  // This should display your login form/modal
 
         return false;
     } catch (error) {
