@@ -2,11 +2,12 @@ import { Routes } from '@angular/router';
 import {paperBettingRoutes} from "../../components/paper-betting/paper-betting.routes";
 import firebase from "firebase/compat";
 import auth = firebase.auth;
-import {authGuard} from "../guard/UserGuard";
+import {authGuard} from "../guard/AuthGuard";
+import {LoginComponent} from "../../auth/login/login.component";
 
 export const content: Routes = [
     {
-        path: 'dashboard',
+        path: '',
         data: {
             breadcrumb: "Dashboard"
         },
@@ -27,5 +28,6 @@ export const content: Routes = [
             breadcrumb: "paper-betting"
         }
     },
+
 
 ]

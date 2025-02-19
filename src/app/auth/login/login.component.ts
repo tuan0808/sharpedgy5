@@ -1,4 +1,4 @@
-import {Component, computed, Injectable, signal} from '@angular/core';
+import {Component, computed, inject, Injectable, signal} from '@angular/core';
 import {
   Auth,
   signInWithEmailAndPassword,
@@ -14,7 +14,7 @@ import {
   AuthProvider,
   AuthError,
 } from "@angular/fire/auth";
-import { Router } from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 import { Observable, firstValueFrom, interval } from "rxjs";
 import { toSignal } from "@angular/core/rxjs-interop";
 import { filter, take } from "rxjs/operators";
@@ -39,14 +39,17 @@ interface AuthErrorDetail {
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
+  //Injectors
+  private fb : FormBuilder = inject(FormBuilder)
+  private authService : AuthService = inject(AuthService)
+  private router : Router = inject(Router)
+  private route : ActivatedRoute = inject(ActivatedRoute)
   loginForm: FormGroup;
   loginError = signal<string | null>(null);
   isLoading = signal(false);
 
   constructor(
-      private fb: FormBuilder,
-      private authService: AuthService,
-      private router: Router
+
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -54,16 +57,27 @@ export class LoginComponent {
     });
   }
 
+  private async navigateAfterLogin() {
+    // Check for returnUrl in query params
+    const returnUrl = this.route.snapshot.queryParams['returnUrl'];
+    if (returnUrl) {
+      await this.router.navigate([returnUrl]);
+    } else {
+      await this.router.navigate(['/dashboard']);
+    }
+  }
+
+
   async login() {
     if (this.loginForm.invalid) return;
-console.log('HI')
+
     this.isLoading.set(true);
     this.loginError.set(null);
 
     try {
       const { email, password } = this.loginForm.value;
       await this.authService.loginWithEmail(email, password);
-      await this.router.navigate(['/dashboard']);
+      await this.navigateAfterLogin();
     } catch (error: any) {
       this.loginError.set(this.getErrorMessage(error.code));
     } finally {
@@ -75,8 +89,8 @@ console.log('HI')
     try {
       this.isLoading.set(true);
       this.loginError.set(null);
-      console.log('hi')
       await this.authService.loginWithGoogle();
+      await this.navigateAfterLogin();
     } catch (error: any) {
       this.loginError.set(this.getErrorMessage(error.code));
     } finally {

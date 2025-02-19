@@ -6,7 +6,7 @@ import {VirtualWalletComponent} from "./virtual-wallet/virtual-wallet.component"
 import {BettingHistoryComponent} from "./betting-history/betting-history.component";
 import {betSettlementResolver} from "../../shared/user.resolver";
 import {canActivate} from "@angular/fire/auth-guard";
-import {authGuard} from "../../shared/guard/UserGuard";
+import {authGuard} from "../../shared/guard/AuthGuard";
 import {LoginComponent} from "../../auth/login/login.component";
 
 export const paperBettingRoutes: Routes = [
