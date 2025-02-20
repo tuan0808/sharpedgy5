@@ -240,14 +240,6 @@ export class BetSettlementService extends BaseApiService<Game> {
             );
     }
 
-    getBalance(uid: string): Observable<number> {
-        return this.http.get<number>(`${this.apiUrl}/${uid}/getUserBalance`)
-            .pipe(
-                retry(3),
-                takeUntilDestroyed(this.destroyRef),
-                catchError(this.handleError<number>('getBalance', 0))
-            );
-    }
 
     getAccount(uid: string): Observable<Account | null> {
         return this.http.get<Account>(`${this.apiUrl}/${uid}/getAccount`).pipe(
@@ -287,5 +279,26 @@ export class BetSettlementService extends BaseApiService<Game> {
             console.error(`${operation} failed:`, error);
             return of(result as T);
         };
+    }
+
+    getAccounts() {
+        return this.http.get<Account[]>(`${this.apiUrl}/${this.uid()}/getAccounts`).pipe(
+            retry(3),
+            takeUntilDestroyed(this.destroyRef),
+            catchError((error) => {
+                if (error instanceof HttpErrorResponse) {
+                    console.error('getAccount failed:', error);
+                    if (error.status === 0) {
+                        console.error('Network or client-side error:', error.error);
+                    } else {
+                        console.error(
+                            `Backend returned code ${error.status}, body was:`,
+                            error.error
+                        );
+                    }
+                }
+                return of(null);
+            })
+        );
     }
 }

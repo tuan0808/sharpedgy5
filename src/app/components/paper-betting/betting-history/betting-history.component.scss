@@ -1,0 +1,220 @@
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* Style Switcher */
+.style-switcher {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.style-button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.style-button:hover {
+  background-color: #e5e7eb;
+}
+
+.style-button.active {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+/* Tab Containers */
+.tab-container {
+  display: flex;
+  margin-bottom: 24px;
+}
+
+.tab-container.classic {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tab-container.pills {
+  background-color: #f3f4f6;
+  padding: 8px;
+  border-radius: 8px;
+  gap: 8px;
+}
+
+.tab-container.modern {
+  background-color: white;
+  padding: 4px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tab-container.cards {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+
+/* Tab Buttons */
+.tab-button {
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  background: none;
+  transition: all 0.2s;
+}
+
+/* Classic Style */
+.classic .tab-button {
+  padding: 12px 24px;
+  color: #6b7280;
+}
+
+.classic .tab-button:hover {
+  color: #374151;
+}
+
+.classic .tab-button.active {
+  color: #2563eb;
+  border-bottom: 2px solid #2563eb;
+}
+
+/* Pills Style */
+.pills .tab-button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  color: #6b7280;
+}
+
+.pills .tab-button:hover {
+  color: #374151;
+  background-color: #e5e7eb;
+}
+
+.pills .tab-button.active {
+  background-color: white;
+  color: #2563eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Modern Style */
+.modern .tab-button {
+  flex: 1;
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.modern .tab-button:hover {
+  color: #374151;
+}
+
+.modern .tab-button.active {
+  background-color: #2563eb;
+  color: white;
+}
+
+/* Cards Style */
+.cards .tab-button {
+  padding: 16px;
+  border-radius: 8px;
+  background-color: #f9fafb;
+  text-align: center;
+}
+
+.cards .tab-button:hover {
+  background-color: #f3f4f6;
+}
+
+.cards .tab-button.active {
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 2px solid #2563eb;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-content .amount {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.card-content .label {
+  font-size: 14px;
+}
+
+.card-content .count {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Tab Content */
+.tab-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-content .count {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+/* Content Area */
+.content-area {
+  padding: 24px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-label {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.header-count {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.header-amount {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.content-placeholder {
+  height: 256px;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}

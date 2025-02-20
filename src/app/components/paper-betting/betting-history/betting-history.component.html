@@ -1,90 +1,73 @@
-<div class="p-6 bg-gray-50">
-    <!-- Header with Filters -->
-    <div class="flex items-center gap-2 mb-4">
-        <div class="relative">
-            <input
-                    type="text"
-                    placeholder="Search accounts..."
-                    class="pl-3 pr-4 py-2 border rounded-lg w-[200px]"
-                    [ngModel]="searchTerm()"
-                    (ngModelChange)="onSearchChange($event)"
-            />
-        </div>
-        <select
-                class="px-3 py-2 border rounded-lg"
-                [ngModel]="filterStatus()"
-                (ngModelChange)="onFilterChange($event)"
-        >
-            <option value="all">All Accounts</option>
-        </select>
-        <select
-                class="px-3 py-2 border rounded-lg"
-                [ngModel]="sortOption()"
-                (ngModelChange)="onSortChange($event)"
-        >
-            <option value="newest">Newest First</option>
-        </select>
-    </div>
-
-    <!-- Account Cards -->
-    <div class="space-y-2">
-        @for (account of paginatedAccounts(); track account.id) {
-            <div class="bg-white rounded-lg shadow-sm p-4">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-lg font-semibold">Account #{{account.id}}</span>
-                            <span [class]="account.activeAccount ? 'bg-green-100 text-green-700 px-2 py-0.5 rounded-md text-sm' : 'bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md text-sm'">
-                                {{account.activeAccount ? 'Active' : 'Closed'}}
-                            </span>
-                            <span class="text-gray-500 text-sm">{{account.betHistory.length}} bets</span>
-                        </div>
-                        <p class="text-sm text-gray-500 mt-1">
-                            Created: {{account.creationDate | date:'M/d/yyyy, h:mm:ss a'}}
-                            @if (account.closedDate) {
-                                • Closed: {{account.closedDate | date:'M/d/yyyy, h:mm:ss a'}}
-                            }
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="text-right">
-                            <div class="text-xs text-gray-500">Balance</div>
-                            <div [class]="'text-sm ' + (account.balance > 0 ? 'text-green-600' : 'text-red-600')">
-                                ${{account.balance.toFixed(2)}}
-                            </div>
-                        </div>
-                        <button
-                                (click)="toggleAccount(account.user_id)"
-                                class="text-gray-400"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
+<div class="dashboard-container">
+    <!-- Style Switcher -->
+    <div class="style-switcher">
+        @for (style of availableStyles; track style) {
+            <button
+                    [class.active]="tabStyle === style"
+                    (click)="setTabStyle(style)"
+                    class="style-button">
+                {{ formatStyleName(style) }} Style
+            </button>
         }
     </div>
 
-    <!-- Pagination -->
-    <div class="flex items-center justify-between mt-4">
-        <select
-                class="px-3 py-2 border rounded-lg"
-                [ngModel]="pageSize()"
-                (ngModelChange)="onPageSizeChange($event)"
-        >
-            <option value="5">5 per page</option>
-        </select>
+    <!-- Tabs Navigation -->
+    <div class="tabs-navigation">
+        <button
+                *ngIf="canScrollLeft"
+                class="scroll-button scroll-left"
+                (click)="scrollTabs('left')"
+                aria-label="Scroll tabs left">
+            ←
+        </button>
 
-        <div class="flex items-center gap-2">
-            <span class="text-gray-500">«</span>
-            <span class="bg-blue-600 text-white px-3 py-1 rounded">1</span>
-            <span class="text-gray-500">»</span>
+        <!-- Tabs -->
+        <div class="tabs-wrapper">
+            <div #tabContainer [class]="'tab-container ' + tabStyle"
+                 @for (tab of tabData; track tab.id) {
+            <button
+                    [class.active]="activeTab === tab.id"
+                    (click)="setActiveTab(tab.id)"
+                    class="tab-button">
+                @if (tabStyle === 'cards') {
+                    <div class="card-content">
+                        <div class="amount">{{ tab.amount }}</div>
+                        <div class="label">{{ tab.label }}</div>
+                        <div class="count">({{ tab.count }})</div>
+                    </div>
+                } @else {
+                    <div class="tab-content">
+                        <span>{{ tab.label }}</span>
+                        <span class="count">({{ tab.count }})</span>
+                    </div>
+                }
+            </button>
+            }
         </div>
+    </div>
 
-        <div class="text-sm text-gray-500">
-            Page 1 of 1
+    <button
+            *ngIf="canScrollRight"
+            class="scroll-button scroll-right"
+            (click)="scrollTabs('right')"
+            aria-label="Scroll tabs right">
+        →
+    </button>
+</div>
+
+<!-- Content Area -->
+<div class="content-area">
+    <div class="content-header">
+        <div class="header-left">
+            <span class="header-label">{{ getActiveTabData()?.label }}</span>
+            <span class="header-count">({{ getActiveTabData()?.count }} items)</span>
         </div>
+        <div class="header-amount">
+            {{ getActiveTabData()?.amount }}
+        </div>
+    </div>
+
+    <div class="content-placeholder">
+        Content for {{ getActiveTabData()?.label }}
     </div>
 </div>

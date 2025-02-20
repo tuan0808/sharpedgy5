@@ -1,130 +1,85 @@
-import {Component, computed, inject, Signal, signal} from '@angular/core';
+import {Component, computed, effect, ElementRef, HostListener, inject, Signal, signal, ViewChild} from '@angular/core';
 import {FormsModule} from "@angular/forms";
-import {map} from "rxjs/operators";
-import {BehaviorSubject, combineLatest} from "rxjs";
-import {AsyncPipe, DatePipe} from "@angular/common";
-import {AccountAccordionComponent} from "../account-accordion/account-accordion.component";
-import {Account} from "../../../shared/model/paper-betting/Account";
-import {PaginationComponent} from "../../../shared/components/pagination/pagination.component";
-import {AccountService} from "../../../shared/services/account.service";
+import {DatePipe} from "@angular/common";
 
-class BettingService {
-}
+import {TabData} from "../../../shared/model/paper-betting/TabData";
 
 @Component({
   selector: 'app-betting-history',
   standalone: true,
   imports: [
     FormsModule,
-    AsyncPipe,
-    AccountAccordionComponent,
-    PaginationComponent,
-    DatePipe
   ],
   templateUrl: './betting-history.component.html',
   styleUrl: './betting-history.component.scss'
 })
 export class BettingHistoryComponent {
-  // Signals for reactive state management
-  private accounts = signal<Account[]>([]);
-  protected searchTerm = signal<string>('');
-  protected filterStatus = signal<string>('all');
-  protected sortOption = signal<string>('newest');
-  protected pageSize = signal<number>(5);
-  private currentPage = signal<number>(1);
-  private expandedAccounts = signal<Set<string>>(new Set());
+  private tabContainerRef!: ElementRef;
+  canScrollLeft = false;
+  canScrollRight = false;
 
-  private accountService: AccountService = inject(AccountService);
-
-  // Computed signals for derived state
-  protected filteredAccounts = computed(() => {
-    let filtered = this.accounts();
-
-    // Apply search filter
-    if (this.searchTerm()) {
-      const search = this.searchTerm().toLowerCase();
-      filtered = filtered.filter(account =>
-          account.id.toString().includes(search)
-      );
+  @ViewChild('tabContainer') set content(content: ElementRef) {
+    if (content) {
+      this.tabContainerRef = content;
+      this.checkScrollButtons();
     }
-
-    // Apply status filter
-    if (this.filterStatus() !== 'all') {
-      filtered = filtered.filter(account =>
-          account.activeAccount === (this.filterStatus() === 'active')
-      );
-    }
-
-    // Apply sorting
-    filtered = [...filtered].sort((a, b) => {
-      switch (this.sortOption()) {
-        case 'newest':
-          return new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime();
-        case 'oldest':
-          return new Date(a.creationDate).getTime() - new Date(b.creationDate).getTime();
-        case 'highest-balance':
-          return b.balance - a.balance;
-        case 'lowest-balance':
-          return a.balance - b.balance;
-        default:
-          return 0;
-      }
-    });
-
-    return filtered;
-  });
-
-  protected paginatedAccounts = computed(() => {
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return this.filteredAccounts().slice(start, start + this.pageSize());
-  });
-
-  protected totalPages = computed(() =>
-      Math.ceil(this.filteredAccounts().length / this.pageSize())
-  );
-
-  constructor() {
-    // Subscribe to account updates
-    this.accountService.accounts$.subscribe(accounts => {
-      this.accounts.set(accounts);
-    });
   }
 
-  // Event handlers
-  onSearchChange(term: string): void {
-    this.searchTerm.set(term);
-    this.currentPage.set(1); // Reset to first page when search changes
+  @HostListener('window:resize')
+  onResize() {
+    this.checkScrollButtons();
   }
 
-  onFilterChange(status: string): void {
-    this.filterStatus.set(status);
-    this.currentPage.set(1);
+  activeTab: string = 'received';
+  tabStyle: string = 'classic';
+
+  tabData: TabData[] = [
+    {id: 'received', label: 'Payments Received', amount: '$3,121.21', count: 111},
+    {id: 'upcoming', label: 'Upcoming Payments', amount: '$20.00', count: 1},
+    {id: 'pastdue', label: 'Past Due', amount: '$39.99', count: 3},
+    {id: 'refunded', label: 'Refunded', amount: '$1.00', count: 1},
+    {id: 'stopped', label: 'Stopped', amount: '$105.05', count: 20}
+  ];
+
+  availableStyles = ['classic', 'pills', 'modern', 'cards'];
+
+  setActiveTab(tabId: string): void {
+    this.activeTab = tabId;
   }
 
-  onSortChange(option: string): void {
-    this.sortOption.set(option);
+  setTabStyle(style: string): void {
+    this.tabStyle = style;
   }
 
-  onPageSizeChange(size: number): void {
-    this.pageSize.set(size);
-    this.currentPage.set(1);
+  getActiveTabData(): TabData | undefined {
+    return this.tabData.find(tab => tab.id === this.activeTab);
   }
 
-  toggleAccount(accountId: string): void {
-    const expanded = this.expandedAccounts();
-    const newExpanded              = new Set(expanded);
+  formatStyleName(style: string): string {
+    return style.charAt(0).toUpperCase() + style.slice(1);
+  }
 
-    if (expanded.has(accountId)) {
-      newExpanded.delete(accountId);
+  scrollTabs(direction: 'left' | 'right'): void {
+    const container = this.tabContainerRef.nativeElement;
+    const scrollAmount = container.clientWidth / 2;
+
+    if (direction === 'left') {
+      container.scrollLeft -= scrollAmount;
     } else {
-      newExpanded.add(accountId);
+      container.scrollLeft += scrollAmount;
     }
 
-    this.expandedAccounts.set(newExpanded);
+    // Wait for scroll animation to complete
+    setTimeout(() => this.checkScrollButtons(), 100);
   }
 
-  // Helper method to check if an account is expanded
-  isAccountExpanded(accountId: string): boolean {
-    return this.expandedAccounts().has(accountId);
+  checkScrollButtons(): void {
+    if (!this.tabContainerRef) return;
+
+    const container = this.tabContainerRef.nativeElement;
+
+    // Check if scrolling is possible
+    this.canScrollLeft = container.scrollLeft > 0;
+    this.canScrollRight = container.scrollLeft < (container.scrollWidth - container.clientWidth);
   }
 }
