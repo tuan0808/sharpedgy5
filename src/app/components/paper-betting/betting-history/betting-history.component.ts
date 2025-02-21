@@ -1,85 +1,104 @@
-import {Component, computed, effect, ElementRef, HostListener, inject, Signal, signal, ViewChild} from '@angular/core';
+import {Component, computed, inject, Signal, signal} from '@angular/core';
 import {FormsModule} from "@angular/forms";
-import {DatePipe} from "@angular/common";
-
-import {TabData} from "../../../shared/model/paper-betting/TabData";
+import {Status} from "../../../shared/model/enums/Status"
+import {Account} from "../../../shared/model/paper-betting/Account";
+import {BetTypes} from "../../../shared/model/enums/BetTypes";
+import {SportType} from "../../../shared/model/SportType";
+import {CurrencyPipe, DatePipe, NgForOf, NgIf} from "@angular/common";
+import {BetSettlementService} from "../../../shared/services/betSettlement.service";
+import {toSignal} from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-betting-history',
   standalone: true,
-  imports: [
-    FormsModule,
-  ],
+    imports: [
+        FormsModule,
+        DatePipe,
+        NgForOf,
+        NgIf,
+        CurrencyPipe,
+    ],
   templateUrl: './betting-history.component.html',
   styleUrl: './betting-history.component.scss'
 })
 export class BettingHistoryComponent {
-  private tabContainerRef!: ElementRef;
-  canScrollLeft = false;
-  canScrollRight = false;
+  private betHistoryService = inject(BetSettlementService);
 
-  @ViewChild('tabContainer') set content(content: ElementRef) {
-    if (content) {
-      this.tabContainerRef = content;
-      this.checkScrollButtons();
+  protected readonly accounts: Signal<Account[]>;
+  protected expandedBetId = signal<string | null>(null);
+  private selectedAccountIdSignal = signal<number | null>(null);
+
+  constructor() {
+    let data = this.betHistoryService.getAccounts();
+    this.accounts = toSignal(
+        data,
+        { initialValue: [] }
+    );
+
+    // Set the initial selected account to the active one
+    data.subscribe(accounts => {
+      const activeAccount = accounts.find(acc => acc.activeAccount);
+      if (activeAccount) {
+        this.selectedAccountIdSignal.set(activeAccount.id);
+      }
+    });
+  }
+
+  protected readonly selectedAccount = computed(() =>
+      this.accounts().find(acc => acc.id === this.selectedAccountIdSignal())
+  );
+
+  protected readonly Status = Status;
+  protected readonly BetTypes = BetTypes;
+  protected readonly SportType = SportType;
+
+  selectAccount(accountId: number): void {
+    this.selectedAccountIdSignal.set(accountId);
+  }
+
+  // Rest of the component methods remain the same
+  toggleBetDetails(gameId: string): void {
+    this.expandedBetId.set(
+        this.expandedBetId() === gameId ? null : gameId
+    );
+  }
+
+  isBetExpanded(gameId: string): boolean {
+    return this.expandedBetId() === gameId;
+  }
+
+  scroll(direction: 'left' | 'right'): void {
+    const container = document.querySelector('.carousel-items');
+    const scrollAmount = 300;
+    if (container) {
+      container.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
     }
   }
 
-  @HostListener('window:resize')
-  onResize() {
-    this.checkScrollButtons();
+  calculateWinRate(account: Account): string {
+    const wins = account.betHistory.filter(bet => bet.status === Status.WIN).length;
+    const total = account.betHistory.filter(bet => bet.status !== Status.PENDING).length;
+    return total > 0 ? ((wins / total) * 100).toFixed(1) : '0.0';
   }
 
-  activeTab: string = 'received';
-  tabStyle: string = 'classic';
-
-  tabData: TabData[] = [
-    {id: 'received', label: 'Payments Received', amount: '$3,121.21', count: 111},
-    {id: 'upcoming', label: 'Upcoming Payments', amount: '$20.00', count: 1},
-    {id: 'pastdue', label: 'Past Due', amount: '$39.99', count: 3},
-    {id: 'refunded', label: 'Refunded', amount: '$1.00', count: 1},
-    {id: 'stopped', label: 'Stopped', amount: '$105.05', count: 20}
-  ];
-
-  availableStyles = ['classic', 'pills', 'modern', 'cards'];
-
-  setActiveTab(tabId: string): void {
-    this.activeTab = tabId;
+  calculateAvgBet(account: Account): string {
+    const total = account.betHistory.reduce((sum, bet) => sum + bet.amount, 0);
+    return (total / account.betHistory.length || 0).toFixed(2);
   }
 
-  setTabStyle(style: string): void {
-    this.tabStyle = style;
+  getPendingBets(account: Account): number {
+    return account.betHistory.filter(bet => bet.status === Status.PENDING).length;
   }
 
-  getActiveTabData(): TabData | undefined {
-    return this.tabData.find(tab => tab.id === this.activeTab);
-  }
-
-  formatStyleName(style: string): string {
-    return style.charAt(0).toUpperCase() + style.slice(1);
-  }
-
-  scrollTabs(direction: 'left' | 'right'): void {
-    const container = this.tabContainerRef.nativeElement;
-    const scrollAmount = container.clientWidth / 2;
-
-    if (direction === 'left') {
-      container.scrollLeft -= scrollAmount;
-    } else {
-      container.scrollLeft += scrollAmount;
+  getStatusClass(status: Status): string {
+    switch(status) {
+      case Status.WIN: return 'win';
+      case Status.LOSS: return 'loss';
+      case Status.PENDING: return 'pending';
+      default: return '';
     }
-
-    // Wait for scroll animation to complete
-    setTimeout(() => this.checkScrollButtons(), 100);
-  }
-
-  checkScrollButtons(): void {
-    if (!this.tabContainerRef) return;
-
-    const container = this.tabContainerRef.nativeElement;
-
-    // Check if scrolling is possible
-    this.canScrollLeft = container.scrollLeft > 0;
-    this.canScrollRight = container.scrollLeft < (container.scrollWidth - container.clientWidth);
   }
 }

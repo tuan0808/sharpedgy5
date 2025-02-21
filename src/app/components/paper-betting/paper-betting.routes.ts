@@ -3,11 +3,11 @@ import {HomeComponent} from "./home/home.component";
 import {AchievementsComponent} from "./achievements/achievements.component";
 import {EducationalContentComponent} from "./educational-content/educational-content.component";
 import {VirtualWalletComponent} from "./virtual-wallet/virtual-wallet.component";
-import {BettingHistoryComponent} from "./betting-history/betting-history.component";
 import {betSettlementResolver} from "../../shared/user.resolver";
 import {canActivate} from "@angular/fire/auth-guard";
 import {authGuard} from "../../shared/guard/AuthGuard";
 import {LoginComponent} from "../../auth/login/login.component";
+import {BettingHistoryComponent} from "./betting-history/betting-history.component";
 
 export const paperBettingRoutes: Routes = [
     {
@@ -44,7 +44,9 @@ export const paperBettingRoutes: Routes = [
                 data: {
                     title: "History",
                     breadcrumb: "history"
-                }
+                },
+                resolve: { account: betSettlementResolver}
+
             },
             {
                 path: 'virtual-wallet',

@@ -282,7 +282,8 @@ export class BetSettlementService extends BaseApiService<Game> {
     }
 
     getAccounts() {
-        return this.http.get<Account[]>(`${this.apiUrl}/${this.uid()}/getAccounts`).pipe(
+        console.log(`${this.apiUrl}/${this.uid()}/getAccounts`)
+        let results = this.http.get<Account[]>(`${this.apiUrl}/${this.uid()}/getAccounts`).pipe(
             retry(3),
             takeUntilDestroyed(this.destroyRef),
             catchError((error) => {
@@ -300,5 +301,7 @@ export class BetSettlementService extends BaseApiService<Game> {
                 return of(null);
             })
         );
+        console.log(results)
+        return results
     }
 }

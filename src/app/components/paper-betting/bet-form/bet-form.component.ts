@@ -1,57 +1,75 @@
-import {Component, EventEmitter, Input, Output, signal, Signal, WritableSignal} from '@angular/core';
-import {Game} from "../../../shared/model/paper-betting/Game";
-import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
-import {MdbRangeModule} from "mdb-angular-ui-kit/range";
-import {CurrencyPipe, NgForOf, NgIf, NgSwitch, NgSwitchCase} from "@angular/common";
-import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
-import {BetSettlementService} from "../../../shared/services/betSettlement.service";
-import {BetTypes} from "../../../shared/model/enums/BetTypes";
-import {BetFormData} from "../../../shared/model/paper-betting/BetFormData";
-import {SportType} from "../../../shared/model/SportType";
-import {AuthService} from "../../../shared/services/auth.service";
-import {firstValueFrom} from "rxjs";
+// bet-form.component.ts
+import {Component, computed, EventEmitter, inject, input, Input, output, Output, signal, Signal} from '@angular/core';
+import {
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
+import { Game } from "../../../shared/model/paper-betting/Game";
+import { BetTypes } from "../../../shared/model/enums/BetTypes";
+import { SportType } from "../../../shared/model/SportType";
 import {BetHistory} from "../../../shared/model/paper-betting/BetHistory";
+import {BetSettlementService} from "../../../shared/services/betSettlement.service";
+import {AuthService} from "../../../shared/services/auth.service";
+import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
+import {BetSettlement} from "../../../shared/model/paper-betting/BetSettlement";
+import {CurrencyPipe, DatePipe, DecimalPipe} from "@angular/common";
+import {Bet} from "../../../shared/model/paper-betting/Bet";
 import {toSignal} from "@angular/core/rxjs-interop";
+import {Status} from "../../../shared/model/enums/Status";
+import {BettingHistoryComponent} from "../betting-history/betting-history.component";
+
+
+interface BetTypeOption {
+  id: BetTypes,
+  label : string,
+  icon : string
+}
+export interface BetFormErrors {
+  amount: string;
+  team: string;
+  general: string;
+}
+
+export interface PotentialWinnings {
+  winnings: string;
+  totalReturn: string;
+}
+
 
 @Component({
   selector: 'app-bet-form',
+  templateUrl: './bet-form.component.html',
   standalone: true,
   imports: [
-    MdbRangeModule,
-    NgSwitch,
+    CurrencyPipe,
     ReactiveFormsModule,
-    NgForOf,
-    NgSwitchCase,
-    NgIf,
-    CurrencyPipe
+    DatePipe,
+    DecimalPipe
   ],
-  templateUrl: './bet-form.component.html',
-  styleUrl: './bet-form.component.scss'
+  styleUrls: ['./bet-form.component.scss']
 })
 export class BetFormComponent {
   @Input() game!: Game;
   @Input() sportType!: SportType;
   @Output() betPlaced = new EventEmitter<{game: Game, balance: number}>();
 
-  betTypes = [
-    { type: BetTypes.MONEYLINE, displayValue: 'Moneyline' },
-    { type: BetTypes.POINT_SPREAD, displayValue: 'Point Spread' },
-    { type: BetTypes.OVER_UNDER, displayValue: 'Over/Under' }
-  ];
+  currentBalance: number = 0;
+  potentialWinnings: number = 0;
+  selectedTeamMoneyline: number = 0;
 
-  formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  });
-
-  balance: Signal<number | undefined> = signal<number>(0);
   readonly BetTypes = BetTypes;
 
-  betForm: FormGroup<{
-    betType: FormControl<BetTypes | null>;
-    wagerValue: FormControl<number | null>;
-    wagerAmount: FormControl<number | null>;
-  }>;
+  betTypeLabels = {
+    [BetTypes.MONEYLINE]: 'Money Line',
+    [BetTypes.POINT_SPREAD]: 'Point Spread',
+    [BetTypes.OVER_UNDER]: 'Over/Under'
+  };
+
+  betForm!: FormGroup;
 
   constructor(
       private fb: FormBuilder,
@@ -59,80 +77,89 @@ export class BetFormComponent {
       private auth: AuthService,
       public activeModal: NgbActiveModal
   ) {
-    this.balance = signal(this.gameService.account().balance)
-    this.betForm = this.fb.group<{
-      betType: FormControl<BetTypes | null>;
-      wagerValue: FormControl<number | null>;
-      wagerAmount: FormControl<number | null>;
-    }>({
-      betType: this.fb.control<BetTypes | null>(null, Validators.required),
-      wagerValue: this.fb.control<number | null>(null, Validators.required),
-      wagerAmount: this.fb.control<number | null>(null, [
+    this.balance = signal(this.gameService.account().balance);
+    this.betForm = this.fb.group({
+      betType: [null as BetTypes | null, Validators.required],
+      selectedTeam: [null as string | null, Validators.required],
+      wagerValue: [null as number | null, Validators.required],
+      wagerAmount: [null as number | null, [
         Validators.required,
         Validators.min(0),
         Validators.max(5000),
         this.balanceValidator()
-      ])
-
-
+      ]]
     });
 
+    // Subscribe to form changes to update calculations
+    this.betForm.valueChanges.subscribe(() => {
+      this.calculatePotentialWinnings();
+    });
+
+    // When bet type changes, reset team selection and wager value
     this.betForm.get('betType')?.valueChanges.subscribe(() => {
-      this.betForm.get('wagerValue')?.reset();
+      this.betForm.patchValue({
+        selectedTeam: null,
+        wagerValue: null
+      });
     });
 
-    //this.initializeBalance();
+    // When team selection changes, update the moneyline
+    this.betForm.get('selectedTeam')?.valueChanges.subscribe((team) => {
+      if (team === this.game.homeTeam.name) {
+        this.selectedTeamMoneyline = this.game.moneylineHome;
+      } else if (team === this.game.awayTeam.name) {
+        this.selectedTeamMoneyline = this.game.moneylineAway;
+      }
+      this.calculatePotentialWinnings();
+    });
+  }
+
+  calculatePotentialWinnings() {
+    const betType = this.betForm.get('betType')?.value;
+    const wagerAmount = this.betForm.get('wagerAmount')?.value || 0;
+
+    if (!betType || !wagerAmount) {
+      this.potentialWinnings = 0;
+      return;
+    }
+
+    switch (betType) {
+      case BetTypes.MONEYLINE:
+        if (this.selectedTeamMoneyline > 0) {
+          // Positive moneyline: Risk $100 to win $moneyline
+          this.potentialWinnings = (wagerAmount * this.selectedTeamMoneyline) / 100;
+        } else {
+          // Negative moneyline: Risk $|moneyline| to win $100
+          this.potentialWinnings = (wagerAmount * 100) / Math.abs(this.selectedTeamMoneyline);
+        }
+        break;
+
+      case BetTypes.POINT_SPREAD:
+      case BetTypes.OVER_UNDER:
+        // Standard -110 odds for spread and over/under bets
+        this.potentialWinnings = (wagerAmount * 100) / 110;
+        break;
+    }
+
+    this.potentialWinnings = Math.round(this.potentialWinnings * 100) / 100;
   }
 
   private balanceValidator() {
     return (control: FormControl<number | null>) => {
       if (!control.value) return null;
-
       const wagerAmount = control.value;
-      const currentBalance = this.balance();
-
-      if (currentBalance - wagerAmount < 0) {
-        return { insufficientFunds: true };
-      }
-
-      return null;
+      const currentBalance = this.currentBalance;
+      return currentBalance - wagerAmount < 0 ? { insufficientFunds: true } : null;
     };
   }
-
-
-  // private async initializeBalance(): Promise<void> {
-  //   try {
-  //     const uid = await this.auth.getUID();
-  //     if (uid) {
-  //       const balance = await firstValueFrom(this.gameService.getBalance(uid));
-  //       this.balance.set(balance);
-  //       // Revalidate wagerAmount when balance changes
-  //       this.betForm.get('wagerAmount')?.updateValueAndValidity();
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching balance:', error);
-  //     this.balance.set(0);
-  //   }
-  // }
 
   async onSubmit() {
     if (this.betForm.valid) {
       try {
         const uid = await this.auth.getUID();
-        if (!uid) {
-          console.error('No UID available for placing bet');
-          return;
-        }
+        if (!uid) return;
 
         const formValue = this.betForm.value;
-        const wagerAmount = Number(formValue.wagerAmount);
-
-        // Double-check balance before submitting
-        if (this.balance() - wagerAmount < 0) {
-          this.betForm.get('wagerAmount')?.setErrors({ insufficientFunds: true });
-          return;
-        }
-
         const bet = new BetHistory();
         bet.gameId = this.game.id;
         bet.userId = uid;
@@ -140,29 +167,26 @@ export class BetFormComponent {
         bet.sport = this.sportType;
         bet.gameStart = new Date(this.game.scheduled);
         bet.wagerValue = Number(formValue.wagerValue);
-        bet.wagerAmount = wagerAmount;
+        bet.wagerAmount = Number(formValue.wagerAmount);
         bet.homeTeam = this.game.homeTeam.name;
         bet.awayTeam = this.game.awayTeam.name;
+        bet.selectedTeam = formValue.selectedTeam as string;
+        bet.potentialWinnings = this.potentialWinnings;
 
         this.gameService.addHistory(bet).subscribe({
           next: (newBalance) => {
-            // Update the game with the new bet
             const updatedGame = { ...this.game, betSettlement: bet };
-            // Emit both the updated game and new balance
             this.betPlaced.emit({ game: updatedGame, balance: newBalance });
             this.activeModal.close();
           },
-          error: (error) => {
-            console.error('Error placing bet:', error);
-          }
+          error: (error) => console.error('Error placing bet:', error)
         });
       } catch (error) {
         console.error('Error during bet submission:', error);
       }
     } else {
       Object.keys(this.betForm.controls).forEach(key => {
-        const control = this.betForm.get(key);
-        control?.markAsTouched();
+        this.betForm.get(key)?.markAsTouched();
       });
     }
   }

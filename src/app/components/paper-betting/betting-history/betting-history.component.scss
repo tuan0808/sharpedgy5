@@ -1,220 +1,200 @@
 .dashboard-container {
-  max-width: 1200px;
+  width: 100%;
+  max-width: 72rem;
   margin: 0 auto;
-  padding: 24px;
+  padding: 1rem;
 }
 
-/* Style Switcher */
-.style-switcher {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 32px;
+/* Carousel Styles */
+.carousel-container {
+  position: relative;
 }
 
-.style-button {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  background-color: #f3f4f6;
-  color: #4b5563;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.style-button:hover {
-  background-color: #e5e7eb;
-}
-
-.style-button.active {
-  background-color: #dbeafe;
-  color: #2563eb;
-}
-
-/* Tab Containers */
-.tab-container {
-  display: flex;
-  margin-bottom: 24px;
-}
-
-.tab-container.classic {
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.tab-container.pills {
-  background-color: #f3f4f6;
-  padding: 8px;
-  border-radius: 8px;
-  gap: 8px;
-}
-
-.tab-container.modern {
-  background-color: white;
-  padding: 4px;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.tab-container.cards {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 16px;
-}
-
-/* Tab Buttons */
-.tab-button {
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  background: none;
-  transition: all 0.2s;
-}
-
-/* Classic Style */
-.classic .tab-button {
-  padding: 12px 24px;
-  color: #6b7280;
-}
-
-.classic .tab-button:hover {
-  color: #374151;
-}
-
-.classic .tab-button.active {
-  color: #2563eb;
-  border-bottom: 2px solid #2563eb;
-}
-
-/* Pills Style */
-.pills .tab-button {
-  padding: 8px 16px;
-  border-radius: 8px;
-  color: #6b7280;
-}
-
-.pills .tab-button:hover {
-  color: #374151;
-  background-color: #e5e7eb;
-}
-
-.pills .tab-button.active {
-  background-color: white;
-  color: #2563eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-/* Modern Style */
-.modern .tab-button {
-  flex: 1;
-  padding: 8px 16px;
-  border-radius: 6px;
-  text-align: center;
-  color: #6b7280;
-}
-
-.modern .tab-button:hover {
-  color: #374151;
-}
-
-.modern .tab-button.active {
-  background-color: #2563eb;
-  color: white;
-}
-
-/* Cards Style */
-.cards .tab-button {
-  padding: 16px;
-  border-radius: 8px;
-  background-color: #f9fafb;
-  text-align: center;
-}
-
-.cards .tab-button:hover {
-  background-color: #f3f4f6;
-}
-
-.cards .tab-button.active {
-  background-color: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 2px solid #2563eb;
-}
-
-.card-content {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.card-content .amount {
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.card-content .label {
-  font-size: 14px;
-}
-
-.card-content .count {
-  font-size: 12px;
-  color: #6b7280;
-}
-
-/* Tab Content */
-.tab-content {
+.carousel-content {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
 }
 
-.tab-content .count {
-  font-size: 12px;
-  opacity: 0.75;
+.scroll-button {
+  position: absolute;
+  z-index: 10;
+  background: white;
+  padding: 8px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-/* Content Area */
-.content-area {
-  padding: 24px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.scroll-button:hover {
+  background: #f8f9fa;
 }
 
-.content-header {
+.scroll-button.left { left: 0; }
+.scroll-button.right { right: 0; }
+
+.carousel-items {
+  display: flex;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  gap: 1rem;
+  padding: 1rem 2rem;
+}
+
+.account-card {
+  flex: none;
+  width: 16rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.account-card:hover {
+  background: #f8f9fa;
+}
+
+.account-card.selected {
+  border: 2px solid #3b82f6;
+  background: #eff6ff;
+}
+
+.account-inactive {
+  opacity: 0.7;
+  position: relative;
+}
+
+.account-inactive::after {
+  content: 'INACTIVE';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #ef4444;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+/* Overview Styles */
+.overview-container {
+  margin-top: 2rem;
+}
+
+.overview-card {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.stat-item {
+  padding: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.stat-value {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.stat-value.positive {
+  color: #10b981;
+}
+
+.balance-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* Table Styles */
+.table-container {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-top: 1.5rem;
 }
 
-.header-label {
-  font-size: 18px;
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.875rem;
   font-weight: 500;
-}
-
-.header-count {
-  font-size: 14px;
   color: #6b7280;
+  background: #f9fafb;
 }
 
-.header-amount {
-  font-size: 20px;
-  font-weight: 600;
+td {
+  padding: 1rem;
 }
 
-.content-placeholder {
-  height: 256px;
-  background-color: #f9fafb;
-  border-radius: 8px;
+tr {
+  border-top: 1px solid #e5e7eb;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  color: white;
+}
+
+.status-badge.win { background: #10b981; }
+.status-badge.loss { background: #ef4444; }
+.status-badge.pending { background: #f59e0b; }
+
+.team-info {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #6b7280;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.win-status {
+  color: #22c55e;
+  font-size: 0.875rem;
+}
+
+.pending-status {
+  color: #ca8a04;
+  font-size: 0.875rem;
+}
+
+.loss-status {
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.amount {
+  font-family: monospace;
+  font-weight: 500;
 }

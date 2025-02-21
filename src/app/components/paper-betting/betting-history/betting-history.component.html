@@ -1,73 +1,136 @@
 <div class="dashboard-container">
-    <!-- Style Switcher -->
-    <div class="style-switcher">
-        @for (style of availableStyles; track style) {
-            <button
-                    [class.active]="tabStyle === style"
-                    (click)="setTabStyle(style)"
-                    class="style-button">
-                {{ formatStyleName(style) }} Style
+    <!-- Account Carousel -->
+    <div class="carousel-container">
+        <div class="carousel-content">
+            <button class="scroll-button left" (click)="scroll('left')">
+                <i class="fas fa-chevron-left"></i>
             </button>
-        }
-    </div>
 
-    <!-- Tabs Navigation -->
-    <div class="tabs-navigation">
-        <button
-                *ngIf="canScrollLeft"
-                class="scroll-button scroll-left"
-                (click)="scrollTabs('left')"
-                aria-label="Scroll tabs left">
-            ←
-        </button>
-
-        <!-- Tabs -->
-        <div class="tabs-wrapper">
-            <div #tabContainer [class]="'tab-container ' + tabStyle"
-                 @for (tab of tabData; track tab.id) {
-            <button
-                    [class.active]="activeTab === tab.id"
-                    (click)="setActiveTab(tab.id)"
-                    class="tab-button">
-                @if (tabStyle === 'cards') {
-                    <div class="card-content">
-                        <div class="amount">{{ tab.amount }}</div>
-                        <div class="label">{{ tab.label }}</div>
-                        <div class="count">({{ tab.count }})</div>
-                    </div>
-                } @else {
-                    <div class="tab-content">
-                        <span>{{ tab.label }}</span>
-                        <span class="count">({{ tab.count }})</span>
+            <div #carouselContainer class="carousel-items">
+                @for (account of accounts(); track account.id) {
+                    <div
+                            (click)="selectAccount(account.id)"
+                            [class.selected]="selectedAccount()?.id === account.id"
+                            [class.account-inactive]="!account.activeAccount"
+                            class="account-card"
+                    >
+                        <div>
+                            <div>Account #{{ account.id }}</div>
+                            <div>Created: {{ account.creationDate | date }}</div>
+                        </div>
+                        <div class="amount">${{ account.balance.toFixed(2) }}</div>
+                        @if (account.closedDate) {
+                            <div>Closed: {{ account.closedDate | date }}</div>
+                        }
                     </div>
                 }
+            </div>
+
+            <button class="scroll-button right" (click)="scroll('right')">
+                <i class="fas fa-chevron-right"></i>
             </button>
-            }
         </div>
     </div>
 
-    <button
-            *ngIf="canScrollRight"
-            class="scroll-button scroll-right"
-            (click)="scrollTabs('right')"
-            aria-label="Scroll tabs right">
-        →
-    </button>
-</div>
+    <!-- Account Overview -->
+    @if (selectedAccount()) {
+        <div class="overview-container">
+            <div class="overview-card">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Total Bets</div>
+                        <div class="stat-value">{{ selectedAccount()?.betHistory.length }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Win Rate</div>
+                        <div class="stat-value positive">
+                            {{ calculateWinRate(selectedAccount()!) }}%
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Avg Bet</div>
+                        <div class="stat-value">
+                            ${{ calculateAvgBet(selectedAccount()!) }}
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Pending Bets</div>
+                        <div class="stat-value">
+                            {{ getPendingBets(selectedAccount()!) }}
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Account Status</div>
+                        <div class="stat-value">
+                            {{ selectedAccount()?.activeAccount ? 'Active' : 'Inactive' }}
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Creation Date</div>
+                        <div class="stat-value">
+                            {{ selectedAccount()?.creationDate | date }}
+                        </div>
+                    </div>
+                </div>
 
-<!-- Content Area -->
-<div class="content-area">
-    <div class="content-header">
-        <div class="header-left">
-            <span class="header-label">{{ getActiveTabData()?.label }}</span>
-            <span class="header-count">({{ getActiveTabData()?.count }} items)</span>
+                <div class="balance-section">
+                    <div class="stat-label">Available Balance</div>
+                    <div class="stat-value">
+                        ${{ selectedAccount()?.balance.toFixed(2) | currency }}
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="header-amount">
-            {{ getActiveTabData()?.amount }}
-        </div>
-    </div>
 
-    <div class="content-placeholder">
-        Content for {{ getActiveTabData()?.label }}
-    </div>
+        <!-- Betting History Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                <tr>
+                    <th><input type="checkbox"></th>
+                    <th>Bet ID</th>
+                    <th>Date</th>
+                    <th>Sport</th>
+                    <th>Bet Type</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                    @for (bet of selectedAccount()?.betHistory; track bet.gameId) {
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td>
+                                <div>{{ bet.homeTeam }} VS {{bet.awayTeam}}</div>
+                                @switch (bet.status) {
+                                    @case (Status.WIN) {
+                                        <div class="win-status">WIN</div>
+                                    }
+                                    @case (Status.PENDING) {
+                                        <div class="pending-status">WIN</div>
+                                    }
+                                    @case (Status.LOSS) {
+                                        <div class="loss-status">WIN</div>
+                                    }
+                                }
+                            </td>
+                            <td>
+                                <div>{{ bet.gameStart | date:'MM/dd/yyyy' }}</div>
+                                <div>{{ bet.gameStart | date:'h:mm a' }}</div>
+                            </td>
+                            <td>{{ SportType[bet.sport] }}</td>
+                            <td>
+                                <div>{{ BetTypes[bet.betType] }}</div>
+                                <div class="view-details">View Details ▼</div>
+                            </td>
+                            <td>{{ bet.amount | currency }}</td>
+                            <td>
+                                <div class="actions">Actions ▼</div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 </div>
