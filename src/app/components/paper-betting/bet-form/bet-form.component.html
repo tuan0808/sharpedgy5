@@ -1,193 +1,97 @@
-<div class="modal-header bg-dark text-white">
-    <h4 class="modal-title">Place Bet</h4>
-    <button type="button" class="btn-close btn-close-white" (click)="activeModal.dismiss()"></button>
-</div>
-<div class="modal-body bg-light">
-    <form [formGroup]="betForm" (ngSubmit)="onSubmit()" class="bet-form">
-        <!-- Bet Type Selection -->
-        <div class="bet-type-selection mb-4">
-            <div class="btn-group w-100" role="group">
-                @for (betType of Object.values(BetTypes); track betType) {
-                    <input type="radio"
-                           class="btn-check"
-                           [value]="betType"
-                           formControlName="betType"
-                           [id]="betType">
-                    <label class="btn btn-outline-primary" [for]="betType">
-                        {{betTypeLabels[betType]}}
-                    </label>
+<div class="betting-card">
+    <h2>Place Your Bet</h2>
+
+    <div class="layout-container">
+        <!-- Left Side - Bet Types -->
+        <div class="bet-types">
+            <h3>Bet Type</h3>
+            <div class="bet-type-list">
+                @for (bet of betTypes; track bet.id) {
+                    <button
+                            type="button"
+                            (click)="setSelectedBetType(bet.id)"
+                            [class.selected]="selectedBetType === bet.id"
+                            class="bet-type-btn">
+                        <span class="bet-icon">{{ bet.icon }}</span>
+                        <span>{{ bet.label }}</span>
+                    </button>
                 }
             </div>
         </div>
 
-        <!-- Team Selection -->
-        @if (betForm.get('betType')?.value) {
-            <div class="team-selection mb-4">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        Select Team
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <div class="team-option h-100">
-                                    <input type="radio"
-                                           class="btn-check"
-                                           [value]="game.homeTeam.name"
-                                           formControlName="selectedTeam"
-                                           id="homeTeam">
-                                    <label class="btn btn-outline-dark w-100 h-100 d-flex flex-column align-items-center justify-content-center"
-                                           for="homeTeam">
-                                        <span class="team-name">{{game.homeTeam.name}}</span>
-                                        @if (betForm.get('betType')?.value === BetTypes.MONEYLINE) {
-                                            <span class="odds" [class.text-success]="game.moneylineHome > 0"
-                                                  [class.text-danger]="game.moneylineHome < 0">
-                                                {{game.moneylineHome >= 0 ? '+' : ''}}{{game.moneylineHome}}
-                                            </span>
-                                        }
-                                        @if (betForm.get('betType')?.value === BetTypes.POINT_SPREAD) {
-                                            <span class="odds">
-                                                {{game.spread >= 0 ? '+' : ''}}{{game.spread}}
-                                            </span>
-                                        }
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="team-option h-100">
-                                    <input type="radio"
-                                           class="btn-check"
-                                           [value]="game.awayTeam.name"
-                                           formControlName="selectedTeam"
-                                           id="awayTeam">
-                                    <label class="btn btn-outline-dark w-100 h-100 d-flex flex-column align-items-center justify-content-center"
-                                           for="awayTeam">
-                                        <span class="team-name">{{game.awayTeam.name}}</span>
-                                        @if (betForm.get('betType')?.value === BetTypes.MONEYLINE) {
-                                            <span class="odds" [class.text-success]="game.moneylineAway > 0"
-                                                  [class.text-danger]="game.moneylineAway < 0">
-                                                {{game.moneylineAway >= 0 ? '+' : ''}}{{game.moneylineAway}}
-                                            </span>
-                                        }
-                                        @if (betForm.get('betType')?.value === BetTypes.POINT_SPREAD) {
-                                            <span class="odds">
-                                                {{-game.spread >= 0 ? '+' : ''}}{{-game.spread}}
-                                            </span>
-                                        }
-                                    </label>
-                                </div>
-                            </div>
+        <!-- Right Side - Form -->
+        <form [formGroup]="bettingForm" (ngSubmit)="onSubmit()" class="bet-form">
+            <div class="form-section">
+                <label>Select Team</label>
+                <div class="team-grid">
+                    <!-- Home Team -->
+                    <button
+                            type="button"
+                            (click)="setSelectedTeam({
+                            name: game.homeTeam.name,
+                            odds: game.moneylineHome,
+                            type: 'home'
+                        })"
+                            [class.selected]="selectedTeam?.type === 'home'"
+                            class="team-btn">
+                        <div class="team-name">{{ game.homeTeam.name }}</div>
+                        <div class="team-odds">
+                            {{ game.moneylineHome >= 0 ? '+' : '' }}{{ game.moneylineHome }}
                         </div>
-                    </div>
+                    </button>
+                    <!-- Away Team -->
+                    <button
+                            type="button"
+                            (click)="setSelectedTeam({
+                            name: game.awayTeam.name,
+                            odds: game.moneylineAway,
+                            type: 'away'
+                        })"
+                            [class.selected]="selectedTeam?.type === 'away'"
+                            class="team-btn">
+                        <div class="team-name">{{ game.awayTeam.name }}</div>
+                        <div class="team-odds">
+                            {{ game.moneylineAway >= 0 ? '+' : '' }}{{ game.moneylineAway }}
+                        </div>
+                    </button>
                 </div>
             </div>
-        }
 
-        <!-- Over/Under Selection -->
-        @if (betForm.get('selectedTeam')?.value && betForm.get('betType')?.value === BetTypes.OVER_UNDER) {
-            <div class="mb-4">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        Over/Under ({{game.overUnderTotal}})
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <input type="radio"
-                                       class="btn-check"
-                                       [value]="game.overUnderTotal"
-                                       formControlName="wagerValue"
-                                       id="over">
-                                <label class="btn btn-outline-dark w-100" for="over">
-                                    Over {{game.overUnderTotal}}
-                                </label>
-                            </div>
-                            <div class="col-6">
-                                <input type="radio"
-                                       class="btn-check"
-                                       [value]="-game.overUnderTotal"
-                                       formControlName="wagerValue"
-                                       id="under">
-                                <label class="btn btn-outline-dark w-100" for="under">
-                                    Under {{game.overUnderTotal}}
-                                </label>
-                            </div>
-                        </div>
+            <div class="form-section">
+                <label for="betAmount">Bet Amount ($)</label>
+                <div class="amount-input">
+                    <span class="dollar-sign">$</span>
+                    <input
+                            id="betAmount"
+                            type="number"
+                            formControlName="amount"
+                            placeholder="Enter amount"
+                            (input)="updatePotentialWinnings()">
+                </div>
+                @if (bettingForm.get('amount')?.errors?.['max']) {
+                    <div class="error-message">Maximum bet amount is $5000</div>
+                }
+                @if (bettingForm.get('amount')?.errors?.['min']) {
+                    <div class="error-message">Minimum bet amount is $0</div>
+                }
+            </div>
+
+            <!-- Potential Winnings Display -->
+            @if (potentialWinnings > 0) {
+                <div class="potential-winnings">
+                    <div class="winnings-info">
+                        <span>Potential Winnings:</span>
+                        <span class="amount">${{ potentialWinnings.toFixed(2) }}</span>
                     </div>
                 </div>
-            </div>
-        }
-
-        <!-- Hidden inputs for Point Spread and Moneyline -->
-        @if (betForm.get('selectedTeam')?.value) {
-            @if (betForm.get('betType')?.value === BetTypes.POINT_SPREAD) {
-                <input type="hidden"
-                       formControlName="wagerValue"
-                       [value]="betForm.get('selectedTeam')?.value === game.homeTeam.name ? game.spread : -game.spread">
             }
-            @if (betForm.get('betType')?.value === BetTypes.MONEYLINE) {
-                <input type="hidden"
-                       formControlName="wagerValue"
-                       [value]="selectedTeamMoneyline">
-            }
-        }
 
-        <!-- Wager Amount Input -->
-        @if (betForm.get('selectedTeam')?.value) {
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    Place Your Bet
-                </div>
-                <div class="card-body">
-                    <div class="row align-items-end">
-                        <div class="col">
-                            <label class="form-label">Bet Amount ($)</label>
-                            <input type="number"
-                                   class="form-control form-control-lg"
-                                   formControlName="wagerAmount"
-                                   placeholder="Enter amount"
-                                   [min]="0"
-                                   [max]="5000"
-                                   (input)="calculatePotentialWinnings()">
-                            @if (betForm.get('wagerAmount')?.touched && betForm.get('wagerAmount')?.errors?.['required']) {
-                                <div class="text-danger mt-1">Amount is required</div>
-                            }
-                            @if (betForm.get('wagerAmount')?.touched && betForm.get('wagerAmount')?.errors?.['min']) {
-                                <div class="text-danger mt-1">Amount must be greater than 0</div>
-                            }
-                            @if (betForm.get('wagerAmount')?.touched && betForm.get('wagerAmount')?.errors?.['max']) {
-                                <div class="text-danger mt-1">Amount must be less than 5000</div>
-                            }
-                            @if (betForm.get('wagerAmount')?.touched && betForm.get('wagerAmount')?.errors?.['insufficientFunds']) {
-                                <div class="text-danger mt-1">Insufficient funds (Balance: {{currentBalance | currency}})</div>
-                            }
-                        </div>
-                    </div>
-
-                    <!-- Potential Winnings Display -->
-                    @if (betForm.valid && potentialWinnings > 0) {
-                        <div class="alert alert-success mt-3 mb-0">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span>Potential Winnings:</span>
-                                <span class="h4 mb-0">{{potentialWinnings | currency}}</span>
-                            </div>
-                        </div>
-                    }
-                </div>
-            </div>
-        }
-    </form>
-</div>
-<div class="modal-footer">
-    <button type="button"
-            class="btn btn-secondary"
-            (click)="activeModal.dismiss()">
-        Cancel
-    </button>
-    <button type="submit"
-            class="btn btn-primary"
-            [disabled]="!betForm.valid"
-            (click)="onSubmit()">
-        Place Bet
-    </button>
+            <button
+                    type="submit"
+                    class="place-bet-btn"
+                    [disabled]="!isFormValid()">
+                Place Bet
+            </button>
+        </form>
+    </div>
 </div>
