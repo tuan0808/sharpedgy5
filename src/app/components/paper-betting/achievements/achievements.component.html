@@ -1,16 +1,74 @@
-<div class="bg-blue-50 border-b border-blue-100">
-<div class="max-w-7xl mx-auto px-4 py-2">
-    <div class="flex items-center justify-between">
-        <div class="flex items-center gap-6">
-            <div class="flex items-center gap-2">
-                <i class="lucide-medal h-5 w-5 text-blue-600"></i>
-                <span class="font-medium">Recent Achievement: </span>
-                <span class="text-blue-600">Hot Streak! 🔥 Won 5 bets in a row</span>
+<div class="achievements-container">
+    <div class="achievements-wrapper">
+        <!-- Header -->
+        <div class="achievements-header">
+            <h1>Achievements</h1>
+            <div class="progress-info">
+                Overall Progress:
+                <span class="progress-value">{{ overallProgress() }}%</span>
             </div>
         </div>
-        <button class="btn btn-link text-blue-600">
-            View All Achievements
-        </button>
+
+        <!-- Achievement List -->
+        <div class="achievements-list">
+            @for (achievement of achievements; track achievement.id) {
+                <div class="achievement-card"
+                     [class.completed]="achievement.completed">
+
+                    <div class="achievement-content">
+                        <!-- Icon -->
+                        <div class="achievement-icon" [class]="getRarityClass(achievement.rarity)">
+                            @switch (achievement.iconType) {
+                                @case ('trophy') {
+                                    <i class="fas fa-trophy"></i>
+                                }
+                                @case ('target') {
+                                    <i class="fas fa-bullseye"></i>
+                                }
+                                @case ('clock') {
+                                    <i class="fas fa-clock"></i>
+                                }
+                                @case ('crown') {
+                                    <i class="fas fa-crown"></i>
+                                }
+                                @case ('star') {
+                                    <i class="fas fa-star"></i>
+                                }
+                            }
+                        </div>
+
+                        <div class="achievement-details">
+                            <div class="achievement-header">
+                                <h3>{{ achievement.title }}</h3>
+                                <span class="rarity-badge" [class]="getRarityClass(achievement.rarity)">
+                      {{ achievement.rarity }}
+                    </span>
+                            </div>
+
+                            <p class="achievement-description">{{ achievement.description }}</p>
+
+                            <div class="progress-section">
+                                <div class="progress-header">
+                                    <span>Progress</span>
+                                    <span>{{ achievement.progress }}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill"
+                                         [style.width.%]="achievement.progress"
+                                         [class.completed]="achievement.completed">
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (achievement.completed) {
+                                <div class="completion-date">
+                                    Completed on {{ achievement.completedDate | date:'mediumDate' }}
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     </div>
-</div>
 </div>

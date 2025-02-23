@@ -8,6 +8,7 @@
             <div class="bet-type-list">
                 @for (bet of betTypes; track bet.id) {
                     <button
+                            [ngClass]="bet.isEnabled ? '' : 'disabled'"
                             type="button"
                             (click)="setSelectedBetType(bet.id)"
                             [class.selected]="selectedBetType === bet.id"

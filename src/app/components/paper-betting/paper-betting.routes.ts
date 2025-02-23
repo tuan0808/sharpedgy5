@@ -8,6 +8,7 @@ import {canActivate} from "@angular/fire/auth-guard";
 import {authGuard} from "../../shared/guard/AuthGuard";
 import {LoginComponent} from "../../auth/login/login.component";
 import {BettingHistoryComponent} from "./betting-history/betting-history.component";
+import {HealthCheckDirective} from "../../shared/directives/HealthCheckDirective";
 
 export const paperBettingRoutes: Routes = [
     {
@@ -20,7 +21,7 @@ export const paperBettingRoutes: Routes = [
                     title: "home",
                     breadcrumb: "home"
                 },
-                resolve: { account: betSettlementResolver}
+                resolve: { account: betSettlementResolver, actuator: HealthCheckDirective}
             },
             {
                 path: 'achievements',
@@ -28,7 +29,8 @@ export const paperBettingRoutes: Routes = [
                 data: {
                     title: "Achievements",
                     breadcrumb: "achievements"
-                }
+                },
+                resolve: { account: betSettlementResolver, actuator: HealthCheckDirective}
             },
             {
                 path: 'educational-content',
@@ -36,7 +38,8 @@ export const paperBettingRoutes: Routes = [
                 data: {
                     title: "Educational Content",
                     breadcrumb: "educational-content"
-                }
+                },
+                resolve: { account: betSettlementResolver, actuator: HealthCheckDirective}
             },
             {
                 path: 'history',
@@ -45,7 +48,7 @@ export const paperBettingRoutes: Routes = [
                     title: "History",
                     breadcrumb: "history"
                 },
-                resolve: { account: betSettlementResolver}
+                resolve: { account: betSettlementResolver, actuator: HealthCheckDirective}
 
             },
             {
@@ -54,7 +57,8 @@ export const paperBettingRoutes: Routes = [
                 data: {
                     title: "Virtual Wallet",
                     breadcrumb: "virtual-wallet"
-                }
+                },
+                resolve: { account: betSettlementResolver, actuator: HealthCheckDirective}
             }
         ]
     }

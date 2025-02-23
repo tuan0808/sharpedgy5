@@ -1,0 +1,272 @@
+[
+  {
+    "id": 1,
+    "title": "First Bet",
+    "description": "Place your first bet.",
+    "rarity": "Common",
+    "progress": 0,
+    "iconType": "coin",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 2,
+    "title": "Betting Streak",
+    "description": "Place at least one bet every day for 5 consecutive days.",
+    "rarity": "Uncommon",
+    "progress": 0,
+    "iconType": "fire",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 3,
+    "title": "Explorer",
+    "description": "Place bets on 5 different sports.",
+    "rarity": "Common",
+    "progress": 0,
+    "iconType": "globe",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 4,
+    "title": "Bet Type Master",
+    "description": "Use every available bet type at least once.",
+    "rarity": "Common",
+    "progress": 0,
+    "iconType": "book",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 5,
+    "title": "Bankroll Builder",
+    "description": "Grow your virtual bankroll to $1,000.",
+    "rarity": "Common",
+    "progress": 0,
+    "iconType": "coin",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 6,
+    "title": "Winning Streak",
+    "description": "Win 3 bets in a row.",
+    "rarity": "Uncommon",
+    "progress": 0,
+    "iconType": "fire",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 7,
+    "title": "Underdog Hunter",
+    "description": "Correctly predict 5 underdog victories.",
+    "rarity": "Rare",
+    "progress": 0,
+    "iconType": "target",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 8,
+    "title": "High Roller",
+    "description": "Place a single bet with a stake of $100 or more.",
+    "rarity": "Uncommon",
+    "progress": 0,
+    "iconType": "dice",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 9,
+    "title": "Consistent Bettor",
+    "description": "Place at least one bet every day for 30 consecutive days.",
+    "rarity": "Rare",
+    "progress": 0,
+    "iconType": "fire",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 10,
+    "title": "Sports Specialist",
+    "description": "Place 20 bets on a single sport.",
+    "rarity": "Uncommon",
+    "progress": 0,
+    "iconType": "star",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 11,
+    "title": "Bet Analyzer",
+    "description": "Review and analyze 10 of your past bets.",
+    "rarity": "Common",
+    "progress": 0,
+    "iconType": "chart",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 12,
+    "title": "Community Contributor",
+    "description": "Participate in 5 discussions or share insights with other users.",
+    "rarity": "Common",
+    "progress": 0,
+    "iconType": "chat",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 13,
+    "title": "Learning Enthusiast",
+    "description": "Complete 3 educational modules or tutorials.",
+    "rarity": "Common",
+    "progress": 0,
+    "iconType": "book",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 14,
+    "title": "Playoff Predictor",
+    "description": "Correctly predict the outcome of a playoff game.",
+    "rarity": "Uncommon",
+    "progress": 0,
+    "iconType": "star",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 15,
+    "title": "Championship Winner",
+    "description": "Correctly predict the winner of a championship or tournament.",
+    "rarity": "Rare",
+    "progress": 0,
+    "iconType": "star",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 16,
+    "title": "Bankroll Manager",
+    "description": "Maintain a positive bankroll for 30 consecutive days.",
+    "rarity": "Rare",
+    "progress": 0,
+    "iconType": "shield",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 17,
+    "title": "Risk Taker",
+    "description": "Place a bet with odds of +500 or higher.",
+    "rarity": "Uncommon",
+    "progress": 0,
+    "iconType": "dice",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 18,
+    "title": "Conservative Bettor",
+    "description": "Place 10 bets with odds of -200 or lower.",
+    "rarity": "Uncommon",
+    "progress": 0,
+    "iconType": "shield",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 19,
+    "title": "Break Even",
+    "description": "Achieve a win rate of 50% or higher over 20 bets.",
+    "rarity": "Uncommon",
+    "progress": 0,
+    "iconType": "balance",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 20,
+    "title": "Profit Maker",
+    "description": "Achieve a positive ROI over 50 bets.",
+    "rarity": "Rare",
+    "progress": 0,
+    "iconType": "chart",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 21,
+    "title": "Bet-ter Luck Next Time",
+    "description": "Lose 5 bets in a row.",
+    "rarity": "Uncommon",
+    "progress": 0,
+    "iconType": "clover",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 22,
+    "title": "Superstitious Bettor",
+    "description": "Place bets on 3 games involving teams with animal mascots.",
+    "rarity": "Common",
+    "progress": 0,
+    "iconType": "clover",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 23,
+    "title": "Parlay Paralysis",
+    "description": "Create a parlay with 5 or more legs and lose.",
+    "rarity": "Uncommon",
+    "progress": 0,
+    "iconType": "dice",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 24,
+    "title": "The Longest Shot",
+    "description": "Bet on a team with odds of +1000 or higher.",
+    "rarity": "Uncommon",
+    "progress": 0,
+    "iconType": "target",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 25,
+    "title": "Emotional Hedge",
+    "description": "Bet on both sides of the same game.",
+    "rarity": "Common",
+    "progress": 0,
+    "iconType": "balance",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 26,
+    "title": "The Hail Mary",
+    "description": "Bet on a game-winning play in the final seconds.",
+    "rarity": "Rare",
+    "progress": 0,
+    "iconType": "star",
+    "completed": false,
+    "completedDate": ""
+  },
+  {
+    "id": 27,
+    "title": "The Underdog Whisperer",
+    "description": "Correctly predict 3 underdog wins in a row.",
+    "rarity": "Epic",
+    "progress": 0,
+    "iconType": "target",
+    "completed": false,
+    "completedDate": ""
+  }
+]

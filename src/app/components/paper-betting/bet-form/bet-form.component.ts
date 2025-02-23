@@ -9,12 +9,14 @@ import {BetSettlementService} from "../../../shared/services/betSettlement.servi
 import {AuthService} from "../../../shared/services/auth.service";
 import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
 import {Status} from "../../../shared/model/enums/Status";
+import {NgClass} from "@angular/common";
 
 
 interface BetTypeOption {
     id: BetTypes,
     label: string,
-    icon: string
+    icon: string,
+    isEnabled: boolean
 }
 
 export interface BetFormErrors {
@@ -35,6 +37,7 @@ export interface PotentialWinnings {
     standalone: true,
     imports: [
         ReactiveFormsModule,
+        NgClass,
     ],
     styleUrls: ['./bet-form.component.scss']
 })
@@ -53,13 +56,13 @@ export class BetFormComponent {
     potentialWinnings: number = 0;
 
     betTypes: BetTypeOption[] = [
-        {id: BetTypes.MONEYLINE, label: 'Money Line', icon: '💰'},
-        {id: BetTypes.POINT_SPREAD, label: 'Point Spread', icon: '📊'},
-        {id: BetTypes.OVER_UNDER, label: 'Over/Under', icon: '⚖️'},
-        {id: BetTypes.PARLAY, label: 'Parlay', icon: '🎲'},
-        {id: BetTypes.TEASER, label: 'Teaser', icon: '🎯'},
-        {id: BetTypes.ROUND_ROBIN, label: 'Round Robin', icon: '🔄'},
-        {id: BetTypes.PLEASER, label: 'Pleaser', icon: '🎪'}
+        {id: BetTypes.MONEYLINE, label: 'Money Line', icon: '💰', isEnabled: true},
+        {id: BetTypes.POINT_SPREAD, label: 'Point Spread', icon: '📊', isEnabled: true},
+        {id: BetTypes.OVER_UNDER, label: 'Over/Under', icon: '⚖️', isEnabled: true},
+        {id: BetTypes.PARLAY, label: 'Parlay', icon: '🎲', isEnabled: false},
+        {id: BetTypes.TEASER, label: 'Teaser', icon: '🎯', isEnabled: false},
+        {id: BetTypes.ROUND_ROBIN, label: 'Round Robin', icon: '🔄', isEnabled: false},
+        {id: BetTypes.PLEASER, label: 'Pleaser', icon: '🎪', isEnabled: false}
     ];
 
     constructor(
@@ -83,20 +86,34 @@ export class BetFormComponent {
 
     updatePotentialWinnings(): void {
         const amount = this.bettingForm.get('amount')?.value;
-        if (!amount || !this.selectedTeam) {
+        if (!amount || !this.selectedTeam || isNaN(amount)) {
             this.potentialWinnings = 0;
             return;
         }
 
-        const odds = parseInt(this.selectedTeam.odds);
-        if (odds > 0) {
-            // Positive odds (e.g., +150)
-            this.potentialWinnings = (amount * odds) / 100;
-        } else {
-            // Negative odds (e.g., -180)
-            this.potentialWinnings = amount * (100 / Math.abs(odds));
+        const odds = parseInt(this.selectedTeam.odds, 10);
+        if (isNaN(odds)) {
+            this.potentialWinnings = 0;
+            return;
         }
-        this.potentialWinnings = Math.round(this.potentialWinnings * 100) / 100;
+
+        let profit: number;
+        if (odds > 0) {
+            // Positive odds: Profit for the given amount
+            profit = (amount * odds) / 100;
+        } else if (odds < 0) {
+            // Negative odds: Profit for the given amount
+            profit = amount * (100 / Math.abs(odds));
+        } else {
+            // Odds of 0 (edge case, theoretically even money)
+            profit = amount; // 1:1 payout, profit equals stake
+        }
+
+        // Round to 2 decimal places
+        this.potentialWinnings = Math.round(profit * 100) / 100;
+
+        // Optional: If you want total payout instead of profit
+        // this.potentialWinnings = Math.round((profit + amount) * 100) / 100;
     }
 
     isFormValid(): boolean {
