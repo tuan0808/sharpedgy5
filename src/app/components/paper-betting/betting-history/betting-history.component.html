@@ -1,90 +1,136 @@
-<div class="p-6 bg-gray-50">
-    <!-- Header with Filters -->
-    <div class="flex items-center gap-2 mb-4">
-        <div class="relative">
-            <input
-                    type="text"
-                    placeholder="Search accounts..."
-                    class="pl-3 pr-4 py-2 border rounded-lg w-[200px]"
-                    [ngModel]="searchTerm()"
-                    (ngModelChange)="onSearchChange($event)"
-            />
+<div class="dashboard-container">
+    <!-- Account Carousel -->
+    <div class="carousel-container">
+        <div class="carousel-content">
+            <button class="scroll-button left" (click)="scroll('left')">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <div #carouselContainer class="carousel-items">
+                @for (account of accounts(); track account.id) {
+                    <div
+                            (click)="selectAccount(account.id)"
+                            [class.selected]="selectedAccount()?.id === account.id"
+                            [class.account-inactive]="!account.activeAccount"
+                            class="account-card"
+                    >
+                        <div>
+                            <div>Account #{{ account.id }}</div>
+                            <div>Created: {{ account.creationDate | date }}</div>
+                        </div>
+                        <div class="amount">${{ account.balance.toFixed(2) }}</div>
+                        @if (account.closedDate) {
+                            <div>Closed: {{ account.closedDate | date }}</div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <button class="scroll-button right" (click)="scroll('right')">
+                <i class="fas fa-chevron-right"></i>
+            </button>
         </div>
-        <select
-                class="px-3 py-2 border rounded-lg"
-                [ngModel]="filterStatus()"
-                (ngModelChange)="onFilterChange($event)"
-        >
-            <option value="all">All Accounts</option>
-        </select>
-        <select
-                class="px-3 py-2 border rounded-lg"
-                [ngModel]="sortOption()"
-                (ngModelChange)="onSortChange($event)"
-        >
-            <option value="newest">Newest First</option>
-        </select>
     </div>
 
-    <!-- Account Cards -->
-    <div class="space-y-2">
-        @for (account of paginatedAccounts(); track account.id) {
-            <div class="bg-white rounded-lg shadow-sm p-4">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-lg font-semibold">Account #{{account.id}}</span>
-                            <span [class]="account.activeAccount ? 'bg-green-100 text-green-700 px-2 py-0.5 rounded-md text-sm' : 'bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md text-sm'">
-                                {{account.activeAccount ? 'Active' : 'Closed'}}
-                            </span>
-                            <span class="text-gray-500 text-sm">{{account.betHistory.length}} bets</span>
-                        </div>
-                        <p class="text-sm text-gray-500 mt-1">
-                            Created: {{account.creationDate | date:'M/d/yyyy, h:mm:ss a'}}
-                            @if (account.closedDate) {
-                                • Closed: {{account.closedDate | date:'M/d/yyyy, h:mm:ss a'}}
-                            }
-                        </p>
+    <!-- Account Overview -->
+    @if (selectedAccount()) {
+        <div class="overview-container">
+            <div class="overview-card">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Total Bets</div>
+                        <div class="stat-value">{{ selectedAccount()?.betHistory.length }}</div>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <div class="text-right">
-                            <div class="text-xs text-gray-500">Balance</div>
-                            <div [class]="'text-sm ' + (account.balance > 0 ? 'text-green-600' : 'text-red-600')">
-                                ${{account.balance.toFixed(2)}}
-                            </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Win Rate</div>
+                        <div class="stat-value positive">
+                            {{ calculateWinRate(selectedAccount()!) }}%
                         </div>
-                        <button
-                                (click)="toggleAccount(account.user_id)"
-                                class="text-gray-400"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Avg Bet</div>
+                        <div class="stat-value">
+                            ${{ calculateAvgBet(selectedAccount()!) }}
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Pending Bets</div>
+                        <div class="stat-value">
+                            {{ getPendingBets(selectedAccount()!) }}
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Account Status</div>
+                        <div class="stat-value">
+                            {{ selectedAccount()?.activeAccount ? 'Active' : 'Inactive' }}
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Creation Date</div>
+                        <div class="stat-value">
+                            {{ selectedAccount()?.creationDate | date }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="balance-section">
+                    <div class="stat-label">Available Balance</div>
+                    <div class="stat-value">
+                        ${{ selectedAccount()?.balance.toFixed(2) | currency }}
                     </div>
                 </div>
             </div>
-        }
-    </div>
-
-    <!-- Pagination -->
-    <div class="flex items-center justify-between mt-4">
-        <select
-                class="px-3 py-2 border rounded-lg"
-                [ngModel]="pageSize()"
-                (ngModelChange)="onPageSizeChange($event)"
-        >
-            <option value="5">5 per page</option>
-        </select>
-
-        <div class="flex items-center gap-2">
-            <span class="text-gray-500">«</span>
-            <span class="bg-blue-600 text-white px-3 py-1 rounded">1</span>
-            <span class="text-gray-500">»</span>
         </div>
 
-        <div class="text-sm text-gray-500">
-            Page 1 of 1
+        <!-- Betting History Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                <tr>
+                    <th><input type="checkbox"></th>
+                    <th>Bet ID</th>
+                    <th>Date</th>
+                    <th>Sport</th>
+                    <th>Bet Type</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                    @for (bet of selectedAccount()?.betHistory; track bet.gameId) {
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td>
+                                <div>{{ bet.homeTeam }} VS {{bet.awayTeam}}</div>
+                                @switch (bet.status) {
+                                    @case (Status.WIN) {
+                                        <div class="win-status">WIN</div>
+                                    }
+                                    @case (Status.PENDING) {
+                                        <div class="pending-status">WIN</div>
+                                    }
+                                    @case (Status.LOSS) {
+                                        <div class="loss-status">WIN</div>
+                                    }
+                                }
+                            </td>
+                            <td>
+                                <div>{{ bet.gameStart | date:'MM/dd/yyyy' }}</div>
+                                <div>{{ bet.gameStart | date:'h:mm a' }}</div>
+                            </td>
+                            <td>{{ SportType[bet.sport] }}</td>
+                            <td>
+                                <div>{{ BetTypes[bet.betType] }}</div>
+                                <div class="view-details">View Details ▼</div>
+                            </td>
+                            <td>{{ bet.amount | currency }}</td>
+                            <td>
+                                <div class="actions">Actions ▼</div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
-    </div>
+    }
 </div>

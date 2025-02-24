@@ -1,0 +1,181 @@
+// achievements.component.scss
+
+// Variables
+$color-background: #f9fafb;
+$color-white: #ffffff;
+$color-text-primary: #1f2937;
+$color-text-secondary: #6b7280;
+$color-border: #e5e7eb;
+$color-green: #22c55e;
+$color-blue: #3b82f6;
+
+// Rarity Colors
+$color-common: #9ca3af;
+$color-rare: #3b82f6;
+$color-epic: #8b5cf6;
+$color-legendary: #f59e0b;
+
+.achievements-container {
+  min-height: 100vh;
+  background-color: $color-background;
+  padding: 2rem;
+  color: $color-text-primary;
+}
+
+.achievements-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.achievements-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: $color-text-primary;
+  }
+
+  .progress-info {
+    font-size: 0.875rem;
+    color: $color-text-secondary;
+
+    .progress-value {
+      font-weight: 600;
+      color: $color-text-primary;
+    }
+  }
+}
+
+.achievements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.achievement-card {
+  background-color: $color-white;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid $color-border;
+  transition: all 0.3s ease;
+
+  &.completed {
+    border-left-color: $color-green;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.achievement-content {
+  display: flex;
+  gap: 1rem;
+}
+
+.achievement-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    font-size: 1.5rem;
+  }
+}
+
+.achievement-details {
+  flex: 1;
+}
+
+.achievement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+  }
+}
+
+.achievement-description {
+  color: $color-text-secondary;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.rarity-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+// Rarity Classes
+.rarity-common {
+  background-color: lighten($color-common, 25%);
+  color: $color-common;
+}
+
+.rarity-rare {
+  background-color: lighten($color-rare, 25%);
+  color: $color-rare;
+}
+
+.rarity-epic {
+  background-color: lighten($color-epic, 25%);
+  color: $color-epic;
+}
+
+.rarity-legendary {
+  background-color: lighten($color-legendary, 25%);
+  color: $color-legendary;
+}
+
+.progress-section {
+  margin-top: 1rem;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: $color-text-secondary;
+  margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: $color-border;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: $color-blue;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+
+  &.completed {
+    background-color: $color-green;
+  }
+}
+
+.completion-date {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: $color-text-secondary;
+}

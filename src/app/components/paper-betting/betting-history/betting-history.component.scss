@@ -1,0 +1,200 @@
+.dashboard-container {
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Carousel Styles */
+.carousel-container {
+  position: relative;
+}
+
+.carousel-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.scroll-button {
+  position: absolute;
+  z-index: 10;
+  background: white;
+  padding: 8px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.scroll-button:hover {
+  background: #f8f9fa;
+}
+
+.scroll-button.left { left: 0; }
+.scroll-button.right { right: 0; }
+
+.carousel-items {
+  display: flex;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  gap: 1rem;
+  padding: 1rem 2rem;
+}
+
+.account-card {
+  flex: none;
+  width: 16rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.account-card:hover {
+  background: #f8f9fa;
+}
+
+.account-card.selected {
+  border: 2px solid #3b82f6;
+  background: #eff6ff;
+}
+
+.account-inactive {
+  opacity: 0.7;
+  position: relative;
+}
+
+.account-inactive::after {
+  content: 'INACTIVE';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #ef4444;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+/* Overview Styles */
+.overview-container {
+  margin-top: 2rem;
+}
+
+.overview-card {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.stat-item {
+  padding: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.stat-value {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.stat-value.positive {
+  color: #10b981;
+}
+
+.balance-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Table Styles */
+.table-container {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-top: 1.5rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  background: #f9fafb;
+}
+
+td {
+  padding: 1rem;
+}
+
+tr {
+  border-top: 1px solid #e5e7eb;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  color: white;
+}
+
+.status-badge.win { background: #10b981; }
+.status-badge.loss { background: #ef4444; }
+.status-badge.pending { background: #f59e0b; }
+
+.team-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.win-status {
+  color: #22c55e;
+  font-size: 0.875rem;
+}
+
+.pending-status {
+  color: #ca8a04;
+  font-size: 0.875rem;
+}
+
+.loss-status {
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.amount {
+  font-family: monospace;
+  font-weight: 500;
+}

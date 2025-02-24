@@ -1,130 +1,104 @@
 import {Component, computed, inject, Signal, signal} from '@angular/core';
 import {FormsModule} from "@angular/forms";
-import {map} from "rxjs/operators";
-import {BehaviorSubject, combineLatest} from "rxjs";
-import {AsyncPipe, DatePipe} from "@angular/common";
-import {AccountAccordionComponent} from "../account-accordion/account-accordion.component";
+import {Status} from "../../../shared/model/enums/Status"
 import {Account} from "../../../shared/model/paper-betting/Account";
-import {PaginationComponent} from "../../../shared/components/pagination/pagination.component";
-import {AccountService} from "../../../shared/services/account.service";
-
-class BettingService {
-}
+import {BetTypes} from "../../../shared/model/enums/BetTypes";
+import {SportType} from "../../../shared/model/SportType";
+import {CurrencyPipe, DatePipe, NgForOf, NgIf} from "@angular/common";
+import {BetSettlementService} from "../../../shared/services/betSettlement.service";
+import {toSignal} from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-betting-history',
   standalone: true,
-  imports: [
-    FormsModule,
-    AsyncPipe,
-    AccountAccordionComponent,
-    PaginationComponent,
-    DatePipe
-  ],
+    imports: [
+        FormsModule,
+        DatePipe,
+        NgForOf,
+        NgIf,
+        CurrencyPipe,
+    ],
   templateUrl: './betting-history.component.html',
   styleUrl: './betting-history.component.scss'
 })
 export class BettingHistoryComponent {
-  // Signals for reactive state management
-  private accounts = signal<Account[]>([]);
-  protected searchTerm = signal<string>('');
-  protected filterStatus = signal<string>('all');
-  protected sortOption = signal<string>('newest');
-  protected pageSize = signal<number>(5);
-  private currentPage = signal<number>(1);
-  private expandedAccounts = signal<Set<string>>(new Set());
+  private betHistoryService = inject(BetSettlementService);
 
-  private accountService: AccountService = inject(AccountService);
-
-  // Computed signals for derived state
-  protected filteredAccounts = computed(() => {
-    let filtered = this.accounts();
-
-    // Apply search filter
-    if (this.searchTerm()) {
-      const search = this.searchTerm().toLowerCase();
-      filtered = filtered.filter(account =>
-          account.id.toString().includes(search)
-      );
-    }
-
-    // Apply status filter
-    if (this.filterStatus() !== 'all') {
-      filtered = filtered.filter(account =>
-          account.activeAccount === (this.filterStatus() === 'active')
-      );
-    }
-
-    // Apply sorting
-    filtered = [...filtered].sort((a, b) => {
-      switch (this.sortOption()) {
-        case 'newest':
-          return new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime();
-        case 'oldest':
-          return new Date(a.creationDate).getTime() - new Date(b.creationDate).getTime();
-        case 'highest-balance':
-          return b.balance - a.balance;
-        case 'lowest-balance':
-          return a.balance - b.balance;
-        default:
-          return 0;
-      }
-    });
-
-    return filtered;
-  });
-
-  protected paginatedAccounts = computed(() => {
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return this.filteredAccounts().slice(start, start + this.pageSize());
-  });
-
-  protected totalPages = computed(() =>
-      Math.ceil(this.filteredAccounts().length / this.pageSize())
-  );
+  protected readonly accounts: Signal<Account[]>;
+  protected expandedBetId = signal<string | null>(null);
+  private selectedAccountIdSignal = signal<number | null>(null);
 
   constructor() {
-    // Subscribe to account updates
-    this.accountService.accounts$.subscribe(accounts => {
-      this.accounts.set(accounts);
+    let data = this.betHistoryService.getAccounts();
+    this.accounts = toSignal(
+        data,
+        { initialValue: [] }
+    );
+
+    // Set the initial selected account to the active one
+    data.subscribe(accounts => {
+      const activeAccount = accounts.find(acc => acc.activeAccount);
+      if (activeAccount) {
+        this.selectedAccountIdSignal.set(activeAccount.id);
+      }
     });
   }
 
-  // Event handlers
-  onSearchChange(term: string): void {
-    this.searchTerm.set(term);
-    this.currentPage.set(1); // Reset to first page when search changes
+  protected readonly selectedAccount = computed(() =>
+      this.accounts().find(acc => acc.id === this.selectedAccountIdSignal())
+  );
+
+  protected readonly Status = Status;
+  protected readonly BetTypes = BetTypes;
+  protected readonly SportType = SportType;
+
+  selectAccount(accountId: number): void {
+    this.selectedAccountIdSignal.set(accountId);
   }
 
-  onFilterChange(status: string): void {
-    this.filterStatus.set(status);
-    this.currentPage.set(1);
+  // Rest of the component methods remain the same
+  toggleBetDetails(gameId: string): void {
+    this.expandedBetId.set(
+        this.expandedBetId() === gameId ? null : gameId
+    );
   }
 
-  onSortChange(option: string): void {
-    this.sortOption.set(option);
+  isBetExpanded(gameId: string): boolean {
+    return this.expandedBetId() === gameId;
   }
 
-  onPageSizeChange(size: number): void {
-    this.pageSize.set(size);
-    this.currentPage.set(1);
-  }
-
-  toggleAccount(accountId: string): void {
-    const expanded = this.expandedAccounts();
-    const newExpanded              = new Set(expanded);
-
-    if (expanded.has(accountId)) {
-      newExpanded.delete(accountId);
-    } else {
-      newExpanded.add(accountId);
+  scroll(direction: 'left' | 'right'): void {
+    const container = document.querySelector('.carousel-items');
+    const scrollAmount = 300;
+    if (container) {
+      container.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
     }
-
-    this.expandedAccounts.set(newExpanded);
   }
 
-  // Helper method to check if an account is expanded
-  isAccountExpanded(accountId: string): boolean {
-    return this.expandedAccounts().has(accountId);
+  calculateWinRate(account: Account): string {
+    const wins = account.betHistory.filter(bet => bet.status === Status.WIN).length;
+    const total = account.betHistory.filter(bet => bet.status !== Status.PENDING).length;
+    return total > 0 ? ((wins / total) * 100).toFixed(1) : '0.0';
+  }
+
+  calculateAvgBet(account: Account): string {
+    const total = account.betHistory.reduce((sum, bet) => sum + bet.amount, 0);
+    return (total / account.betHistory.length || 0).toFixed(2);
+  }
+
+  getPendingBets(account: Account): number {
+    return account.betHistory.filter(bet => bet.status === Status.PENDING).length;
+  }
+
+  getStatusClass(status: Status): string {
+    switch(status) {
+      case Status.WIN: return 'win';
+      case Status.LOSS: return 'loss';
+      case Status.PENDING: return 'pending';
+      default: return '';
+    }
   }
 }

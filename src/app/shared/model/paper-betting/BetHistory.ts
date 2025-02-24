@@ -1,8 +1,7 @@
-import {BetFormComponent} from "../../../components/paper-betting/bet-form/bet-form.component";
-import {BetFormData} from "./BetFormData";
 import {SportType} from "../SportType";
 import {BetTypes} from "../enums/BetTypes";
 import {BetSettlement} from "./BetSettlement";
+import {Status} from "../enums/Status";
 
 export class BetHistory implements BetSettlement {
     gameId : string
@@ -15,5 +14,8 @@ export class BetHistory implements BetSettlement {
     betType: BetTypes;
     wagerValue: number;
     wagerAmount: number;
-
+    amount : number = 0 ;
+    status : Status = Status.PENDING
+    selectedTeam: string;
+    potentialWinnings: number;
 }
