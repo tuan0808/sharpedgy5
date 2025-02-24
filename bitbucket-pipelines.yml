@@ -11,7 +11,7 @@ definitions:
 
 pipelines:
   branches:
-    master:
+    main:
       - step:
           name: Build
           caches:
