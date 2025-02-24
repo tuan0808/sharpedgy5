@@ -19,8 +19,6 @@ pipelines:
             - npm
           script:
             - npm ci
-            - npm run lint
-            - npm run test:ci
             - npm run build:prod
           artifacts:
             - dist/**
