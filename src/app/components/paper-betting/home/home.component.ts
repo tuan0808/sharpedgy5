@@ -1,4 +1,4 @@
-import {Component, computed, effect, inject, OnInit, Signal, signal, WritableSignal} from '@angular/core';
+import {Component, computed, effect, HostListener, inject, OnInit, Signal, signal, WritableSignal} from '@angular/core';
 import {MdbAccordionModule} from "mdb-angular-ui-kit/accordion";
 import {GameCardComponent} from "./game-card/game-card.component";
 import {SportType} from "../../../shared/model/SportType";
@@ -12,6 +12,7 @@ import {PaginationComponent} from "../../../shared/components/pagination/paginat
 import {BetHistory} from "../../../shared/model/paper-betting/BetHistory";
 import {HttpClient} from "@angular/common/http";
 import {catchError, filter, tap} from "rxjs/operators";
+import {ToastrService} from "ngx-toastr";
 
 @Component({
   selector: 'app-home',
@@ -28,9 +29,14 @@ import {catchError, filter, tap} from "rxjs/operators";
 })
 export class HomeComponent implements OnInit {
   private readonly betSettlement = inject(BetSettlementService);
+  private readonly toastr = inject(ToastrService);
   private readonly MAX_LOAD_RETRIES = 3;
   private readonly RETRY_DELAY = 2000; // 2 seconds
   private retryCount = 0;
+  private previousBalance: number | null = null;
+
+  // Scroll tracking
+  protected isAtTop = signal<boolean>(true);
 
   // Signals
   protected readonly account = this.betSettlement.account;
@@ -59,15 +65,46 @@ export class HomeComponent implements OnInit {
   constructor() {
     // Setup effect to watch for account changes
     effect(() => {
-      if (this.account()) {
+      const account = this.account();
+
+
+      if (account) {
         this.hasError.set(false);
         this.errorMessage.set('');
+
+        this.toastr.info(account.balance.toFixed(), "Balance Change")
+        // Check for balance changes and show notification
+        if (this.previousBalance !== null && this.previousBalance !== account.balance) {
+          console.log('hi')
+          const difference = account.balance - this.previousBalance;
+          const message = difference > 0
+              ? `Balance increased by ${difference.toFixed(2)}!`
+              : `Balance decreased by ${Math.abs(difference).toFixed(2)}`;
+
+          const toastrType = difference > 0 ? 'success' : 'info';
+          this.toastr[toastrType](message, 'Balance Update');
+        }
+
+        this.previousBalance = account.balance;
       }
     });
   }
 
   async ngOnInit(): Promise<void> {
     await this.waitForUser();
+  }
+
+  // Use Angular's HostListener for scroll events
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    const wasAtTop = this.isAtTop();
+    this.isAtTop.set(scrollTop <= 10);
+
+    // If user just scrolled away from the top, show notification
+    if (wasAtTop && !this.isAtTop()) {
+      this.toastr.info('Scroll back to top to see all options', 'Scrolled Down');
+    }
   }
 
   private async waitForUser(retryCount = 0): Promise<void> {
@@ -120,8 +157,10 @@ export class HomeComponent implements OnInit {
     this.hasError.set(true);
     if (error instanceof Error) {
       this.errorMessage.set(error.message);
+      this.toastr.error(error.message, 'Error');
     } else {
       this.errorMessage.set('An unexpected error occurred');
+      this.toastr.error('An unexpected error occurred', 'Error');
     }
   }
 
@@ -148,5 +187,10 @@ export class HomeComponent implements OnInit {
   async onRetry(): Promise<void> {
     this.retryCount = 0;
     await this.loadGames();
+  }
+
+  // Scroll to top helper method
+  scrollToTop(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }

@@ -1,4 +1,8 @@
+import {UserRole} from "./enums/UserRole";
 
-class UserData {
-
+export interface UserData {
+    uuid : String,
+    username : String,
+    role : UserRole,
+    ageVerified : Boolean
 }

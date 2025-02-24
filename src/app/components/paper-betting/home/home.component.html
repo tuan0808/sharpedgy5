@@ -20,7 +20,7 @@
     </div>
     <div class="sports-scroll border-bottom card">
         <div class="container-fluid px-4 position-relative">
-            <div class="d-flex overflow-auto py-2" #scrollContainer>
+            <div class="d-flex overflow-auto py-2">
                 @for (sport of sports(); track sport.name) {
                     <button class="btn sport-tab"
                             [class.active]="selectedSport() === sport.type"
@@ -90,3 +90,10 @@
         </div>
     }
 </div>
+
+<!-- Scroll to top button, only shown when not at top -->
+@if (!isAtTop()) {
+    <button class="btn btn-primary scroll-to-top" (click)="scrollToTop()">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+}

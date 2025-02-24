@@ -62,3 +62,22 @@
   border: 1px solid #ffeeba;
   margin-bottom: 1rem;
 }
+.scroll-to-top {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0.8;
+  transition: opacity 0.3s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+
+  &:hover {
+    opacity: 1;
+  }
+}

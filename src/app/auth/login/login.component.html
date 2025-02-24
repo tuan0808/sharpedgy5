@@ -13,14 +13,16 @@
 
             <div class="card mt-4">
                 <div class="card-body">
-                    <form [formGroup]="loginForm" (ngSubmit)="login()">
+                    <form method="post" [formGroup]="loginForm" (ngSubmit)="login()" autocomplete="on" name="loginForm">
                         <div class="form-group">
                             <label for="email">Email</label>
                             <input
                                     id="email"
+                                    name="email"
                                     type="email"
                                     class="form-control"
                                     formControlName="email"
+                                    autocomplete="username"
                                     [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
                             />
                             @if(loginForm.get('email')?.errors?.['required'] && loginForm.get('email')?.touched){
@@ -35,9 +37,11 @@
                             <label for="password">Password</label>
                             <input
                                     id="password"
+                                    name="password"
                                     type="password"
                                     class="form-control"
                                     formControlName="password"
+                                    autocomplete="current-password"
                                     [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
                             />
                             @if(loginForm.get('password')?.errors?.['required'] && loginForm.get('password')?.touched){

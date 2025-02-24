@@ -32,7 +32,6 @@ export class BetSettlementService extends BaseApiService<Game> {
     private readonly uid = signal<string | null>(null);
 
     // Computed values
-    readonly currentBalance = computed(() => this.balance());
     readonly currentUserId = computed(() => this.uid());
 
     constructor() {

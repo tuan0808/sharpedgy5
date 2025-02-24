@@ -136,7 +136,7 @@ export class AuthService {
 
                             if (!user) {
                                 this.logSecurityEvent('user_signed_out');
-                                await this.router.navigate(['/login']);
+                                await this.router.navigate(['auth/login']);
                             } else {
                                 this.logSecurityEvent('auth_state_changed', { uid: user.uid });
                                 const currentReturnUrl = this.returnUrl();
