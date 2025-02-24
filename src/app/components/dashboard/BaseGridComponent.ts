@@ -95,15 +95,46 @@ export abstract class BaseGridComponent {
             resizable: {
                 enabled: this.auth.isAuthenticated()
             },
-            ...BaseGridComponent.GRID_DIMENSIONS,
-            outerMargin: true,
+            minCols: 24,
+            maxCols: 24,
+            minRows: 12,
+            maxRows: 12,
+            fixedColWidth: 5,
+            fixedRowHeight: 5,
+            outerMargin: false, // Disable outer margin to maximize space
             useTransformPositioning: true,
             mobileBreakpoint: 640,
+            margin: 5, // Minimal margin between items
             compactType: CompactType.None,
+            setGridSize: true,
+            disableWindowResize: false,
+            scrollToNewItems: false, // Prevent automatic scrolling
+            disableAutoPositionOnConflict: false,
+            swap: false,
+            swapWhileDragging: false,
+            maintainRatio: false, // Don't maintain aspect ratio
+            keepFixedHeightInMobile: true,
+            keepFixedWidthInMobile: true,
             itemChangeCallback: () => {
                 if (!this.isUndoRedoOperation()) {
                     this.handleGridChange();
                 }
+            },
+            initCallback: () => {
+                // Force a resize after initialization
+                setTimeout(() => {
+                    if (this.options().api) {
+                        this.options().api.resize();
+                    }
+                }, 100);
+            },
+            gridSizeChangedCallback: () => {
+                // Force a resize when grid size changes
+                setTimeout(() => {
+                    if (this.options().api) {
+                        this.options().api.resize();
+                    }
+                }, 100);
             }
         };
     }

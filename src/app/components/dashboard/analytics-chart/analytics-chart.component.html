@@ -1,0 +1,58 @@
+<div class="chart-container">
+    <div class="control-panel">
+        <button class="reset-button" (click)="resetGame()">Reset</button>
+        <div class="status-indicator">
+            @if (dataModel?.turn() === 'w') {
+                <span>Your Turn (White)</span>
+            } @else if (dataModel?.turn() === 'b' && isThinking) {
+                <span>AI... (Black)</span>
+            } @else if (dataModel?.turn() === 'b' && !isThinking) {
+                <span>AI Turn (Black)</span>
+
+            }
+        </div>
+    </div>
+    <div class="board-container">
+        <div class="chessboard">
+            <!-- Rank indicators (numbers) on the left side -->
+            <div class="rank-indicators">
+                @for(rank of '87654321'.split(''); track rank) {
+                    <div class="rank-indicator">
+                        {{ rank }}
+                    </div>
+                }
+
+            </div>
+            <div class="board-with-files">
+                <!-- File indicators (letters) on the bottom -->
+                <div class="file-indicators">
+                    @for (file of 'abcdefgh'.split(''); track file) {
+                        <div class="file-indicator">
+                            {{ file }}
+                        </div>
+                    }
+                </div>
+
+                <!-- The actual chess board -->
+                <div class="board-grid">
+                    @for (row of dataGrid; track $index; let y = $index) {
+                        <div class="board-row">
+                            @for (cell of row; track $index; let x = $index) {
+                                <div
+                                        class="board-cell"
+                                        [class.light]="(x + y) % 2 === 0"
+                                        [class.dark]="(x + y) % 2 !== 0"
+                                        [class.active]="selected && selected.x === x && selected.y === y"
+                                        [class.option]="validOptions.includes(x + ',' + y)"
+                                        (click)="handleInput(x, y)"
+                                >
+                                    <span class="piece">{{ computeValue(cell) }}</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

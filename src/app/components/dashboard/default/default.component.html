@@ -1,34 +1,27 @@
 <div class="gridster-wrapper">
-    <div class="dashboard-header d-flex justify-content-between align-items-center p-3">
+    <!-- Fixed-height header -->
+    <div class="dashboard-header">
         @if (currentDashboard()) {
             <h1>{{ currentDashboard()?.name }}</h1>
         }
 
-        <!-- Undo/Redo buttons - Only show when user is logged in -->
+        <!-- Undo/Redo buttons -->
         @if (!popupWindow() && auth.isAuthenticated()) {
             <div class="btn-group">
-                <button
-                        class="btn"
-                        [class.btn-primary]="canUndo()"
-                        [class.btn-secondary]="!canUndo()"
-                        [disabled]="!canUndo()"
-                        (click)="undo()"
+                <button class="btn" [class.btn-primary]="canUndo()" [class.btn-secondary]="!canUndo()"
+                        [disabled]="!canUndo()" (click)="undo()"
                         [title]="canUndo() ? 'Undo last action' : 'No more actions to undo'">
                     <i class="icofont icofont-undo" [class.text-muted]="!canUndo()"></i>
                 </button>
-                <button
-                        class="btn"
-                        [class.btn-primary]="canRedo()"
-                        [class.btn-secondary]="!canRedo()"
-                        [disabled]="!canRedo()"
-                        (click)="redo()"
+                <button class="btn" [class.btn-primary]="canRedo()" [class.btn-secondary]="!canRedo()"
+                        [disabled]="!canRedo()" (click)="redo()"
                         [title]="canRedo() ? 'Redo last action' : 'No more actions to redo'">
                     <i class="icofont icofont-redo" [class.text-muted]="!canRedo()"></i>
                 </button>
             </div>
         }
 
-        <!-- Action buttons - Only show when user is logged in -->
+        <!-- Action buttons -->
         @if (auth.isAuthenticated()) {
             <div class="btn-group">
                 <button class="btn btn-primary" (click)="saveDashboardState()">
@@ -44,15 +37,18 @@
         }
     </div>
 
-    <div class="gridster-container">
-        <gridster [options]="getGridOptions()"
-                  (dragover)="$event.preventDefault()"
-                  (drop)="onDrop($event)">
-            @for (item of gridItems(); track item.id) {
-                <gridster-item [item]="item">
-                    <ng-template appDynamicComponent></ng-template>
-                </gridster-item>
-            }
-        </gridster>
-    </div>
+    <!-- Main content area -->
+    @if (toggleAnalytics) {
+        <app-analytics-chart></app-analytics-chart>
+    } @else {
+        <div class="gridster-container">
+            <gridster [options]="getGridOptions()" (dragover)="$event.preventDefault()" (drop)="onDrop($event)">
+                @for (item of gridItems(); track item.id) {
+                    <gridster-item [item]="item">
+                        <ng-template appDynamicComponent></ng-template>
+                    </gridster-item>
+                }
+            </gridster>
+        </div>
+    }
 </div>

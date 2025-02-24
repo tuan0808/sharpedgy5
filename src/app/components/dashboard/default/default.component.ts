@@ -4,7 +4,7 @@ import {
     ViewEncapsulation,
     ChangeDetectorRef,
     AfterViewInit,
-    afterNextRender, afterRender, effect, signal, computed, DestroyRef
+    afterNextRender, afterRender, effect, signal, computed, DestroyRef, HostListener
 } from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {ChartistModule} from "ng-chartist";
@@ -21,6 +21,7 @@ import {BaseGridComponent} from '../BaseGridComponent';
 
 import {AuthService} from "../../../shared/services/auth.service";
 import {ToastrService} from "ngx-toastr";
+import {AnalyticsChartComponent} from "../analytics-chart/analytics-chart.component";
 
 @Component({
     selector: "app-default",
@@ -37,6 +38,7 @@ import {ToastrService} from "ngx-toastr";
         SidenavComponent,
         FormsModule,
         DynamicComponentDirective,
+        AnalyticsChartComponent,
     ],
     templateUrl: "./default.component.html",
     styleUrls: ["./default.component.scss"],
@@ -47,6 +49,8 @@ export class DefaultComponent extends BaseGridComponent {
     protected popupWindow = signal<Window | null>(null);
     private popupCheckInterval = signal<number | null>(null);
     protected isPopupOpen = computed(() => this.popupWindow() !== null);
+    protected toggleAnalytics = false
+    private resizeTimeout: any = null;
 
     constructor(
         componentRegistry: ComponentRegistryService,
@@ -65,6 +69,57 @@ export class DefaultComponent extends BaseGridComponent {
             }
         });
     }
+    @HostListener('window:resize', ['$event'])
+    onResize(event: Event) {
+        // Debounce resize events to prevent excessive calculations
+        if (this.resizeTimeout) {
+            clearTimeout(this.resizeTimeout);
+        }
+
+        this.resizeTimeout = setTimeout(() => {
+            this.adjustGridSize();
+        }, 200);
+    }
+
+    private adjustGridSize(): void {
+        if (this.gridster?.options?.api) {
+            // Force gridster to reset its layout
+            this.gridster.options.api.optionsChanged();
+
+            // Force the gridster to resize
+            setTimeout(() => {
+                this.gridster.options.api.resize();
+
+                // Force DOM update
+                this.cdr.detectChanges();
+            }, 100);
+        }
+    }
+
+
+// Modify your initializeComponent method to include grid initialization
+    protected override initializeComponent(): void {
+        afterNextRender(() => {
+            // Set up message handlers
+            window.addEventListener('message', this.handlePopupMessage.bind(this));
+
+            // Initialize gridster with a slight delay to ensure DOM is ready
+            setTimeout(() => {
+                this.adjustGridSize();
+
+                // Add event listener for fullscreen changes
+                document.addEventListener('fullscreenchange', () => this.adjustGridSize());
+            }, 200);
+        });
+    }
+
+
+    @HostListener('window:keydown', ['$event'])
+    handleKeyDown(event: KeyboardEvent) {
+        if (event.ctrlKey && event.shiftKey && event.key === 'C') {
+            this.toggleAnalytics = true
+        }
+    }
 
     protected getGridOptions(): GridsterConfig {
         const baseOptions = this.options();
@@ -77,18 +132,6 @@ export class DefaultComponent extends BaseGridComponent {
             };
         }
         return baseOptions;
-    }
-
-    protected initializeComponent(): void {
-        afterNextRender(() => {
-            // Only set up event listeners here
-            window.addEventListener('message', this.handlePopupMessage.bind(this));
-
-            // Initialize gridster options
-            if (this.gridster?.options?.api) {
-                this.gridster.options.api.optionsChanged();
-            }
-        });
     }
 
     async closePopupGrid(): Promise<void> {
