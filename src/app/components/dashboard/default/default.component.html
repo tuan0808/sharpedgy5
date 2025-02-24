@@ -38,9 +38,9 @@
     </div>
 
     <!-- Main content area -->
-    @if (toggleAnalytics) {
+   <!-- @if (toggleAnalytics) {
         <app-analytics-chart></app-analytics-chart>
-    } @else {
+    } @else {-->
         <div class="gridster-container">
             <gridster [options]="getGridOptions()" (dragover)="$event.preventDefault()" (drop)="onDrop($event)">
                 @for (item of gridItems(); track item.id) {
@@ -50,5 +50,5 @@
                 }
             </gridster>
         </div>
-    }
+    <!--}-->
 </div>
