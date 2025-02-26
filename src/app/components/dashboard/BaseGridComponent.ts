@@ -37,11 +37,12 @@ export abstract class BaseGridComponent {
     private static readonly MOVES_BEFORE_AUTO_SAVE = 20;
     private static readonly DEFAULT_HEADER_HEIGHT = 50;
     private static readonly GRID_DIMENSIONS = {
-        minCols: 24,
-        maxCols: 24,
-        minRows: 12,
+        maxCols: 12,
         maxRows: 12,
-        margin: 10
+        minRows: 8,
+        minCols: 8,
+
+        margin: 0
     };
 
     // Grid Configuration
@@ -116,20 +117,24 @@ export abstract class BaseGridComponent {
     protected addToHistory(): void {
         if (!this.auth.isAuthenticated()) return;
 
+        // Create a snapshot of the current grid state
         const currentState: GridState = {
-            items: this.gridItems().map(item => ({...item})),
+            items: this.gridItems().map(item => ({...item})), // Deep copy to avoid reference issues
             timestamp: Date.now()
         };
 
+        // Trim history to current index and append new state
         let history = [...this.gridHistory()];
         history = history.slice(0, this.currentHistoryIndex() + 1);
         history.push(currentState);
 
+        // Cap history size to prevent memory bloat
         if (history.length > BaseGridComponent.MAX_HISTORY_SIZE) {
             history.shift();
             this.currentHistoryIndex.update(val => val - 1);
         }
 
+        // Update signals with new history state
         this.gridHistory.set(history);
         this.currentHistoryIndex.update(val => val + 1);
         this.movesSinceLastSave.update(val => val + 1);
@@ -155,7 +160,8 @@ export abstract class BaseGridComponent {
             this.toastr.success('Dashboard saved successfully');
         } catch (error) {
             console.error('Error saving dashboard:', error);
-            this.toastr.error('Failed to save dashboard');
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            this.toastr.error(`Failed to save dashboard: ${errorMessage}`);
         }
     }
 

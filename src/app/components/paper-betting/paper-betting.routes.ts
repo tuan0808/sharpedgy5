@@ -20,8 +20,7 @@ export const paperBettingRoutes: Routes = [
                 data: {
                     title: "home",
                     breadcrumb: "home"
-                },
-                resolve: { account: betSettlementResolver, actuator: HealthCheckDirective}
+                }
             },
             {
                 path: 'achievements',
@@ -29,8 +28,7 @@ export const paperBettingRoutes: Routes = [
                 data: {
                     title: "Achievements",
                     breadcrumb: "achievements"
-                },
-                resolve: { account: betSettlementResolver, actuator: HealthCheckDirective}
+                }
             },
             {
                 path: 'educational-content',
@@ -38,8 +36,7 @@ export const paperBettingRoutes: Routes = [
                 data: {
                     title: "Educational Content",
                     breadcrumb: "educational-content"
-                },
-                resolve: { account: betSettlementResolver, actuator: HealthCheckDirective}
+                }
             },
             {
                 path: 'history',
@@ -47,8 +44,7 @@ export const paperBettingRoutes: Routes = [
                 data: {
                     title: "History",
                     breadcrumb: "history"
-                },
-                resolve: { account: betSettlementResolver, actuator: HealthCheckDirective}
+                }
 
             },
             {
@@ -57,8 +53,7 @@ export const paperBettingRoutes: Routes = [
                 data: {
                     title: "Virtual Wallet",
                     breadcrumb: "virtual-wallet"
-                },
-                resolve: { account: betSettlementResolver, actuator: HealthCheckDirective}
+                }
             }
         ]
     }

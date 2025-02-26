@@ -78,4 +78,5 @@ export class  ComponentRegistryService {
     async getDashboards(uuid: any): Promise<Observable<Dashboard[]>> {
         return this.httpClient.get<Dashboard[]>(`${this.endpoint}/dashboard/v1/${uuid}/getDashboards`);
     }
+
 }

@@ -1,18 +1,19 @@
 import {computed, effect, inject, Injectable, Signal, signal} from '@angular/core';
 import {
     signInWithEmailAndPassword,
-    signInWithRedirect,
     GoogleAuthProvider,
     signOut,
     User,
     onAuthStateChanged,
-    Auth
+    Auth, browserLocalPersistence, signInWithPopup
 } from "@angular/fire/auth";
-import { browserSessionPersistence, setPersistence } from 'firebase/auth';
+import { setPersistence } from 'firebase/auth';
 import { Router } from "@angular/router";
 import {LoginMetrics} from "../model/auth/LoginMetrics";
 import {environment} from "../../../environments/environment";
-import {AuthErrorDetail} from "../model/auth/AuthErrorDetail";
+import {PartialUser} from "../model/auth/PartialUser";
+import {HttpClient} from "@angular/common/http";
+import {UserService} from "./user.service";
 
 @Injectable({
     providedIn: 'root'
@@ -21,42 +22,32 @@ export class AuthService {
     private readonly SESSION_DURATION = 24 * 60 * 60 * 1000;
     private readonly MAX_LOGIN_ATTEMPTS = 3;
     private readonly LOCKOUT_DURATION = 15 * 60 * 1000;
-    private readonly RETRY_ATTEMPTS = 3;
-    private readonly RETRY_DELAY = 1000;
     private redirectUrl: string | null = null;
 
-    // Dependency injection using inject()
+    // Dependency injection
+    private readonly userService : UserService = inject(UserService)
     private readonly router = inject(Router);
     private readonly auth = inject(Auth);
+    private readonly http : HttpClient = inject(HttpClient)
 
-    // State management using signals
-    readonly authCheckComplete = signal<boolean>(false);
-    readonly user = signal<User | null>(null);
+    // State management with Signals
+    private readonly user = signal<User | null>(null);
+    private readonly authInitialized = signal<boolean>(false);
     private readonly loginMetrics = signal<LoginMetrics>({
         attempts: 0,
         lastAttempt: 0
     });
-    private readonly returnUrl = signal<string | null>(null);
 
-    // Computed values
-    readonly isAuthenticated: Signal<boolean> = computed(() =>
-        this.authCheckComplete() && !!this.user()
-    );
-
+    // Public reactive properties
+    readonly isAuthenticated: Signal<boolean> = computed(() => !!this.user());
     readonly displayName: Signal<string> = computed(() =>
-        this.user()?.displayName ||
-        this.user()?.email ||
-        'Guest'
+        this.user()?.displayName || this.user()?.email || 'Guest'
     );
 
     private sessionTimeout?: number;
-    private unsubscribeAuth?: () => void;
-    initializationPromise: Promise<void>;
 
     constructor() {
-        this.initializationPromise = this.initAuth();
-
-        // Setup effects
+        // Effects for session timeout and CSRF protection
         effect(() => {
             const user = this.user();
             if (user) {
@@ -74,7 +65,6 @@ export class AuthService {
             if (this.user()) {
                 const expectedState = sessionStorage.getItem('auth_state');
                 const actualState = new URLSearchParams(window.location.search).get('state');
-
                 if (expectedState && actualState && expectedState !== actualState) {
                     this.logout();
                     this.logSecurityEvent('csrf_attack_prevented');
@@ -83,16 +73,130 @@ export class AuthService {
         });
     }
 
+    // Lazy initialize auth when needed
+    async ensureAuthInitialized(): Promise<void> {
+        if (this.authInitialized()) return;
+        try {
+            await setPersistence(this.auth, browserLocalPersistence);
+            await new Promise<void>(resolve => {
+                console.log('hiiiii');
+                onAuthStateChanged(this.auth, async (user) => {
+                    this.user.set(user);
+                    this.authInitialized.set(true);
+                    resolve();
+                });
+            });
+        } catch (error) {
+            console.error('Auth initialization error:', error);
+            this.authInitialized.set(true); // Mark as initialized even on error
+        }
+    }
 
-    setRedirectUrl(url: string) {
+    checkIfNewUser(creationTime: string, lastSignInTime: string): boolean {
+        return creationTime === lastSignInTime;
+    }
+
+
+    // Public method to get UID
+    async getUID(): Promise<string | null> {
+        await this.ensureAuthInitialized();
+        return this.user()?.uid ?? null;
+    }
+
+
+
+    // Login methods
+    async loginWithEmail(email: string, password: string): Promise<User> {
+        await this.ensureAuthInitialized();
+        if (this.isLocked()) {
+            throw new Error('Account temporarily locked due to too many attempts');
+        }
+        try {
+            const credential = await signInWithEmailAndPassword(this.auth, email, password);
+            this.resetLoginMetrics();
+            this.logSecurityEvent('email_login_success', { uid: credential.user.uid });
+            await this.registerAccount(credential.user).then(s=>s)
+            return credential.user;
+        } catch (error) {
+            this.handleFailedLogin(email);
+            this.logSecurityEvent('email_login_failed', { error: (error as Error).message });
+            throw error;
+        }
+    }
+
+
+
+    async loginWithGoogle(): Promise<User> {
+        await this.ensureAuthInitialized();
+        if (this.isLocked()) {
+            throw new Error('Account temporarily locked due to too many attempts');
+        }
+        try {
+            const provider = new GoogleAuthProvider();
+            provider.addScope('email profile');
+            const credential = await signInWithPopup(this.auth, provider);
+            this.resetLoginMetrics();
+            this.logSecurityEvent('google_login_success', {
+                uid: credential.user.uid,
+                email: credential.user.email
+            });
+            // Call registerAccount but don't await it here
+            this.registerAccount(credential.user).catch(error => {
+                console.error('Failed to register user after login:', error);
+                // Optionally log this to your security event system
+                this.logSecurityEvent('post_login_registration_failed', { error: error.message });
+            });
+            return credential.user; // Return immediately after successful login
+        } catch (error) {
+            this.handleFailedLogin('google-auth');
+            this.logSecurityEvent('google_login_failed', { error: (error as Error).message });
+            throw error;
+        }
+    }
+
+    async registerAccount(user: User): Promise<Boolean> {
+        const isNew = this.checkIfNewUser(user.metadata.creationTime, user.metadata.lastSignInTime);
+        console.log(`Is new? ${isNew}, Creation: ${user.metadata.creationTime}, LastSignIn: ${user.metadata.lastSignInTime}`);
+
+        if (true) {
+            await this.userService.createUser({
+                uid: user.uid,
+                displayName: user.displayName,
+            });
+            console.log('createUser called');
+        }
+        return true;
+    }
+
+    // Logout
+    async logout(): Promise<void> {
+        try {
+            const user = this.user();
+            await signOut(this.auth);
+            this.user.set(null);
+            await this.router.navigate(['/auth/login']);
+            this.logSecurityEvent('logout_success', { uid: user?.uid });
+        } catch (error) {
+            this.logSecurityEvent('logout_error', { error: (error as Error).message });
+            throw error;
+        }
+    }
+
+    // Navigation to login form
+    async showLoginForm(): Promise<void> {
+        const currentUrl = this.router.url;
+        this.setRedirectUrl(currentUrl);
+        await this.router.navigate(['/auth/login'], {
+            queryParams: { returnUrl: currentUrl }
+        });
+    }
+
+    setRedirectUrl(url: string): void {
         this.redirectUrl = url;
     }
-    handleSuccessfulLogin() {
-        const router = inject(Router);
-        if (this.redirectUrl) {
-            router.navigate([this.redirectUrl]);
-            this.redirectUrl = null;  // Clear it after use
-        }
+
+    getRedirectUrl(): string | null {
+        return this.redirectUrl;
     }
 
     private generateStateParam(): string {
@@ -101,150 +205,15 @@ export class AuthService {
         return state;
     }
 
-    async showLoginForm() {
-        // Store current URL before navigation
-        const currentUrl = this.router.url;
-        this.setRedirectUrl(currentUrl);
-
-        // Navigate to login
-        await this.router.navigate(['/auth/login'], {
-            queryParams: { returnUrl: currentUrl }
-        });
-    }
-
-
-    private async initAuth(): Promise<void> {
-        try {
-            await setPersistence(this.auth, browserSessionPersistence);
-
-            if (this.unsubscribeAuth) {
-                this.unsubscribeAuth();
-            }
-
-            return new Promise<void>((resolve, reject) => {
-                const timeoutId = setTimeout(() => {
-                    reject(new Error('Auth initialization timeout'));
-                }, 10000);
-
-                this.unsubscribeAuth = onAuthStateChanged(
-                    this.auth,
-                    async (user) => {
-                        try {
-                            console.debug('Auth state changed:', user?.uid);
-                            this.user.set(user);
-                            this.authCheckComplete.set(true);
-
-                            if (!user) {
-                                this.logSecurityEvent('user_signed_out');
-                                await this.router.navigate(['/login']);
-                            } else {
-                                this.logSecurityEvent('auth_state_changed', { uid: user.uid });
-                                const currentReturnUrl = this.returnUrl();
-                                if (currentReturnUrl) {
-                                    this.returnUrl.set(null);
-                                    await this.router.navigate([currentReturnUrl]);
-                                }
-                            }
-
-                            clearTimeout(timeoutId);
-                            resolve();
-                        } catch (error) {
-                            reject(error);
-                        }
-                    },
-                    (error) => {
-                        console.error('Auth state change error:', error);
-                        clearTimeout(timeoutId);
-                        this.authCheckComplete.set(true);
-                        reject(error);
-                    }
-                );
-            });
-        } catch (error) {
-            this.logSecurityEvent('init_auth_error', { error: (error as Error).message });
-            this.authCheckComplete.set(true);
-            throw error;
-        }
-    }
-
-    async getUID(): Promise<string | null> {
-        try {
-            await Promise.race([
-                this.initializationPromise,
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Auth initialization timeout')), 5000)
-                )
-            ]);
-
-            if (!this.authCheckComplete()) {
-                await this.initAuth();
-            }
-
-            return this.auth.currentUser?.uid ?? null;
-        } catch (error) {
-            console.error('Error getting UID:', error);
-            return null;
-        }
-    }
-
-    async loginWithGoogle(): Promise<void> {
-        try {
-            this.returnUrl.set(this.router.url);
-            const provider = new GoogleAuthProvider();
-            provider.addScope('email');
-            provider.addScope('profile');
-            provider.setCustomParameters({
-                state: this.generateStateParam()
-            });
-
-            await signInWithRedirect(this.auth, provider);
-            this.logSecurityEvent('google_login_initiated');
-        } catch (error) {
-            this.logSecurityEvent('google_login_error', { error: (error as Error).message });
-            throw error;
-        }
-    }
-
-    async loginWithEmail(email: string, password: string): Promise<User> {
-        if (this.isLocked()) {
-            const error = new Error('Account temporarily locked');
-            this.logSecurityEvent('login_blocked_lockout', { email });
-            throw error;
-        }
-
-        try {
-            const { user } = await signInWithEmailAndPassword(this.auth, email, password);
-            this.resetLoginMetrics();
-            this.logSecurityEvent('email_login_success', { email });
-
-            const savedReturnUrl = this.returnUrl() || '/';
-            this.returnUrl.set(null);
-            await this.router.navigate([savedReturnUrl]);
-
-            return user;
-        } catch (error) {
-            const authError = error as AuthErrorDetail;
-            this.handleFailedLogin(email);
-            this.logSecurityEvent('email_login_error', {
-                email,
-                code: authError.code,
-                attempts: this.loginMetrics().attempts
-            });
-            throw authError;
-        }
-    }
-
-    // Effects are now directly in the constructor
+    // Login metrics and security
     private isLocked(): boolean {
         const metrics = this.loginMetrics();
-        return metrics.lockoutUntil !== undefined &&
-            Date.now() < metrics.lockoutUntil;
+        return metrics.lockoutUntil !== undefined && Date.now() < metrics.lockoutUntil;
     }
 
     private handleFailedLogin(email: string): void {
         const metrics = this.loginMetrics();
         const attempts = metrics.attempts + 1;
-
         if (attempts >= this.MAX_LOGIN_ATTEMPTS) {
             this.loginMetrics.set({
                 attempts: 0,
@@ -267,25 +236,11 @@ export class AuthService {
         });
     }
 
-
     private logSecurityEvent(event: string, data?: Record<string, any>): void {
         if (environment.production) {
             console.info(`Security Event: ${event}`, data);
         } else {
             console.debug(`Security Event: ${event}`, data);
-        }
-    }
-
-    async logout() {
-        try {
-            const user = this.auth.currentUser;
-            await signOut(this.auth);
-            this.user.set(null);
-            await this.router.navigate(['/login']);
-            this.logSecurityEvent('logout_success', { uid: user?.uid });
-        } catch (error) {
-            this.logSecurityEvent('logout_error', { error: (error as Error).message });
-            throw error;
         }
     }
 }

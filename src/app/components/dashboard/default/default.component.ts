@@ -4,7 +4,7 @@ import {
     ViewEncapsulation,
     ChangeDetectorRef,
     AfterViewInit,
-    afterNextRender, afterRender, effect, signal, computed, DestroyRef
+    afterNextRender, afterRender, effect, signal, computed, DestroyRef, HostListener
 } from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {ChartistModule} from "ng-chartist";
@@ -21,6 +21,13 @@ import {BaseGridComponent} from '../BaseGridComponent';
 
 import {AuthService} from "../../../shared/services/auth.service";
 import {ToastrService} from "ngx-toastr";
+import {DashboardItem} from "../../../shared/data/dashboard/DashboardItem";
+
+interface PopupMessage {
+    type: 'requestInitialData' | 'gridUpdate' | 'popupClosing';
+    items?: DashboardItem[]; // Assuming DashboardItem is the type for grid items
+}
+const POPUP_GRID_URL = '/popup-grid'; // Could come from environment.ts
 
 @Component({
     selector: "app-default",
@@ -47,6 +54,7 @@ export class DefaultComponent extends BaseGridComponent {
     protected popupWindow = signal<Window | null>(null);
     private popupCheckInterval = signal<number | null>(null);
     protected isPopupOpen = computed(() => this.popupWindow() !== null);
+    private toggleAnalytics: boolean;
 
     constructor(
         componentRegistry: ComponentRegistryService,
@@ -89,6 +97,13 @@ export class DefaultComponent extends BaseGridComponent {
                 this.gridster.options.api.optionsChanged();
             }
         });
+    }
+
+    @HostListener('window:keydown', ['$event'])
+    handleKeyDown(event: KeyboardEvent) {
+        if (event.ctrlKey && event.shiftKey && event.key === 'C') {
+            this.toggleAnalytics = true
+        }
     }
 
     async closePopupGrid(): Promise<void> {
@@ -135,25 +150,24 @@ export class DefaultComponent extends BaseGridComponent {
         const left = (window.innerWidth - width) / 2;
         const top = (window.innerHeight - height) / 2;
 
-        const newPopup = window.open('/popup-grid', 'DashboardGrid',
+        const newPopup = window.open(POPUP_GRID_URL, 'DashboardGrid',
             `width=${width},height=${height},left=${left},top=${top}`);
 
         this.popupWindow.set(newPopup);
         this.setupPopupChecks();
     }
 
-
-
     private setupPopupChecks() {
         if (this.popupCheckInterval()) {
             window.clearInterval(this.popupCheckInterval());
         }
 
+        // Increase interval to 1000ms to reduce performance impact
         const intervalId = window.setInterval(() => {
             if (this.popupWindow()?.closed) {
                 this.handlePopupClosed();
             }
-        }, 500);
+        }, 1000);
 
         this.popupCheckInterval.set(intervalId);
 
@@ -172,29 +186,30 @@ export class DefaultComponent extends BaseGridComponent {
         }
     }
 
-    private handlePopupMessage(event: MessageEvent) {
+    private handlePopupMessage(event: MessageEvent<PopupMessage>) {
+        if (!this.popupWindow()) return; // Early return if no popup
+
         switch (event.data.type) {
             case 'requestInitialData':
-                if (this.popupWindow()) {
-                    this.popupWindow()?.postMessage({
-                        type: 'gridData',
-                        items: this.gridItems()
-                    }, '*');
-                }
+                this.popupWindow()?.postMessage({
+                    type: 'gridData',
+                    items: this.gridItems()
+                }, '*');
                 break;
             case 'gridUpdate':
-                // Uncomment and update this section to handle grid updates from popup
-                this.gridItems.set(event.data.items);
+                this.gridItems.set(event.data.items ?? []);
                 if (this.gridster?.options?.api) {
                     this.gridster.options.api.optionsChanged();
                 }
                 break;
             case 'popupClosing':
-                this.gridItems.set(event.data.items);
+                this.gridItems.set(event.data.items ?? []);
                 this.saveDashboardState().then(() => {
                     this.handlePopupClosed();
                 });
                 break;
+            default:
+                console.warn('Unhandled popup message type:', event.data.type);
         }
     }
 
