@@ -21,7 +21,13 @@ import {BaseGridComponent} from '../BaseGridComponent';
 
 import {AuthService} from "../../../shared/services/auth.service";
 import {ToastrService} from "ngx-toastr";
-import {AnalyticsChartComponent} from "../analytics-chart/analytics-chart.component";
+import {DashboardItem} from "../../../shared/data/dashboard/DashboardItem";
+
+interface PopupMessage {
+    type: 'requestInitialData' | 'gridUpdate' | 'popupClosing';
+    items?: DashboardItem[]; // Assuming DashboardItem is the type for grid items
+}
+const POPUP_GRID_URL = '/popup-grid'; // Could come from environment.ts
 
 @Component({
     selector: "app-default",
@@ -38,7 +44,6 @@ import {AnalyticsChartComponent} from "../analytics-chart/analytics-chart.compon
         SidenavComponent,
         FormsModule,
         DynamicComponentDirective,
-        AnalyticsChartComponent,
     ],
     templateUrl: "./default.component.html",
     styleUrls: ["./default.component.scss"],
@@ -49,8 +54,7 @@ export class DefaultComponent extends BaseGridComponent {
     protected popupWindow = signal<Window | null>(null);
     private popupCheckInterval = signal<number | null>(null);
     protected isPopupOpen = computed(() => this.popupWindow() !== null);
-    protected toggleAnalytics = false
-    private resizeTimeout: any = null;
+    private toggleAnalytics: boolean;
 
     constructor(
         componentRegistry: ComponentRegistryService,
@@ -69,57 +73,6 @@ export class DefaultComponent extends BaseGridComponent {
             }
         });
     }
-    @HostListener('window:resize', ['$event'])
-    onResize(event: Event) {
-        // Debounce resize events to prevent excessive calculations
-        if (this.resizeTimeout) {
-            clearTimeout(this.resizeTimeout);
-        }
-
-        this.resizeTimeout = setTimeout(() => {
-            this.adjustGridSize();
-        }, 200);
-    }
-
-    private adjustGridSize(): void {
-        if (this.gridster?.options?.api) {
-            // Force gridster to reset its layout
-            this.gridster.options.api.optionsChanged();
-
-            // Force the gridster to resize
-            setTimeout(() => {
-                this.gridster.options.api.resize();
-
-                // Force DOM update
-                this.cdr.detectChanges();
-            }, 100);
-        }
-    }
-
-
-// Modify your initializeComponent method to include grid initialization
-    protected override initializeComponent(): void {
-        afterNextRender(() => {
-            // Set up message handlers
-            window.addEventListener('message', this.handlePopupMessage.bind(this));
-
-            // Initialize gridster with a slight delay to ensure DOM is ready
-            setTimeout(() => {
-                this.adjustGridSize();
-
-                // Add event listener for fullscreen changes
-                document.addEventListener('fullscreenchange', () => this.adjustGridSize());
-            }, 200);
-        });
-    }
-
-
-    @HostListener('window:keydown', ['$event'])
-    handleKeyDown(event: KeyboardEvent) {
-        if (event.ctrlKey && event.shiftKey && event.key === 'C') {
-            this.toggleAnalytics = true
-        }
-    }
 
     protected getGridOptions(): GridsterConfig {
         const baseOptions = this.options();
@@ -132,6 +85,25 @@ export class DefaultComponent extends BaseGridComponent {
             };
         }
         return baseOptions;
+    }
+
+    protected initializeComponent(): void {
+        afterNextRender(() => {
+            // Only set up event listeners here
+            window.addEventListener('message', this.handlePopupMessage.bind(this));
+
+            // Initialize gridster options
+            if (this.gridster?.options?.api) {
+                this.gridster.options.api.optionsChanged();
+            }
+        });
+    }
+
+    @HostListener('window:keydown', ['$event'])
+    handleKeyDown(event: KeyboardEvent) {
+        if (event.ctrlKey && event.shiftKey && event.key === 'C') {
+            this.toggleAnalytics = true
+        }
     }
 
     async closePopupGrid(): Promise<void> {
@@ -178,25 +150,24 @@ export class DefaultComponent extends BaseGridComponent {
         const left = (window.innerWidth - width) / 2;
         const top = (window.innerHeight - height) / 2;
 
-        const newPopup = window.open('/popup-grid', 'DashboardGrid',
+        const newPopup = window.open(POPUP_GRID_URL, 'DashboardGrid',
             `width=${width},height=${height},left=${left},top=${top}`);
 
         this.popupWindow.set(newPopup);
         this.setupPopupChecks();
     }
 
-
-
     private setupPopupChecks() {
         if (this.popupCheckInterval()) {
             window.clearInterval(this.popupCheckInterval());
         }
 
+        // Increase interval to 1000ms to reduce performance impact
         const intervalId = window.setInterval(() => {
             if (this.popupWindow()?.closed) {
                 this.handlePopupClosed();
             }
-        }, 500);
+        }, 1000);
 
         this.popupCheckInterval.set(intervalId);
 
@@ -215,29 +186,30 @@ export class DefaultComponent extends BaseGridComponent {
         }
     }
 
-    private handlePopupMessage(event: MessageEvent) {
+    private handlePopupMessage(event: MessageEvent<PopupMessage>) {
+        if (!this.popupWindow()) return; // Early return if no popup
+
         switch (event.data.type) {
             case 'requestInitialData':
-                if (this.popupWindow()) {
-                    this.popupWindow()?.postMessage({
-                        type: 'gridData',
-                        items: this.gridItems()
-                    }, '*');
-                }
+                this.popupWindow()?.postMessage({
+                    type: 'gridData',
+                    items: this.gridItems()
+                }, '*');
                 break;
             case 'gridUpdate':
-                // Uncomment and update this section to handle grid updates from popup
-                this.gridItems.set(event.data.items);
+                this.gridItems.set(event.data.items ?? []);
                 if (this.gridster?.options?.api) {
                     this.gridster.options.api.optionsChanged();
                 }
                 break;
             case 'popupClosing':
-                this.gridItems.set(event.data.items);
+                this.gridItems.set(event.data.items ?? []);
                 this.saveDashboardState().then(() => {
                     this.handlePopupClosed();
                 });
                 break;
+            default:
+                console.warn('Unhandled popup message type:', event.data.type);
         }
     }
 

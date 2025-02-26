@@ -39,34 +39,21 @@ interface AuthErrorDetail {
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
-  //Injectors
-  private fb : FormBuilder = inject(FormBuilder)
-  private authService : AuthService = inject(AuthService)
-  private router : Router = inject(Router)
-  private route : ActivatedRoute = inject(ActivatedRoute)
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
   loginForm: FormGroup;
   loginError = signal<string | null>(null);
   isLoading = signal(false);
 
-  constructor(
-
-  ) {
+  constructor() {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      password: ['', [Validators.required, Validators.minLength(6)]],
     });
   }
-
-  private async navigateAfterLogin() {
-    // Check for returnUrl in query params
-    const returnUrl = this.route.snapshot.queryParams['returnUrl'];
-    if (returnUrl) {
-      await this.router.navigate([returnUrl]);
-    } else {
-      await this.router.navigate(['/dashboard']);
-    }
-  }
-
 
   async login() {
     if (this.loginForm.invalid) return;
@@ -79,6 +66,7 @@ export class LoginComponent {
       await this.authService.loginWithEmail(email, password);
       await this.navigateAfterLogin();
     } catch (error: any) {
+      console.error('Email login error:', error);
       this.loginError.set(this.getErrorMessage(error.code));
     } finally {
       this.isLoading.set(false);
@@ -86,15 +74,34 @@ export class LoginComponent {
   }
 
   async googleLogin() {
+    this.isLoading.set(true);
+    this.loginError.set(null);
+
     try {
-      this.isLoading.set(true);
-      this.loginError.set(null);
-      await this.authService.loginWithGoogle();
+      const user = await this.authService.loginWithGoogle();
+      console.log('Google login succeeded, UID:', user.uid); // Extra confirmation
       await this.navigateAfterLogin();
+      // Optional: Notify user about popup
+      setTimeout(() => {
+        if (this.isLoading() === false) {
+          this.loginError.set('Login successful! Please close the Google popup if it remains open.');
+        }
+      }, 1000);
     } catch (error: any) {
+      console.error('Google login error:', error);
       this.loginError.set(this.getErrorMessage(error.code));
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  private async navigateAfterLogin() {
+    const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '';
+    try {
+      await this.router.navigate([returnUrl]);
+    } catch (navError) {
+      console.error('Navigation error:', navError);
+      this.loginError.set('Login succeeded, but navigation failed.  Please go to the dashboard manually.');
     }
   }
 
@@ -105,7 +112,9 @@ export class LoginComponent {
       case 'auth/too-many-requests':
         return 'Too many attempts. Please try again later';
       case 'auth/popup-closed-by-user':
-        return 'Login cancelled';
+        return 'Login cancelled by closing the popup';
+      case 'auth/popup-blocked':
+        return 'Popup blocked. Please allow popups and try again.';
       default:
         return 'An error occurred during login';
     }

@@ -8,7 +8,6 @@ import {DashboardItem} from "../data/dashboard/DashboardItem";
 import {catchError, map, tap} from "rxjs/operators";
 import {Observable, shareReplay, throwError} from "rxjs";
 import {Dashboard} from "../data/dashboard/Dashboard";
-import {AnalyticsChartComponent} from "../../components/dashboard/analytics-chart/analytics-chart.component";
 
 @Injectable({
     providedIn: 'root'
@@ -80,12 +79,4 @@ export class  ComponentRegistryService {
         return this.httpClient.get<Dashboard[]>(`${this.endpoint}/dashboard/v1/${uuid}/getDashboards`);
     }
 
-    private registry: { [key: string]: any } = {
-        'AnalyticsChartComponent': AnalyticsChartComponent
-        // Other components...
-    };
-
-    getComponentType(name: string) {
-        return this.registry[name] || null;
-    }
 }

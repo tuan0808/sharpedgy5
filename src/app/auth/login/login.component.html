@@ -56,8 +56,7 @@
                             <button
                                     type="submit"
                                     class="btn btn-primary w-100"
-                                    [disabled]="loginForm.invalid || isLoading()"
-                            >
+                                    [disabled]="loginForm.invalid || isLoading()">
                                 @if(isLoading()){
                                     <span class="spinner-border spinner-border-sm me-2"></span>
                                 }

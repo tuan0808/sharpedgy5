@@ -1,54 +1,57 @@
 <div class="gridster-wrapper">
-    <!-- Fixed-height header -->
-    <div class="dashboard-header">
-        @if (currentDashboard()) {
-            <h1>{{ currentDashboard()?.name }}</h1>
-        }
-
-        <!-- Undo/Redo buttons -->
-        @if (!popupWindow() && auth.isAuthenticated()) {
-            <div class="btn-group">
-                <button class="btn" [class.btn-primary]="canUndo()" [class.btn-secondary]="!canUndo()"
-                        [disabled]="!canUndo()" (click)="undo()"
-                        [title]="canUndo() ? 'Undo last action' : 'No more actions to undo'">
+    <div class="d-flex align-items-center justify-content-between" style="height: 50px;">
+        <div class="d-flex gap-2">
+            @if (!popupWindow() && auth.isAuthenticated()) {
+                <!-- Undo Button -->
+                <button class="btn btn-sm btn-outline-secondary"
+                        [class.btn-primary]="canUndo()"
+                        [class.btn-secondary]="!canUndo()"
+                        [disabled]="!auth.isAuthenticated() || !canUndo()"
+                        (click)="undo()"
+                        [title]="auth.isAuthenticated() ? (canUndo() ? 'Undo last action' : 'No actions to undo') : 'You must be logged in to modify the dashboard'">
                     <i class="icofont icofont-undo" [class.text-muted]="!canUndo()"></i>
                 </button>
-                <button class="btn" [class.btn-primary]="canRedo()" [class.btn-secondary]="!canRedo()"
-                        [disabled]="!canRedo()" (click)="redo()"
-                        [title]="canRedo() ? 'Redo last action' : 'No more actions to redo'">
+                <!-- Redo Button -->
+                <button class="btn btn-sm btn-outline-secondary"
+                        [class.btn-primary]="canRedo()"
+                        [class.btn-secondary]="!canRedo()"
+                        [disabled]="!auth.isAuthenticated() || !canRedo()"
+                        (click)="redo()"
+                        [title]="auth.isAuthenticated() ? (canRedo() ? 'Redo last action' : 'No more actions to redo') : 'You must be logged in to modify the dashboard'">
                     <i class="icofont icofont-redo" [class.text-muted]="!canRedo()"></i>
                 </button>
-            </div>
-        }
-
-        <!-- Action buttons -->
-        @if (auth.isAuthenticated()) {
-            <div class="btn-group">
-                <button class="btn btn-primary" (click)="saveDashboardState()">
+            }
+            @if (auth.isAuthenticated()) {
+                <button class="btn btn-primary"
+                        (click)="saveDashboardState()"
+                        [disabled]="!auth.isAuthenticated()"
+                        [title]="auth.isAuthenticated() ? 'Save dashboard state' : 'You must be logged in to modify the dashboard'">
                     <i class="icofont icofont-save"></i>
                 </button>
-                <button class="btn btn-secondary" (click)="toggleGrid()">
+                <!-- Grid Toggle Button (unchanged) -->
+                <button class="btn btn-sm btn-outline-secondary"
+                        (click)="toggleGrid()">
                     <i class="icofont icofont-grid-advance"></i>
                 </button>
-                <button class="btn btn-primary" (click)="openPopupGrid()">
+                <!-- Popout Button -->
+                <button class="btn btn-sm btn-outline-secondary"
+                        (click)="openPopupGrid()"
+                        [disabled]="!auth.isAuthenticated()"
+                        [title]="auth.isAuthenticated() ? 'Open in new window' : 'You must be logged in to modify the dashboard'">
                     <i class="icofont icofont-external-link"></i>
                 </button>
-            </div>
-        }
-    </div>
-
-    <!-- Main content area -->
-   <!-- @if (toggleAnalytics) {
-        <app-analytics-chart></app-analytics-chart>
-    } @else {-->
-        <div class="gridster-container">
-            <gridster [options]="getGridOptions()" (dragover)="$event.preventDefault()" (drop)="onDrop($event)">
-                @for (item of gridItems(); track item.id) {
-                    <gridster-item [item]="item">
-                        <ng-template appDynamicComponent></ng-template>
-                    </gridster-item>
-                }
-            </gridster>
+            }
         </div>
-    <!--}-->
+    </div>
+    <div class="gridster-container">
+        <gridster [options]="getGridOptions()"
+                  (dragover)="$event.preventDefault()"
+                  (drop)="onDrop($event)">
+            @for (item of gridItems(); track item.id) {
+                <gridster-item [item]="item">
+                    <ng-template appDynamicComponent></ng-template>
+                </gridster-item>
+            }
+        </gridster>
+    </div>
 </div>

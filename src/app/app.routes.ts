@@ -7,7 +7,7 @@ import { AdminGuard } from './shared/guard/admin.guard';
 // import {RegisterComponent} from "./auth/register/register.component";
 import {VerificationComponent} from "./auth/verification/verification.component";
 import {ResetPwdComponent} from "./auth/reset-pwd/reset-pwd.component";
-import {PopupGridComponent} from "./components/dashboard/popup-grid/popup-grid.component";
+//import {PopupGridComponent} from "./components/dashboard/popup-grid/popup-grid.component";
 import {LoginComponent} from "./auth/login/login.component";
 
 export const routes: Routes = [
@@ -44,9 +44,9 @@ export const routes: Routes = [
         //canActivate: [AdminGuard],
         children: fullRoutes,
     },
-    {
-        path: 'popup-grid',
-        component: PopupGridComponent,
-        children: content
-    }
+    // {
+    //     path: 'popup-grid',
+    //     component: PopupGridComponent,
+    //     children: content
+    // }
 ];

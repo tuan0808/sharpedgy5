@@ -31,7 +31,7 @@ export class BetSettlementService extends BaseApiService<Game> {
     private readonly BASE_RETRY_DELAY = 2000; // 2 seconds
     private sseRetryCount = 0;
 
-    
+
     // Signals
     readonly account = signal<Account | null>(null);
     readonly allGames = signal<Game[]>([]);
@@ -48,7 +48,7 @@ export class BetSettlementService extends BaseApiService<Game> {
 
     private async initializeUser(retryCount = 0): Promise<void> {
         try {
-            const userId = await Promise.race([
+            let userId = await Promise.race<string>([
                 this.auth.getUID(),
                 new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('Auth timeout')), 5000)

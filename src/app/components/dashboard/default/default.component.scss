@@ -1,136 +1,55 @@
-/* ROOT LEVEL FIXES */
-:host {
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-/* WRAPPER FIXES */
 .gridster-wrapper {
-  height: 100vh !important;
-  max-height: 100vh !important;
-  width: 100% !important;
-  overflow: hidden !important;
-  display: flex;
-  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+
+  .dashboard-header {
+    height: 64px;
+    border-bottom: 1px solid #ddd;
+  }
 }
 
-/* HEADER FIXES */
-.dashboard-header {
-  height: 64px !important;
-  min-height: 64px !important;
-  max-height: 64px !important;
-  flex-shrink: 0 !important;
-  border-bottom: 1px solid #ddd;
-  padding: 0 15px !important;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  overflow: hidden !important;
-}
-
-/* CONTAINER FIXES */
 .gridster-container {
-  flex: 1 !important;
-  position: relative !important;
-  height: calc(100vh - 64px) !important;
-  max-height: calc(100vh - 64px) !important;
-  width: 100% !important;
-  overflow: hidden !important;
-  padding: 0 !important;
-  margin: 0 !important;
+  padding: 20px;
+  height: calc(100vh - 64px);
+  overflow: auto;
+
+  .add-item-btn {
+    margin-bottom: 20px;
+    padding: 8px 16px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:hover {
+      background: #0056b3;
+    }
+  }
 }
 
-/* GRIDSTER COMPONENT FIXES */
 ::ng-deep gridster {
-  height: 100% !important;
+  background: #f5f5f5;
+  height: calc(100vh - 120px) !important;
   width: 100% !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  overflow: hidden !important;
   margin: 0 !important;
-  padding: 0 !important;
 }
 
-/* GRIDSTER ITEM FIXES */
 ::ng-deep gridster-item {
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-  border-radius: 4px !important;
-  background: #fff !important;
-}
-
-/* GRIDSTER ITEM CONTENT */
-::ng-deep gridster-item > * {
-  flex: 1 !important;
-  overflow: hidden !important;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-/* ENSURE GRID ELEMENTS TAKE PROPER SIZE */
-::ng-deep .gridster-column,
-::ng-deep .gridster-row {
-  transition: none !important;
-}
-
-::ng-deep gridster-preview,
-::ng-deep gridster-grid {
-  width: 100% !important;
-  height: 100% !important;
-}
-
-/* DISABLE ALL SCROLLBARS */
-::-webkit-scrollbar {
-  width: 0 !important;
-  height: 0 !important;
-  display: none !important;
-}
-
-* {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-
-/* FORCE BOX-SIZING ON ALL ELEMENTS */
-* {
-  box-sizing: border-box !important;
-}
-
-/* ANALYTICS COMPONENT FIX */
-app-analytics-chart {
-  flex: 1 !important;
-  overflow: hidden !important;
-  width: 100% !important;
-  height: calc(100vh - 64px) !important;
-}
-
-/* DYNAMIC COMPONENT FIX */
-::ng-deep .dynamic-component-container {
-  overflow: hidden !important;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-/* PREVENT ANIMATIONS DURING RESIZE */
-::ng-deep gridster-item.no-transition {
-  transition: none !important;
-}
-
-/* FIX FOR SPECIFIC ANGULAR-GRIDSTER2 ISSUES */
-::ng-deep gridster-item .gridster-item-resizable-handler {
-  z-index: 2 !important;
-}
-
-::ng-deep gridster-item .gridster-item-content {
-  width: 100% !important;
-  height: 100% !important;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: absolute !important;
-  overflow: hidden !important;
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.popup-message {
+  height: calc(100vh - 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
