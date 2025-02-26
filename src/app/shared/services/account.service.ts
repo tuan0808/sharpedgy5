@@ -15,7 +15,7 @@ export class AccountService {
   }
 
   private loadAccounts(): void {
-    this.http.get<Account[]>('/api/accounts').subscribe(
+    this.http.get<Account[]>('/api/accounts',{withCredentials: true}).subscribe(
         accounts => this.accountsSubject.next(accounts)
     );
   }

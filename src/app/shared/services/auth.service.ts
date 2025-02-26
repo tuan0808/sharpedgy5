@@ -27,7 +27,7 @@ export class AuthService {
     // Dependency injection
     private readonly userService : UserService = inject(UserService)
     private readonly router = inject(Router);
-    private readonly auth = inject(Auth);
+    readonly auth = inject(Auth);
     private readonly http : HttpClient = inject(HttpClient)
 
     // State management with Signals

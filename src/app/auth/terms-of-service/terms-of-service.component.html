@@ -1,0 +1,89 @@
+<!-- terms.component.html -->
+<div class="page-wrapper">
+    <div class="auth-bg">
+        <div class="authentication-box">
+            <div class="text-center">
+                <img src="assets/images/logo.png" alt="Logo" />
+                <h4 class="mt-4">Terms of Service</h4>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="terms-content" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+                        <h5>Welcome to our website</h5>
+                        <p>By accessing or using our website, you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our services.</p>
+
+                        <h6>1. Eligibility</h6>
+                        <p>You must be at least 18 years old (or the legal age in your jurisdiction) to use our services. By using our website, you represent and warrant that you meet this requirement.</p>
+
+                        <h6>2. Services Provided</h6>
+                        <p>Our website offers live sports data, paper betting (fake bets with no monetary value), and customizable dashboards for tracking sports and betting analytics. No real money wagering or gambling occurs on our platform.</p>
+
+                        <h6>3. Account Registration</h6>
+                        <p>To access certain features, you may need to create an account. You are responsible for maintaining the confidentiality of your login credentials and all activities that occur under your account.</p>
+
+                        <h6>4. Acceptable Use</h6>
+                        <p>You agree not to use our services for any unlawful or prohibited activities, including but not limited to:</p>
+                        <ul>
+                            <li>Attempting to manipulate sports data or outcomes</li>
+                            <li>Using automated scripts or bots to interact with our platform</li>
+                            <li>Harassing or defrauding other users</li>
+                            <li>Violating any applicable laws or regulations</li>
+                        </ul>
+
+                        <h6>5. Intellectual Property</h6>
+                        <p>All content, trademarks, logos, and intellectual property on this website belong to us or its licensors. You may not use, reproduce, or distribute any content without our prior written consent.</p>
+
+                        <h6>6. Disclaimers</h6>
+                        <p>Our services are provided "as is" without any warranties, express or implied. We do not guarantee the accuracy, completeness, or reliability of the sports data provided. Your use of the site is at your own risk.</p>
+
+                        <h6>7. Limitation of Liability</h6>
+                        <p>To the fullest extent permitted by law, we are not liable for any direct, indirect, incidental, consequential, or punitive damages arising from your use of our website.</p>
+
+                        <h6>8. Termination</h6>
+                        <p>We reserve the right to suspend or terminate your account at our sole discretion if you violate these Terms.</p>
+
+                        <h6>9. Changes to These Terms</h6>
+                        <p>We may update these Terms from time to time. Continued use of our services after updates constitutes acceptance of the revised Terms.</p>
+
+                        <h6>10. Contact Us</h6>
+                        <p>If you have any questions about these Terms, please contact us at our support email.</p>
+                    </div>
+
+                    <form method="post" [formGroup]="termsForm" (ngSubmit)="acceptTerms()" autocomplete="off" name="termsForm">
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input
+                                        id="agreeTerms"
+                                        name="agreeTerms"
+                                        type="checkbox"
+                                        class="form-check-input"
+                                        formControlName="agreeTerms"
+                                        [class.is-invalid]="termsForm.get('agreeTerms')?.invalid && termsForm.get('agreeTerms')?.touched"
+                                />
+                                <label class="form-check-label" for="agreeTerms">
+                                    I agree to the terms and that I am 18 years and older.
+                                </label>
+                                @if(termsForm.get('agreeTerms')?.errors?.['required'] && termsForm.get('agreeTerms')?.touched){
+                                    <div class="invalid-feedback">You must agree to the terms to continue</div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <button
+                                    type="submit"
+                                    class="btn btn-primary w-100"
+                                    [disabled]="termsForm.invalid || isLoading()">
+                                @if(isLoading()){
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Continue
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
