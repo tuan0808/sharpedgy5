@@ -4,7 +4,7 @@ import {GameCardComponent} from "./game-card/game-card.component";
 import {SportType} from "../../../shared/model/SportType";
 import {BetSettlementService} from "../../../shared/services/betSettlement.service";
 import {Game} from "../../../shared/model/paper-betting/Game";
-import {BehaviorSubject, firstValueFrom, Observable, retry, timeout} from "rxjs";
+import {BehaviorSubject, firstValueFrom, Observable, of, retry, timeout} from "rxjs";
 import {CurrencyPipe, DatePipe} from "@angular/common";
 import {SportDetail} from "../../../shared/model/SportDetail";
 import {PaginationComponent} from "../../../shared/components/pagination/pagination.component";
@@ -32,7 +32,6 @@ export class HomeComponent implements OnInit {
   private readonly toastr = inject(ToastrService);
   private readonly MAX_LOAD_RETRIES = 3;
   private readonly RETRY_DELAY = 2000; // 2 seconds
-  private retryCount = 0;
   private previousBalance: number | null = null;
 
   // Scroll tracking
@@ -66,16 +65,13 @@ export class HomeComponent implements OnInit {
     // Setup effect to watch for account changes
     effect(() => {
       const account = this.account();
-
-
       if (account) {
         this.hasError.set(false);
         this.errorMessage.set('');
 
-        this.toastr.info(account.balance.toFixed(), "Balance Change")
+        this.toastr.info(account.balance.toFixed(), "Balance Change");
         // Check for balance changes and show notification
         if (this.previousBalance !== null && this.previousBalance !== account.balance) {
-          console.log('hi')
           const difference = account.balance - this.previousBalance;
           const message = difference > 0
               ? `Balance increased by ${difference.toFixed(2)}!`
@@ -84,7 +80,6 @@ export class HomeComponent implements OnInit {
           const toastrType = difference > 0 ? 'success' : 'info';
           this.toastr[toastrType](message, 'Balance Update');
         }
-
         this.previousBalance = account.balance;
       }
     });
@@ -92,6 +87,8 @@ export class HomeComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await this.waitForUser();
+    console.log('User ID ready:', this.betSettlement.currentUserId());
+    await this.loadGames();
   }
 
   // Use Angular's HostListener for scroll events
@@ -113,10 +110,10 @@ export class HomeComponent implements OnInit {
         if (retryCount >= this.MAX_LOAD_RETRIES) {
           throw new Error('Failed to load user after maximum retries');
         }
+        console.log(`Waiting for user, attempt ${retryCount + 1}/${this.MAX_LOAD_RETRIES}`);
         await new Promise(resolve => setTimeout(resolve, 1000));
         retryCount++;
       }
-      await this.loadGames();
     } catch (error) {
       console.error('Error waiting for user:', error);
       this.handleError(error);
@@ -124,7 +121,10 @@ export class HomeComponent implements OnInit {
   }
 
   private async loadGames(): Promise<void> {
-    if (this.isLoading()) return;
+    if (this.isLoading() || !this.betSettlement.currentUserId()) {
+      console.log('Skipping loadGames: Loading in progress or no user ID');
+      return;
+    }
 
     try {
       this.isLoading.set(true);
@@ -132,15 +132,19 @@ export class HomeComponent implements OnInit {
       this.errorMessage.set('');
 
       const gamesObservable = this.betSettlement.getSportsByNFL(this.selectedSport()).pipe(
-          timeout(10000), // 10 second timeout
+          timeout(10000),
           retry({
             count: 2,
             delay: (error, retryCount) => {
               console.log(`Retrying game load attempt ${retryCount}`, error);
               return new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY));
-            }
+            },
           }),
-          tap(games => console.log(`Retrieved ${games?.length} games`))
+          tap(games => console.log(`Retrieved ${games?.length} games`)),
+          catchError(err => {
+            console.error('Game fetch failed:', err);
+            return of([]); // Return an empty array as a fallback
+          })
       );
 
       await firstValueFrom(gamesObservable);
@@ -185,7 +189,6 @@ export class HomeComponent implements OnInit {
   }
 
   async onRetry(): Promise<void> {
-    this.retryCount = 0;
     await this.loadGames();
   }
 

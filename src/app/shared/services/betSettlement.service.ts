@@ -31,7 +31,6 @@ export class BetSettlementService extends BaseApiService<Game> {
     private readonly BASE_RETRY_DELAY = 2000; // 2 seconds
     private sseRetryCount = 0;
 
-
     // Signals
     readonly account = signal<Account | null>(null);
     readonly allGames = signal<Game[]>([]);
@@ -48,29 +47,22 @@ export class BetSettlementService extends BaseApiService<Game> {
 
     private async initializeUser(retryCount = 0): Promise<void> {
         try {
-            let userId = await Promise.race<string>([
+            const userId = await Promise.race<string>([
                 this.auth.getUID(),
                 new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('Auth timeout')), 5000)
-                )
-            ]).catch(error => {
-                console.error('Error:', error);
-                return null;
-            });
-
-            if (userId) {
-                this.uid.set(userId);
-                console.log('Set uid signal:', userId);
-                await this.setupAccountUpdates(userId);
-            } else if (retryCount < this.MAX_INIT_RETRIES) {
-                await this.retryInitialize(retryCount);
-            } else {
-                console.error('Failed to initialize user after max retries');
-            }
+                ),
+            ]);
+            this.uid.set(userId);
+            console.log('User initialized with ID:', userId);
+            await this.setupAccountUpdates(userId);
         } catch (error) {
             console.error('Error initializing user:', error);
             if (retryCount < this.MAX_INIT_RETRIES) {
                 await this.retryInitialize(retryCount);
+            } else {
+                console.error('Failed to initialize user after max retries');
+                this.uid.set(null); // Explicitly set to null to avoid hanging
             }
         }
     }
