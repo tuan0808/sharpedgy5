@@ -52,7 +52,8 @@ export class UserService {
             const response = await lastValueFrom(
                 this.http.post(`${this.apiUrl}/register`, user, {
                     observe: 'response', // Get full HttpResponse
-                    responseType: 'text' // Treat as text to avoid JSON parsing issues
+                    responseType: 'text', // Treat as text to avoid JSON parsing issues
+                    withCredentials: true
                 }).pipe(
                     retry({
                         count: 3,
@@ -61,9 +62,6 @@ export class UserService {
                     })
                 )
             );
-
-            console.log('After HTTP call, Status:', response.status);
-            console.log('After HTTP call, Body:', response.body);
 
             if (response.status !== 200) {
                 throw new Error(`Unexpected status: ${response.status}`);

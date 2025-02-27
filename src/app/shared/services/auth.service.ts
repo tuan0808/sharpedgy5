@@ -27,7 +27,7 @@ export class AuthService {
     // Dependency injection
     private readonly userService : UserService = inject(UserService)
     private readonly router = inject(Router);
-    private readonly auth = inject(Auth);
+    readonly auth = inject(Auth);
     private readonly http : HttpClient = inject(HttpClient)
 
     // State management with Signals
@@ -158,7 +158,7 @@ export class AuthService {
         const isNew = this.checkIfNewUser(user.metadata.creationTime, user.metadata.lastSignInTime);
         console.log(`Is new? ${isNew}, Creation: ${user.metadata.creationTime}, LastSignIn: ${user.metadata.lastSignInTime}`);
 
-        if (true) {
+        if (isNew) {
             await this.userService.createUser({
                 uid: user.uid,
                 displayName: user.displayName,

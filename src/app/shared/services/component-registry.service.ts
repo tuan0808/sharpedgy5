@@ -54,7 +54,7 @@ export class  ComponentRegistryService {
     async save(uuid: any, dashboardId: number, item: DashboardItem[]) {
         console.log(JSON.stringify(item))
         console.log(`${this.endpoint}/dashboard/v1/${uuid}/${dashboardId}/saveDashboard`)
-        return this.httpClient.post<any[]>(`${this.endpoint}/dashboard/v1/${uuid}/${dashboardId}/saveDashboard`, item)
+        return this.httpClient.post<any[]>(`${this.endpoint}/dashboard/v1/${uuid}/${dashboardId}/saveDashboard`, item,{withCredentials: true})
             .pipe(
                 map(m => true),
                 catchError(error => {
@@ -70,13 +70,13 @@ export class  ComponentRegistryService {
     }
 
     async loadComponents(dashboardId: string): Promise<Observable<DashboardItem[]>> {
-        const response = await this.httpClient.get<DashboardItem[]>(`${this.endpoint}/dashboard/v1/${dashboardId}/loadDashboard`);
+        const response = await this.httpClient.get<DashboardItem[]>(`${this.endpoint}/dashboard/v1/${dashboardId}/loadDashboard`,{withCredentials: true});
         console.log(response)
         return response;
     }
 
     async getDashboards(uuid: any): Promise<Observable<Dashboard[]>> {
-        return this.httpClient.get<Dashboard[]>(`${this.endpoint}/dashboard/v1/${uuid}/getDashboards`);
+        return this.httpClient.get<Dashboard[]>(`${this.endpoint}/dashboard/v1/${uuid}/getDashboards`,{withCredentials: true});
     }
 
 }

@@ -208,7 +208,7 @@ export class BetSettlementService extends BaseApiService<Game> {
         const userId = this.uid();
         if (!userId) return of([]);
 
-        return this.http.get<Game[]>(`${this.apiUrl}/${userId}/${sportType}/getUpcomingGames`).pipe(
+        return this.http.get<Game[]>(`${this.apiUrl}/${userId}/${sportType}/getUpcomingGames`, {withCredentials: true}).pipe(
             map(games => this.updateGamesWithBetHistory(games)),
             retry({ count: 3, delay: this.BASE_RETRY_DELAY }),
             takeUntilDestroyed(this.destroyRef),
@@ -233,7 +233,7 @@ export class BetSettlementService extends BaseApiService<Game> {
     }
 
     getAccount(uid: string): Observable<Account | null> {
-        return this.http.get<Account>(`${this.apiUrl}/${uid}/getAccount`).pipe(
+        return this.http.get<Account>(`${this.apiUrl}/${uid}/getAccount`, {withCredentials: true}).pipe(
             retry({ count: 3, delay: this.BASE_RETRY_DELAY }),
             takeUntilDestroyed(this.destroyRef),
             catchError(this.handleError<Account | null>('getAccount', null))

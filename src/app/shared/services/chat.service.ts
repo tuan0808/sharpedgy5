@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { ChatDB } from '../../shared/data/chat/chat';
-import { ChatUsers, chat } from '../../shared/model/chat.model';
+import { ChatDB } from '../data/chat/chat';
+import { ChatUsers, chat } from '../model/chat.model';
 import { Observable, Subscriber } from 'rxjs';
 import { map, filter, scan } from 'rxjs/operators';
 
