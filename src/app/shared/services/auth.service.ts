@@ -158,7 +158,7 @@ export class AuthService {
         const isNew = this.checkIfNewUser(user.metadata.creationTime, user.metadata.lastSignInTime);
         console.log(`Is new? ${isNew}, Creation: ${user.metadata.creationTime}, LastSignIn: ${user.metadata.lastSignInTime}`);
 
-        if (true) {
+        if (isNew) {
             await this.userService.createUser({
                 uid: user.uid,
                 displayName: user.displayName,

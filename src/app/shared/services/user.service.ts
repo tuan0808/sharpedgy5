@@ -63,9 +63,6 @@ export class UserService {
                 )
             );
 
-            console.log('After HTTP call, Status:', response.status);
-            console.log('After HTTP call, Body:', response.body);
-
             if (response.status !== 200) {
                 throw new Error(`Unexpected status: ${response.status}`);
             }
