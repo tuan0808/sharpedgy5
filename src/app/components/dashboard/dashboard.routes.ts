@@ -6,7 +6,7 @@ export const dashboard: Routes = [
         path: '',
         children: [
           {
-            path: '',
+            path: 'dashboard',
             component: DefaultComponent,
             data: {
               title: "Custom Dashboard",

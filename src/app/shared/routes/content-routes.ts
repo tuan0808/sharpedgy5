@@ -1,9 +1,6 @@
 import { Routes } from '@angular/router';
-import {paperBettingRoutes} from "../../components/paper-betting/paper-betting.routes";
-import firebase from "firebase/compat";
-import auth = firebase.auth;
 import {authGuard} from "../guard/AuthGuard";
-import {LoginComponent} from "../../auth/login/login.component";
+import {adminGuard} from "../guard/admin.guard";
 
 export const content: Routes = [
     {
@@ -28,6 +25,14 @@ export const content: Routes = [
             breadcrumb: "paper-betting"
         }
     },
+    {
+        path: 'admin',
+        canActivate: [adminGuard],
+        loadChildren: () => import('../../components/admin/admin.routes').then(r=>r.adminRoutes),
+        data: {
+            breadcrumb: "admin"
+        }
+    }
 
 
 ]

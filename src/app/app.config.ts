@@ -11,7 +11,7 @@ import { adapterFactory } from 'angular-calendar/date-adapters/date-fns';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 
-import { HttpClient, provideHttpClient } from '@angular/common/http';
+import {HttpClient, provideHttpClient, withInterceptors} from '@angular/common/http';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -22,6 +22,7 @@ import {initializeApp, provideFirebaseApp} from "@angular/fire/app";
 import firebase from "firebase/compat";
 import {environment} from "../environments/environment";
 import {getAuth, provideAuth} from "@angular/fire/auth";
+import {authInterceptor} from "./shared/interceptors/auth.interceptor";
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -29,7 +30,9 @@ export const appConfig: ApplicationConfig = {
     provideAuth(() => getAuth()),
     provideAnimations(),
     provideToastr(),
-    provideHttpClient(),
+    provideHttpClient(
+        withInterceptors([authInterceptor])
+    ),
     provideCharts(withDefaultRegisterables()),
     provideRouter(routes),
     importProvidersFrom(

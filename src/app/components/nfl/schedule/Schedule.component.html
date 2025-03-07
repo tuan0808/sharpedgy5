@@ -1,35 +1,24 @@
-<div class="container-fluid">
-    <div class="row">
-        <div class="search-wrapper ">
-
-            <div class="container px-0">
-
-                <drag-scroll #nav [scroll-x-wheel-enabled]="true" [snap-duration]="500">
-                    <div *ngFor="let w of weeks | async" drag-scroll-item>
-
-                        <button class="card shadow-sm btn  "
-                                [ngClass]="isBetween(w.startDate, w.endDate) ? 'currentDate' : ''">
-                            <div class="card-body" (click)="getDataByWeek(w.week)">
-                                <h5 class="card-title">Week - {{ w.week }}</h5>
-                                <p class="card-date">{{ w.month }} {{ w.startDate.getDate() }}
-                                    - {{ w.endDate.getDate() }}</p>
-                            </div>
-                        </button>
-                    </div>
-                </drag-scroll>
-                <mdb-accordion [multiple]=true [flush]="true" *ngFor="let gamesList of currentSelection | keyvalue">
-                    <mdb-accordion-item [collapsed]="false">
-                        <ng-template mdbAccordionItemHeader>{{ gamesList.key }}</ng-template>
-                        <ng-template mdbAccordionItemBody>
-                            <div *ngFor="let game of gamesList.value">
-                                <app-table-data [game]="game" [scoreData]="getScoreData(game.GameKey)"></app-table-data>
-                            </div>
-
-                        </ng-template>
-                    </mdb-accordion-item>
-                </mdb-accordion>
-            </div>
+<div class="container">
+    <div class="scoreboard-date-nav">
+        <div class="date-selector">
+            <button class="date-btn">Tue Feb 25</button>
+            <button class="date-btn">Wed Feb 26</button>
+            <button class="date-btn active">Thu Feb 27</button>
+            <button class="date-btn">Fri Feb 28</button>
+            <button class="date-btn">Sat Feb 29</button>
         </div>
+        <div>
+            <button class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-calendar-alt me-1"></i> Calendar
+            </button>
+        </div>
+    </div>
 
+    <h4 class="section-title">{{currentDate}}</h4>
+
+    <div class="score-cards-container">
+        <app-score-card [gameData]="finalGame"></app-score-card>
+        <app-score-card [gameData]="liveGame"></app-score-card>
+        <app-score-card [gameData]="upcomingGame"></app-score-card>
     </div>
 </div>

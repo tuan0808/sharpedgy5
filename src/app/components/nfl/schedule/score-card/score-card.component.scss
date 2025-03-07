@@ -1,0 +1,155 @@
+.score-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background-color: #fff;
+  width: 100%;
+  max-width: 300px;
+  display: inline-block;
+  vertical-align: top;
+  margin-right: 16px;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.score-card-header {
+  background-color: #f8f9fa;
+  padding: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.game-status-pill {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.tv-network {
+  color: #666;
+}
+
+.score-card-body {
+  padding: 12px;
+}
+
+.team-section {
+  margin-bottom: 12px;
+}
+
+.team-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px; /* Exact 20px gap as per image */
+}
+
+.team-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.team-details {
+  text-align: center;
+}
+
+.team-name {
+  font-size: 1rem;
+  color: #333;
+  display: block;
+  font-weight: 600;
+}
+
+.team-record {
+  font-size: 0.75rem;
+  color: #666;
+  display: block;
+}
+
+.team-score {
+  font-size: 1.5rem;
+  font-weight: 700;
+  min-width: 40px;
+}
+
+.score-summary-container {
+  margin-top: 8px;
+  width: 100%;
+  overflow: hidden; /* Prevent overflow issues */
+}
+
+.quarter-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.header-row {
+  margin-bottom: 2px; /* Small gap between header and data rows */
+}
+
+.quarter-cell {
+  flex: 1 0 auto; /* Allow cells to grow but maintain minimum size */
+  height: 28px;
+  padding: 2px 4px; /* Adjusted padding for better fit */
+  border: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+  font-size: 0.75rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box; /* Include padding and border in width */
+  min-width: 28px; /* Minimum width to match image */
+}
+
+.quarter-cell.header {
+  font-weight: 600;
+}
+
+.game-info-box {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: #666;
+  text-align: left;
+  padding: 8px;
+  background-color: #f0f0f0; /* Greyish background */
+  border-radius: 4px;
+}
+
+.info-item {
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.info-item i {
+  width: 16px;
+  text-align: center;
+}
+
+.score-card-footer {
+  background-color: #f8f9fa;
+  padding: 8px;
+  font-size: 0.75rem;
+  color: #666;
+  text-align: center;
+  border-top: 1px solid #dee2e6;
+  white-space: pre-wrap;
+}

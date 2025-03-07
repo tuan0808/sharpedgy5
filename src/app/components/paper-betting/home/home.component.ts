@@ -147,6 +147,8 @@ export class HomeComponent implements OnInit {
           })
       );
 
+      gamesObservable.subscribe(s=>console.log(JSON.stringify(s)))
+
       await firstValueFrom(gamesObservable);
     } catch (error) {
       console.error('Failed to load games:', error);

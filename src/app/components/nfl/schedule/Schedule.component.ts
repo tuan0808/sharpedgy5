@@ -4,111 +4,86 @@ import {AsyncPipe, DOCUMENT, KeyValuePipe, NgClass, NgForOf, ViewportScroller} f
 import {NflDataService} from "../../../shared/services/nfl-data.service";
 import {Observable} from "rxjs";
 import {Week} from "../../../shared/model/Week";
-import {Schedule_card} from "./table-data/schedule_card";
 import {DragScrollComponent, DragScrollItemDirective} from "ngx-drag-scroll";
+import {ScoreCardComponent} from "./score-card/score-card.component";
 
+export interface Team {
+    logo: string;
+    abbr: string;
+    record: string;
+    score?: number;
+    quarters?: number[];
+    isWinner?: boolean;
+    hasPossession?: boolean;
+}
+
+export interface GameData {
+    status: 'final' | 'live' | 'upcoming';
+    tvNetwork: string;
+    statusText: string;
+    teams: Team[];
+    location?: string;
+    attendance?: string;
+    footerText: string;
+    gameTime?: string;
+    weather?: string;
+    line?: string;
+}
 @Component({
   selector: 'app-sample-page2',
   standalone: true,
-  imports: [
-    MdbAccordionModule,
-    KeyValuePipe,
-    Schedule_card,
-    DragScrollComponent,
-    AsyncPipe,
-    NgClass,
-    NgForOf,
-    DragScrollItemDirective
-  ],
+    imports: [
+        MdbAccordionModule,
+        KeyValuePipe,
+        DragScrollComponent,
+        AsyncPipe,
+        NgClass,
+        NgForOf,
+        DragScrollItemDirective,
+        ScoreCardComponent
+    ],
   templateUrl: './Schedule.component.html',
   styleUrl: './Schedule.component.scss'
 })
 export class ScheduleComponent {
-  direction = "";
-  protected schedules: Observable<any[]> = new Observable<any[]>()
-  protected weeks: Observable<Week[]> = new Observable<Week[]>()
-  protected currentSelection: Map<string, any[]> = new Map<string, any[]>()
-  protected readonly Date = Date;
+    currentDate = 'Thursday, February 27, 2025';
 
-  isNavCollapse = false;
-  protected currentWeek: number = 0
-  protected scores: Map<number, any> = new Map();
+    finalGame: GameData = {
+        status: 'final',
+        tvNetwork: 'FOX',
+        statusText: 'Final',
+        teams: [
+            { logo: 'PHI', abbr: 'Eagles', record: '13-4', score: 40, quarters: [7, 17, 10, 6], isWinner: true },
+            { logo: 'KC', abbr: 'Chiefs', record: '12-5', score: 22, quarters: [0, 0, 6, 16] }
+        ],
+        location: 'Caesars Superdome, New Orleans, LA',
+        attendance: '65,719',
+        footerText: 'Super Bowl LIX | Top Performers: J. Hurts: 328 YDS, 3 TD'
+    };
 
-  @HostListener('window:scroll', []) onScroll() {
-    this.isNavCollapse = this.scroll.getScrollPosition()[1] > 70;
-  }
+    liveGame: GameData = {
+        status: 'live',
+        tvNetwork: 'CBS',
+        statusText: '3rd Quarter',
+        teams: [
+            { logo: 'BAL', abbr: 'Ravens', record: '11-6', score: 21, quarters: [7, 14, 0] },
+            { logo: 'CIN', abbr: 'Bengals', record: '10-7', score: 17, quarters: [3, 7, 7], hasPossession: true }
+        ],
+        gameTime: '4:32 remaining in 3rd quarter',
+        location: 'CIN Ball on BAL 28',
+        footerText: 'Week 9 Regular Season | AFC North Rivalry'
+    };
 
-  constructor(
-      private scroll: ViewportScroller,
-      @Inject(DOCUMENT) private document: Document,
-      private nflData: NflDataService
-  ) {
-    let date = new Date()
-    this.nflData.getWeekSchedule().then(it => {
-      this.weeks = it;
-    })
-  }
-
-
-  ngOnInit() {
-
-  }
-  getDataByWeek(week : number) {
-    let date = new Date()
-    this.nflData.getScoresbyWeek(date.getFullYear(),week ).then(t=>t.subscribe(sc=>{
-      this.scores.clear()
-      sc.forEach(fe=>this.scores.set(fe.GameKey, fe))
-      console.log(this.scores.values())
-    }))
-    this.nflData.getSchedules(date.getFullYear(), week).then(t=>t.subscribe(sc =>{
-
-      console.log(`current ${sc.values()}`)
-      this.currentSelection = sc}))
-  }
-
-  groupBy(data: any[]) {
-    let groupItems: { [key: string]: any[] } = {};
-    let map: Map<String, any[]> = new Map();
-
-
-    data.reduce(item => {
-      let gameDate = new Date(item.Date.split("T")[0])
-
-      let key = `${gameDate.getMonth()}-${gameDate.getDate()}`
-      if (!key) {
-        groupItems[key] = []
-      }
-      groupItems[key].push(item)
-
-    })
-
-    console.log(groupItems)
-  }
-
-  onWheel(event: WheelEvent): void {
-    if (event.deltaY > 0) this.scrollToRight();
-    else this.scrollToLeft();
-  }
-
-  scrollToLeft(): void {
-    // @ts-ignore
-    document.getElementById('scroll-1').scrollLeft -= 400;
-  }
-
-  scrollToRight(): void {
-    document.getElementById('scroll-1')!.scrollLeft += 400;
-  }
-
-
-  isBetween(startDate: Date, endDate: Date) {
-    let currentDate = new Date()
-    return currentDate.getTime() >= startDate.getTime() && currentDate.getTime() <= endDate.getTime();
-  }
-
-
-  getScoreData(gameKey: any) {
-    let score = this.scores.get(gameKey)
-    console.log(score)
-    return score
-  }
+    upcomingGame: GameData = {
+        status: 'upcoming',
+        tvNetwork: 'NBC',
+        statusText: '8:20 PM ET',
+        teams: [
+            { logo: 'DAL', abbr: 'Cowboys', record: '9-7' },
+            { logo: 'NYG', abbr: 'Giants', record: '7-9' }
+        ],
+        location: 'MetLife Stadium, East Rutherford, NJ',
+        weather: '32°F, 10-15 mph winds',
+        footerText: 'Week 9 Regular Season | Line: DAL -3.5'
+    };
 }

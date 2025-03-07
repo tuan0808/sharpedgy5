@@ -1,19 +1,14 @@
-import {computed, effect, inject, Injectable, Signal, signal} from '@angular/core';
+import { computed, effect, inject, Injectable, Signal, signal } from '@angular/core';
 import {
-    signInWithEmailAndPassword,
-    GoogleAuthProvider,
-    signOut,
-    User,
-    onAuthStateChanged,
-    Auth, browserLocalPersistence, signInWithPopup
+    signInWithEmailAndPassword, GoogleAuthProvider, signOut, User, onAuthStateChanged, Auth, browserLocalPersistence,
+    signInWithPopup, FacebookAuthProvider, OAuthProvider, TwitterAuthProvider, getIdTokenResult, onIdTokenChanged
 } from "@angular/fire/auth";
 import { setPersistence } from 'firebase/auth';
 import { Router } from "@angular/router";
-import {LoginMetrics} from "../model/auth/LoginMetrics";
-import {environment} from "../../../environments/environment";
-import {PartialUser} from "../model/auth/PartialUser";
-import {HttpClient} from "@angular/common/http";
-import {UserService} from "./user.service";
+import { LoginMetrics } from "../model/auth/LoginMetrics";
+import { environment } from "../../../environments/environment";
+import { HttpClient } from "@angular/common/http";
+import { UserService } from "./user.service";
 
 @Injectable({
     providedIn: 'root'
@@ -23,63 +18,56 @@ export class AuthService {
     private readonly MAX_LOGIN_ATTEMPTS = 3;
     private readonly LOCKOUT_DURATION = 15 * 60 * 1000;
     private redirectUrl: string | null = null;
-
-    // Dependency injection
-    private readonly userService : UserService = inject(UserService)
+    private readonly userService: UserService = inject(UserService);
     private readonly router = inject(Router);
     readonly auth = inject(Auth);
-    private readonly http : HttpClient = inject(HttpClient)
+    private readonly http: HttpClient = inject(HttpClient);
 
-    // State management with Signals
     private readonly user = signal<User | null>(null);
     private readonly authInitialized = signal<boolean>(false);
-    private readonly loginMetrics = signal<LoginMetrics>({
-        attempts: 0,
-        lastAttempt: 0
-    });
+    private readonly loginMetrics = signal<LoginMetrics>(this.loadLoginMetrics());
+    private cachedToken: { token: string, expiresAt: number } | null = null; // Token cache
 
-    // Public reactive properties
     readonly isAuthenticated: Signal<boolean> = computed(() => !!this.user());
     readonly displayName: Signal<string> = computed(() =>
         this.user()?.displayName || this.user()?.email || 'Guest'
     );
 
+    private readonly isAdminSignal = signal<boolean>(false);
+    readonly isAdmin: Signal<boolean> = computed(() => this.isAdminSignal());
+
     private sessionTimeout?: number;
 
     constructor() {
-        // Effects for session timeout and CSRF protection
         effect(() => {
             const user = this.user();
             if (user) {
-                if (this.sessionTimeout) {
-                    clearTimeout(this.sessionTimeout);
-                }
+                if (this.sessionTimeout) clearTimeout(this.sessionTimeout);
                 this.sessionTimeout = window.setTimeout(() => {
                     this.logout();
                     this.logSecurityEvent('session_timeout', { uid: user.uid });
                 }, this.SESSION_DURATION);
+                this.checkAdminStatus(user);
+            } else {
+                this.isAdminSignal.set(false);
             }
-        });
+        }, { allowSignalWrites: true });
 
-        effect(() => {
-            if (this.user()) {
-                const expectedState = sessionStorage.getItem('auth_state');
-                const actualState = new URLSearchParams(window.location.search).get('state');
-                if (expectedState && actualState && expectedState !== actualState) {
-                    this.logout();
-                    this.logSecurityEvent('csrf_attack_prevented');
-                }
+        onIdTokenChanged(this.auth, async (user) => {
+            this.user.set(user);
+            if (user) {
+                const token = await this.getFreshToken(); // Use cached token if valid
+                console.log("Token from onIdTokenChanged:", token);
+                this.updateBackendToken(token);
             }
         });
     }
 
-    // Lazy initialize auth when needed
     async ensureAuthInitialized(): Promise<void> {
         if (this.authInitialized()) return;
         try {
             await setPersistence(this.auth, browserLocalPersistence);
             await new Promise<void>(resolve => {
-                console.log('hiiiii');
                 onAuthStateChanged(this.auth, async (user) => {
                     this.user.set(user);
                     this.authInitialized.set(true);
@@ -87,106 +75,213 @@ export class AuthService {
                 });
             });
         } catch (error) {
-            console.error('Auth initialization error:', error);
-            this.authInitialized.set(true); // Mark as initialized even on error
+            this.logSecurityEvent('auth_init_error', { message: 'Initialization failed' });
+            this.authInitialized.set(true);
         }
+    }
+
+    private async checkAdminStatus(user: User): Promise<void> {
+        try {
+            const tokenResult = await getIdTokenResult(user);
+            const isAdmin = tokenResult.claims['isAdmin'] === true;
+            this.isAdminSignal.set(isAdmin);
+        } catch (error) {
+            this.isAdminSignal.set(false);
+            this.logSecurityEvent('admin_check_failed', { message: 'Failed to verify admin status' });
+        }
+    }
+
+    private loadLoginMetrics(): LoginMetrics {
+        const stored = localStorage.getItem('login_metrics');
+        return stored ? JSON.parse(stored) : { attempts: 0, lastAttempt: 0 };
+    }
+
+    private saveLoginMetrics(metrics: LoginMetrics): void {
+        localStorage.setItem('login_metrics', JSON.stringify(metrics));
+        this.loginMetrics.set(metrics);
     }
 
     checkIfNewUser(creationTime: string, lastSignInTime: string): boolean {
         return creationTime === lastSignInTime;
     }
 
-
-    // Public method to get UID
     async getUID(): Promise<string | null> {
         await this.ensureAuthInitialized();
         return this.user()?.uid ?? null;
     }
 
+    async getFreshToken(): Promise<string | null> {
+        await this.ensureAuthInitialized();
+        const user = this.auth.currentUser;
+        if (!user) {
+            console.error("No user logged in");
+            return null;
+        }
 
+        const now = Date.now() / 1000; // Current time in seconds
+        if (this.cachedToken && this.cachedToken.expiresAt > now + 300) { // 5-min buffer
+            console.log("Using cached token:", this.cachedToken.token);
+            return this.cachedToken.token;
+        }
 
-    // Login methods
+        const token = await user.getIdToken(true); // Force refresh only if needed
+        const decoded = JSON.parse(atob(token.split('.')[1]));
+        this.cachedToken = { token, expiresAt: decoded.exp };
+        console.log("Fresh token:", token);
+        console.log("Issued at:", new Date(decoded.iat * 1000));
+        console.log("Expires at:", new Date(decoded.exp * 1000));
+        return token;
+    }
+
     async loginWithEmail(email: string, password: string): Promise<User> {
         await this.ensureAuthInitialized();
-        if (this.isLocked()) {
-            throw new Error('Account temporarily locked due to too many attempts');
-        }
+        if (this.isLocked()) throw new Error('Account temporarily locked');
         try {
             const credential = await signInWithEmailAndPassword(this.auth, email, password);
             this.resetLoginMetrics();
             this.logSecurityEvent('email_login_success', { uid: credential.user.uid });
-            await this.registerAccount(credential.user).then(s=>s)
+            await this.registerAccount(credential.user);
             return credential.user;
         } catch (error) {
             this.handleFailedLogin(email);
-            this.logSecurityEvent('email_login_failed', { error: (error as Error).message });
+            this.logSecurityEvent('email_login_failed', { message: 'Authentication failed' });
             throw error;
         }
     }
-
-
 
     async loginWithGoogle(): Promise<User> {
         await this.ensureAuthInitialized();
-        if (this.isLocked()) {
-            throw new Error('Account temporarily locked due to too many attempts');
-        }
+        if (this.isLocked()) throw new Error('Account temporarily locked');
         try {
             const provider = new GoogleAuthProvider();
             provider.addScope('email profile');
+            const state = this.generateStateParam();
+            provider.setCustomParameters({ state });
             const credential = await signInWithPopup(this.auth, provider);
+            if (!this.validateState(state)) throw new Error('Invalid state parameter');
             this.resetLoginMetrics();
-            this.logSecurityEvent('google_login_success', {
-                uid: credential.user.uid,
-                email: credential.user.email
-            });
-            // Call registerAccount but don't await it here
-            this.registerAccount(credential.user).catch(error => {
-                console.error('Failed to register user after login:', error);
-                // Optionally log this to your security event system
-                this.logSecurityEvent('post_login_registration_failed', { error: error.message });
-            });
-            return credential.user; // Return immediately after successful login
+            this.logSecurityEvent('google_login_success', { uid: credential.user.uid });
+            await this.registerAccount(credential.user);
+            return credential.user;
         } catch (error) {
             this.handleFailedLogin('google-auth');
-            this.logSecurityEvent('google_login_failed', { error: (error as Error).message });
+            this.logSecurityEvent('google_login_failed', { message: 'Authentication failed' });
             throw error;
         }
     }
 
-    async registerAccount(user: User): Promise<Boolean> {
-        const isNew = this.checkIfNewUser(user.metadata.creationTime, user.metadata.lastSignInTime);
-        console.log(`Is new? ${isNew}, Creation: ${user.metadata.creationTime}, LastSignIn: ${user.metadata.lastSignInTime}`);
+    async loginWithFacebook(): Promise<User> {
+        await this.ensureAuthInitialized();
+        if (this.isLocked()) throw new Error('Account temporarily locked');
+        try {
+            const provider = new FacebookAuthProvider();
+            provider.addScope('email');
+            const state = this.generateStateParam();
+            provider.setCustomParameters({ state });
+            const credential = await signInWithPopup(this.auth, provider);
+            if (!this.validateState(state)) throw new Error('Invalid state parameter');
+            this.resetLoginMetrics();
+            this.logSecurityEvent('facebook_login_success', { uid: credential.user.uid });
+            await this.registerAccount(credential.user);
+            return credential.user;
+        } catch (error) {
+            this.handleFailedLogin('facebook-auth');
+            this.logSecurityEvent('facebook_login_failed', { message: 'Authentication failed' });
+            throw error;
+        }
+    }
 
+    async loginWithApple(): Promise<User> {
+        await this.ensureAuthInitialized();
+        if (this.isLocked()) throw new Error('Account temporarily locked');
+        try {
+            const provider = new OAuthProvider('apple.com');
+            provider.addScope('email name');
+            const state = this.generateStateParam();
+            provider.setCustomParameters({ state });
+            const credential = await signInWithPopup(this.auth, provider);
+            if (!this.validateState(state)) throw new Error('Invalid state parameter');
+            this.resetLoginMetrics();
+            this.logSecurityEvent('apple_login_success', { uid: credential.user.uid });
+            await this.registerAccount(credential.user);
+            return credential.user;
+        } catch (error) {
+            this.handleFailedLogin('apple-auth');
+            this.logSecurityEvent('apple_login_failed', { message: 'Authentication failed' });
+            throw error;
+        }
+    }
+
+    async loginWithGithub(): Promise<User> {
+        await this.ensureAuthInitialized();
+        if (this.isLocked()) throw new Error('Account temporarily locked');
+        try {
+            const provider = new OAuthProvider('github.com');
+            provider.addScope('user:email');
+            const state = this.generateStateParam();
+            provider.setCustomParameters({ state });
+            const credential = await signInWithPopup(this.auth, provider);
+            if (!this.validateState(state)) throw new Error('Invalid state parameter');
+            this.resetLoginMetrics();
+            this.logSecurityEvent('github_login_success', { uid: credential.user.uid });
+            await this.registerAccount(credential.user);
+            return credential.user;
+        } catch (error) {
+            this.handleFailedLogin('github-auth');
+            this.logSecurityEvent('github_login_failed', { message: 'Authentication failed' });
+            throw error;
+        }
+    }
+
+    async loginWithTwitter(): Promise<User> {
+        await this.ensureAuthInitialized();
+        if (this.isLocked()) throw new Error('Account temporarily locked');
+        try {
+            const provider = new TwitterAuthProvider();
+            const state = this.generateStateParam();
+            provider.setCustomParameters({ state });
+            const credential = await signInWithPopup(this.auth, provider);
+            if (!this.validateState(state)) throw new Error('Invalid state parameter');
+            this.resetLoginMetrics();
+            this.logSecurityEvent('twitter_login_success', { uid: credential.user.uid });
+            await this.registerAccount(credential.user);
+            return credential.user;
+        } catch (error) {
+            this.handleFailedLogin('twitter-auth');
+            this.logSecurityEvent('twitter_login_failed', { message: 'Authentication failed' });
+            throw error;
+        }
+    }
+
+    async registerAccount(user: User): Promise<boolean> {
+        const isNew = this.checkIfNewUser(user.metadata.creationTime!, user.metadata.lastSignInTime!);
         if (isNew) {
             await this.userService.createUser({
                 uid: user.uid,
                 displayName: user.displayName,
             });
-            console.log('createUser called');
         }
         return true;
     }
 
-    // Logout
     async logout(): Promise<void> {
         try {
             const user = this.user();
             await signOut(this.auth);
             this.user.set(null);
+            this.cachedToken = null; // Clear cached token on logout
             await this.router.navigate(['/auth/login']);
             this.logSecurityEvent('logout_success', { uid: user?.uid });
         } catch (error) {
-            this.logSecurityEvent('logout_error', { error: (error as Error).message });
+            this.logSecurityEvent('logout_error', { message: 'Logout failed' });
             throw error;
         }
     }
 
-    // Navigation to login form
     async showLoginForm(): Promise<void> {
         const currentUrl = this.router.url;
         this.setRedirectUrl(currentUrl);
-        await this.router.navigate(['/auth/login'], {
+        await this.router.navigate(['http://localhost:8080/auth/login'], {
             queryParams: { returnUrl: currentUrl }
         });
     }
@@ -205,7 +300,13 @@ export class AuthService {
         return state;
     }
 
-    // Login metrics and security
+    private validateState(expectedState: string): boolean {
+        const actualState = new URLSearchParams(window.location.search).get('state');
+        const storedState = sessionStorage.getItem('auth_state');
+        sessionStorage.removeItem('auth_state');
+        return expectedState === actualState && expectedState === storedState;
+    }
+
     private isLocked(): boolean {
         const metrics = this.loginMetrics();
         return metrics.lockoutUntil !== undefined && Date.now() < metrics.lockoutUntil;
@@ -215,13 +316,13 @@ export class AuthService {
         const metrics = this.loginMetrics();
         const attempts = metrics.attempts + 1;
         if (attempts >= this.MAX_LOGIN_ATTEMPTS) {
-            this.loginMetrics.set({
+            this.saveLoginMetrics({
                 attempts: 0,
                 lastAttempt: Date.now(),
                 lockoutUntil: Date.now() + this.LOCKOUT_DURATION
             });
         } else {
-            this.loginMetrics.set({
+            this.saveLoginMetrics({
                 ...metrics,
                 attempts,
                 lastAttempt: Date.now()
@@ -230,7 +331,7 @@ export class AuthService {
     }
 
     private resetLoginMetrics(): void {
-        this.loginMetrics.set({
+        this.saveLoginMetrics({
             attempts: 0,
             lastAttempt: Date.now()
         });
@@ -241,6 +342,14 @@ export class AuthService {
             console.info(`Security Event: ${event}`, data);
         } else {
             console.debug(`Security Event: ${event}`, data);
+        }
+    }
+
+    private async updateBackendToken(token: string): Promise<void> {
+        try {
+            await this.http.post(`http://localhost:8080/api/auth/token-refresh`, { token }).toPromise();
+        } catch (error) {
+            this.logSecurityEvent('token_refresh_failed', { message: 'Failed to update backend token' });
         }
     }
 }

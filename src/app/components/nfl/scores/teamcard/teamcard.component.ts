@@ -1,23 +1,21 @@
 import {Component, Input, OnInit} from '@angular/core';
+import {NgClass, NgIf} from "@angular/common";
 
 @Component({
   selector: 'app-teamcard',
   standalone: true,
-  imports: [],
+  imports: [
+    NgClass,
+    NgIf
+  ],
   templateUrl: './teamcard.component.html',
   styleUrl: './teamcard.component.css'
 })
 export class TeamcardComponent implements OnInit {
   @Input()
   game : any;
-  protected teamData : any[] = []
-  homeTeam : any;
-  awayTeam : any;
 
-  ngOnInit() {
-  }
-  constructor() {
-
+  ngOnInit(): void {
   }
 
 

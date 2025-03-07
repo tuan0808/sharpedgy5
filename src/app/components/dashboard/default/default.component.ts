@@ -3,8 +3,7 @@ import {
     ViewChild,
     ViewEncapsulation,
     ChangeDetectorRef,
-    AfterViewInit,
-    afterNextRender, afterRender, effect, signal, computed, DestroyRef, HostListener
+    afterNextRender, effect, signal, computed,  HostListener
 } from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {ChartistModule} from "ng-chartist";

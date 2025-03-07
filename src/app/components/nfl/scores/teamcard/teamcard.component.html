@@ -1,123 +1,85 @@
-<link rel="stylesheet" href="teamcard.component.css">
-<div class="container">
-  <div class="card">
-    <div class="">
-      <!-- Main Container -->
-      <div class="d-flex flex-row">
-        <div class="">
-          <!-- Left Team Section -->
-          <div class="">
-            <div class ="d-flex img-container justify-content-center align-items-center">
-              <img src="./assets/images/NFL/{{game.HomeTeam.Image}}" class="team-logo" alt="Home Team Logo">
-
-            </div>
-            <div class="text-center">
-              <h6>{{game.HomeTeam.FullName}}</h6>
-            </div>
-
-            <div class="betting-info d-flex justify-content-center">
-              <div class="spread me-3">
-                <div>Spread</div>
-                <div class="card">{{game.PointSpread}}</div>
-              </div>
-              <div class="moneyline me-3">
-                <div>Moneyline</div>
-                <div class="card">{{game.HomeTeamMoneyLine}}</div>
-              </div>
-              <div class="total-points">
-                <div>OverUnder</div>
-                <div class="card">{{game.OverUnder}}</div>
-              </div>
-            </div>
-          </div>
+<div class="score-card">
+    <div class="score-card-header">
+        <div>
+      <span class="game-status-pill" [ngClass]="{
+        'final': game.status === 'Final',
+        'live': game.status.includes('Quarter'),
+        'upcoming': game.status.includes('PM') || game.status.includes('AM')
+      }">{{ game.status }}</span>
         </div>
-        <div class="">
-          <div class="d-flex flex-column">
-            <div class=" ">
-              <div class="row">
-                <div class="col-12">
-                </div>
-
-              </div>
-            </div>
-            <!-- Menu -->
-            <div class="bg-primary text-black">
-
-
-            </div>
-
-            <div class=" ">
-              <div class="d-inline-flex  ">
-                <div class="d-flex flex-column">
-                  <div class=" border">
-                    <div class="score-section">
-                      <div class="label">Home</div>
-                      <div class="score away">{{game.HomeScore}}</div>
-                    </div>
-                  </div>
-                  <div class=" border">
-                    <div class="timeline">
-                      <div>1</div><div>2</div><div>3</div><div>4</div>
-                      <div>7</div><div>3</div><div>10</div><div>0</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="spacer">
-                  <div class=" border spacer">
-                    <div class="score-section">
-                      <div class="label"></div>
-                      <div class="score away"></div>
-                    </div>
-                  </div>
-
-                </div>
-                <div class="d-flex flex-column">
-                  <div class=" border">
-                    <div class="score-section">
-                      <div class="label">Away</div>
-                      <div class="score away">{{game.AwayScore}}</div>
-                    </div>
-                  </div>
-                  <div class=" border">
-                    <div class="timeline">
-                      <div>1</div><div>2</div><div>3</div><div>4</div>
-                      <div>{{game.HomeScoreQuarter1}}</div><div>{{game.HomeScoreQuarter2}}</div><div>{{game.HomeScoreQuarter3}}</div><div>{{game.HomeScoreQuarter4}}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div>
+            <i class="fas fa-tv me-1"></i> {{ game.network }}
         </div>
-        <div class="">
-          <div class="">
-            <div class ="d-flex img-container justify-content-center align-items-center">
-              <img src="./assets/images/NFL/{{game.AwayTeam.Image}}" class="team-logo" alt="Home Team Logo">
-
-            </div>
-            <div class="text-center">
-              <h6>{{game.AwayTeam.fullName}}</h6>
-            </div>
-
-            <div class="betting-info d-flex justify-content-center">
-              <div class="spread me-3">
-                <div>Spread</div>
-                <div class="card">{{game.PointSpreadAwayTeamMoneyLine}}</div>
-              </div>
-              <div class="moneyline me-3">
-                <div>Moneyline</div>
-                <div class="card">{{game.PointSpreadAwayTeamMoneyLine}}</div>
-              </div>
-              <div class="total-points">
-                <div>OverUnder</div>
-                <div class="card">{{game.OverUnder}}</div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
     </div>
-  </div>
+    <div class="score-card-body">
+        <div class="team-row" [ngClass]="{ 'winner': game.awayTeam.score > game.homeTeam.score && game.status === 'Final' }">
+            <div class="team-logo">{{ game.awayTeam.abbr }}</div>
+            <div class="team-info">
+                <div class="team-name-container">
+                    <div class="team-abbr">{{ game.awayTeam.name }}</div>
+                    <div class="team-record">{{ game.awayTeam.record }}</div>
+                </div>
+                <div class="team-score" *ngIf="game.status !== 'upcoming'">{{ game.awayTeam.score }}</div>
+            </div>
+        </div>
+        <div class="team-row" [ngClass]="{ 'winner': game.homeTeam.score > game.awayTeam.score && game.status === 'Final' }">
+            <div class="possession-indicator" *ngIf="game.possession === 'home' && game.status.includes('Quarter')"></div>
+            <div class="team-logo">{{ game.homeTeam.abbr }}</div>
+            <div class="team-info">
+                <div class="team-name-container">
+                    <div class="team-abbr">{{ game.homeTeam.name }}</div>
+                    <div class="team-record">{{ game.homeTeam.record }}</div>
+                </div>
+                <div class="team-score" *ngIf="game.status !== 'upcoming'">{{ game.homeTeam.score }}</div>
+            </div>
+        </div>
+
+        <div class="score-summary" *ngIf="game.status !== 'upcoming'">
+            <div class="quarter-score header">1</div>
+            <div class="quarter-score header">2</div>
+            <div class="quarter-score header">3</div>
+            <div class="quarter-score header">4</div>
+            <div class="quarter-score header">T</div>
+        </div>
+        <div class="score-summary" *ngIf="game.status !== 'upcoming'">
+            <div class="quarter-score">{{ game.awayTeam.quarters[0] }}</div>
+            <div class="quarter-score">{{ game.awayTeam.quarters[1] }}</div>
+            <div class="quarter-score">{{ game.awayTeam.quarters[2] }}</div>
+            <div class="quarter-score">{{ game.awayTeam.quarters[3] }}</div>
+            <div class="quarter-score">{{ game.awayTeam.score }}</div>
+        </div>
+        <div class="score-summary" *ngIf="game.status !== 'upcoming'">
+            <div class="quarter-score">{{ game.homeTeam.quarters[0] }}</div>
+            <div class="quarter-score">{{ game.homeTeam.quarters[1] }}</div>
+            <div class="quarter-score">{{ game.homeTeam.quarters[2] }}</div>
+            <div class="quarter-score">{{ game.homeTeam.quarters[3] }}</div>
+            <div class="quarter-score">{{ game.homeTeam.score }}</div>
+        </div>
+
+        <div class="game-info-box">
+            <div class="game-info-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>{{ game.location }}</span>
+            </div>
+            <div class="game-info-item" *ngIf="game.attendance">
+                <i class="fas fa-users"></i>
+                <span>Attendance: {{ game.attendance }}</span>
+            </div>
+            <div class="game-info-item" *ngIf="game.timeRemaining">
+                <i class="fas fa-clock"></i>
+                <span>{{ game.timeRemaining }}</span>
+            </div>
+            <div class="game-info-item" *ngIf="game.ballPosition">
+                <i class="fas fa-football-ball"></i>
+                <span>{{ game.ballPosition }}</span>
+            </div>
+            <div class="game-info-item" *ngIf="game.weather">
+                <i class="fas fa-cloud"></i>
+                <span>{{ game.weather }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="score-card-footer">
+        {{ game.footerText }}
+    </div>
 </div>

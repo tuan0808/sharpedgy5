@@ -16,13 +16,5 @@ import {NflDataService} from "../../../shared/services/nfl-data.service";
   styleUrl: './scores.component.scss'
 })
 export class ScoresComponent {
-  protected gameScores: Observable<any[]>  | undefined;
 
-  constructor(private nflDataService : NflDataService) {
-    nflDataService.getScoresBySeasonFinal(2024)
-        .then(gs=>{
-          this.gameScores = gs
-          gs.subscribe(s=>console.log(s))
-        })
-  }
 }

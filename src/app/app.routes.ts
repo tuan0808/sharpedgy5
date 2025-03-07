@@ -3,13 +3,9 @@ import { ContentLayoutComponent } from './shared/components/layout/content-layou
 import { content } from './shared/routes/content-routes';
 import { FullLayoutComponent } from './shared/components/layout/full-layout/full-layout.component';
 import { fullRoutes } from './shared/routes/full.routes';
-import { AdminGuard } from './shared/guard/admin.guard';
-// import {RegisterComponent} from "./auth/register/register.component";
 import {VerificationComponent} from "./auth/verification/verification.component";
 import {ResetPwdComponent} from "./auth/reset-pwd/reset-pwd.component";
-//import {PopupGridComponent} from "./components/dashboard/popup-grid/popup-grid.component";
 import {LoginComponent} from "./auth/login/login.component";
-
 export const routes: Routes = [
     // {
     //     path: "",
@@ -43,10 +39,5 @@ export const routes: Routes = [
         component: FullLayoutComponent,
         //canActivate: [AdminGuard],
         children: fullRoutes,
-    },
-    // {
-    //     path: 'popup-grid',
-    //     component: PopupGridComponent,
-    //     children: content
-    // }
+    }
 ];

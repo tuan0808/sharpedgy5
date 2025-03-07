@@ -1,21 +1,16 @@
-import {computed, DestroyRef, inject, Injectable, signal} from '@angular/core';
-import {Game} from "../model/paper-betting/Game";
-import {Account} from "../model/paper-betting/Account";
-import {firstValueFrom, Observable, of, retry, throwError, timeout} from "rxjs";
-import {catchError, map} from "rxjs/operators";
-import {BaseApiService} from "./base-api.service";
-import {SportType} from "../model/SportType";
-import {BetHistory} from "../model/paper-betting/BetHistory";
-import {HttpErrorResponse} from "@angular/common/http";
-import {AuthService} from "./auth.service";
-import {environment} from "../../../environments/environment";
-import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
+import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
+import { Game } from "../model/paper-betting/Game";
+import { Account } from "../model/paper-betting/Account";
+import { firstValueFrom, Observable, of, retry, throwError, timeout } from "rxjs";
+import { catchError, map } from "rxjs/operators";
+import { BaseApiService } from "./base-api.service";
+import { SportType } from "../model/SportType";
+import { BetHistory } from "../model/paper-betting/BetHistory";
+import { HttpErrorResponse } from "@angular/common/http";
+import { AuthService } from "./auth.service";
+import { environment } from "../../../environments/environment";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
-
-/**
- * Service for handling bet settlement functionality.
- * Extends BaseApiService to interact with backend APIs.
- */
 @Injectable({
     providedIn: 'root'
 })
@@ -28,16 +23,14 @@ export class BetSettlementService extends BaseApiService<Game> {
     private eventSource?: globalThis.EventSource;
     private readonly MAX_INIT_RETRIES = 3;
     private readonly MAX_SSE_RETRIES = 5;
-    private readonly BASE_RETRY_DELAY = 2000; // 2 seconds
-    private sseRetryCount = 0;
+    private readonly BASE_RETRY_DELAY = 5000; // Increased to 5s
+    private sseRetryCount = 0; // Added missing declaration
 
-    // Signals
     readonly account = signal<Account | null>(null);
     readonly allGames = signal<Game[]>([]);
     private readonly balance = signal<number>(0);
     private readonly uid = signal<string | null>(null);
 
-    // Computed values
     readonly currentUserId = computed(() => this.uid());
 
     constructor() {
@@ -62,7 +55,7 @@ export class BetSettlementService extends BaseApiService<Game> {
                 await this.retryInitialize(retryCount);
             } else {
                 console.error('Failed to initialize user after max retries');
-                this.uid.set(null); // Explicitly set to null to avoid hanging
+                this.uid.set(null);
             }
         }
     }
@@ -98,7 +91,7 @@ export class BetSettlementService extends BaseApiService<Game> {
         const initialAccount = await firstValueFrom(
             this.getAccount(userId).pipe(
                 timeout(10000),
-                retry({ count: 3, delay: this.BASE_RETRY_DELAY }),
+                retry({ count: 1, delay: this.BASE_RETRY_DELAY }), // Reduced to 1 retry
                 catchError(error => {
                     console.error('Failed to get initial account:', error);
                     return of(null);
@@ -183,11 +176,13 @@ export class BetSettlementService extends BaseApiService<Game> {
 
     private updateGameBetRecord(gameId: string, betHistory: BetHistory): void {
         this.allGames.update(games => games.map(game =>
-            game.id === gameId ? { ...game, betSettlement: {
+            game.id === gameId ? {
+                ...game, betSettlement: {
                     betType: betHistory.betType,
                     wagerValue: betHistory.wagerValue,
                     wagerAmount: betHistory.wagerAmount
-                }} : game
+                }
+            } : game
         ));
     }
 
@@ -200,9 +195,9 @@ export class BetSettlementService extends BaseApiService<Game> {
         const userId = this.uid();
         if (!userId) return of([]);
 
-        return this.http.get<Game[]>(`${this.apiUrl}/${userId}/${sportType}/getUpcomingGames`, {withCredentials: true}).pipe(
+        return this.http.get<Game[]>(`${this.apiUrl}/${userId}/${sportType}/getUpcomingGames`, { withCredentials: true }).pipe(
             map(games => this.updateGamesWithBetHistory(games)),
-            retry({ count: 3, delay: this.BASE_RETRY_DELAY }),
+            retry({ count: 1, delay: this.BASE_RETRY_DELAY }), // Reduced to 1 retry
             takeUntilDestroyed(this.destroyRef),
             catchError(this.handleError<Game[]>('getSportsByNFL', []))
         );
@@ -214,19 +209,21 @@ export class BetSettlementService extends BaseApiService<Game> {
 
         const updatedGames = games.map(game => {
             const betRecord = betHistory.find(bet => bet.gameId === game.id);
-            return betRecord ? { ...game, betSettlement: {
+            return betRecord ? {
+                ...game, betSettlement: {
                     betType: betRecord.betType,
                     wagerValue: betRecord.wagerValue,
                     wagerAmount: betRecord.wagerAmount
-                }} : game;
+                }
+            } : game;
         });
         this.allGames.set(updatedGames);
         return updatedGames;
     }
 
     getAccount(uid: string): Observable<Account | null> {
-        return this.http.get<Account>(`${this.apiUrl}/${uid}/getAccount`, {withCredentials: true}).pipe(
-            retry({ count: 3, delay: this.BASE_RETRY_DELAY }),
+        return this.http.get<Account>(`${this.apiUrl}/${uid}/getAccount`, { withCredentials: true }).pipe(
+            retry({ count: 1, delay: this.BASE_RETRY_DELAY }), // Reduced to 1 retry
             takeUntilDestroyed(this.destroyRef),
             catchError(this.handleError<Account | null>('getAccount', null))
         );
@@ -255,7 +252,7 @@ export class BetSettlementService extends BaseApiService<Game> {
         const url = `${this.apiUrl}/${this.uid()}/getAccounts`;
         console.log(url);
         return this.http.get<Account[]>(url).pipe(
-            retry({ count: 3, delay: this.BASE_RETRY_DELAY }),
+            retry({ count: 1, delay: this.BASE_RETRY_DELAY }), // Reduced to 1 retry
             takeUntilDestroyed(this.destroyRef),
             catchError(this.handleError<Account[] | null>('getAccounts', null))
         );

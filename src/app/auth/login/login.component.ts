@@ -79,9 +79,8 @@ export class LoginComponent {
 
     try {
       const user = await this.authService.loginWithGoogle();
-      console.log('Google login succeeded, UID:', user.uid); // Extra confirmation
+      console.log('Google login succeeded, UID:', user.uid);
       await this.navigateAfterLogin();
-      // Optional: Notify user about popup
       setTimeout(() => {
         if (this.isLoading() === false) {
           this.loginError.set('Login successful! Please close the Google popup if it remains open.');
@@ -95,13 +94,93 @@ export class LoginComponent {
     }
   }
 
+  async facebookLogin() {
+    this.isLoading.set(true);
+    this.loginError.set(null);
+    try {
+      const user = await this.authService.loginWithFacebook();
+      console.log('Facebook login succeeded, UID:', user.uid);
+      await this.navigateAfterLogin();
+      setTimeout(() => {
+        if (!this.isLoading()) {
+          this.loginError.set('Login successful! Please close the Facebook popup if it remains open.');
+        }
+      }, 1000);
+    } catch (error: any) {
+      console.error('Facebook login error:', error);
+      this.loginError.set(this.getErrorMessage(error.code));
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  async appleLogin() {
+    this.isLoading.set(true);
+    this.loginError.set(null);
+    try {
+      const user = await this.authService.loginWithApple();
+      console.log('Apple login succeeded, UID:', user.uid);
+      await this.navigateAfterLogin();
+      setTimeout(() => {
+        if (!this.isLoading()) {
+          this.loginError.set('Login successful! Please close the Apple popup if it remains open.');
+        }
+      }, 1000);
+    } catch (error: any) {
+      console.error('Apple login error:', error);
+      this.loginError.set(this.getErrorMessage(error.code));
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  async githubLogin() {
+    this.isLoading.set(true);
+    this.loginError.set(null);
+    try {
+      const user = await this.authService.loginWithGithub();
+      console.log('GitHub login succeeded, UID:', user.uid);
+      await this.navigateAfterLogin();
+      setTimeout(() => {
+        if (!this.isLoading()) {
+          this.loginError.set('Login successful! Please close the GitHub popup if it remains open.');
+        }
+      }, 1000);
+    } catch (error: any) {
+      console.error('GitHub login error:', error);
+      this.loginError.set(this.getErrorMessage(error.code));
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  async twitterLogin() {
+    this.isLoading.set(true);
+    this.loginError.set(null);
+    try {
+      const user = await this.authService.loginWithTwitter();
+      console.log('Twitter login succeeded, UID:', user.uid);
+      await this.navigateAfterLogin();
+      setTimeout(() => {
+        if (!this.isLoading()) {
+          this.loginError.set('Login successful! Please close the Twitter popup if it remains open.');
+        }
+      }, 1000);
+    } catch (error: any) {
+      console.error('Twitter login error:', error);
+      this.loginError.set(this.getErrorMessage(error.code));
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
   private async navigateAfterLogin() {
     const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '';
     try {
       await this.router.navigate([returnUrl]);
     } catch (navError) {
       console.error('Navigation error:', navError);
-      this.loginError.set('Login succeeded, but navigation failed.  Please go to the dashboard manually.');
+      this.loginError.set('Login succeeded, but navigation failed. Please go to the dashboard manually.');
     }
   }
 
@@ -115,6 +194,8 @@ export class LoginComponent {
         return 'Login cancelled by closing the popup';
       case 'auth/popup-blocked':
         return 'Popup blocked. Please allow popups and try again.';
+      case 'auth/account-exists-with-different-credential':
+        return 'An account already exists with a different sign-in method';
       default:
         return 'An error occurred during login';
     }

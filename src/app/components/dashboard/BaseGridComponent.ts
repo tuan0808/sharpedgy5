@@ -37,10 +37,10 @@ export abstract class BaseGridComponent {
     private static readonly MOVES_BEFORE_AUTO_SAVE = 20;
     private static readonly DEFAULT_HEADER_HEIGHT = 50;
     private static readonly GRID_DIMENSIONS = {
-        maxCols: 8,
-        maxRows: 8,
-        minRows: 8,
-        minCols: 8,
+        maxCols: 24,
+        maxRows: 24,
+        minRows: 24,
+        minCols: 24,
 
         margin: 2
     };
