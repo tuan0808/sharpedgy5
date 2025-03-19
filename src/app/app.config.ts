@@ -19,7 +19,6 @@ export function HttpLoaderFactory(http: HttpClient) {
 
 import { routes } from './app.routes';
 import {initializeApp, provideFirebaseApp} from "@angular/fire/app";
-import firebase from "firebase/compat";
 import {environment} from "../environments/environment";
 import {getAuth, provideAuth} from "@angular/fire/auth";
 import {authInterceptor} from "./shared/interceptors/auth.interceptor";

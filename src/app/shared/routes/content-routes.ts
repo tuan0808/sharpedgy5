@@ -5,6 +5,12 @@ import {adminGuard} from "../guard/admin.guard";
 export const content: Routes = [
     {
         path: '',
+        pathMatch: 'full',
+        redirectTo: '/dashboard'
+    },
+    {
+        path: 'dashboard',
+        canActivate: [authGuard],
         data: {
             breadcrumb: "Dashboard"
         },

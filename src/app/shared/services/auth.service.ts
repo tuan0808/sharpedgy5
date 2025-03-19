@@ -9,6 +9,8 @@ import { LoginMetrics } from "../model/auth/LoginMetrics";
 import { environment } from "../../../environments/environment";
 import { HttpClient } from "@angular/common/http";
 import { UserService } from "./user.service";
+import {firstValueFrom, throwError, timeout} from "rxjs";
+import {catchError} from "rxjs/operators";
 
 @Injectable({
     providedIn: 'root'
@@ -110,7 +112,7 @@ export class AuthService {
         return this.user()?.uid ?? null;
     }
 
-    async getFreshToken(): Promise<string | null> {
+    async getFreshToken(forceRefresh = false): Promise<string | null> {
         await this.ensureAuthInitialized();
         const user = this.auth.currentUser;
         if (!user) {
@@ -119,18 +121,29 @@ export class AuthService {
         }
 
         const now = Date.now() / 1000; // Current time in seconds
-        if (this.cachedToken && this.cachedToken.expiresAt > now + 300) { // 5-min buffer
-            console.log("Using cached token:", this.cachedToken.token);
+
+        // If we have a cached token and not forcing refresh, use it
+        if (!forceRefresh && this.cachedToken && this.cachedToken.expiresAt > now + 300) { // 5-min buffer
+            console.log("Using cached token, expires in:", Math.round(this.cachedToken.expiresAt - now), "seconds");
             return this.cachedToken.token;
         }
 
-        const token = await user.getIdToken(true); // Force refresh only if needed
-        const decoded = JSON.parse(atob(token.split('.')[1]));
-        this.cachedToken = { token, expiresAt: decoded.exp };
-        console.log("Fresh token:", token);
-        console.log("Issued at:", new Date(decoded.iat * 1000));
-        console.log("Expires at:", new Date(decoded.exp * 1000));
-        return token;
+        try {
+            console.log("Fetching fresh token...");
+            const token = await user.getIdToken(true); // Force refresh
+            const decoded = JSON.parse(atob(token.split('.')[1]));
+
+            this.cachedToken = { token, expiresAt: decoded.exp };
+            console.log("Fresh token acquired, expires at:", new Date(decoded.exp * 1000));
+
+            // Make sure the token is also refreshed on the backend
+            await this.updateBackendToken(token);
+
+            return token;
+        } catch (error) {
+            console.error("Error fetching fresh token:", error);
+            return null;
+        }
     }
 
     async loginWithEmail(email: string, password: string): Promise<User> {
@@ -295,7 +308,8 @@ export class AuthService {
     }
 
     private generateStateParam(): string {
-        const state = crypto.randomUUID();
+
+        const state = window.crypto.randomUUID();
         sessionStorage.setItem('auth_state', state);
         return state;
     }
@@ -345,11 +359,35 @@ export class AuthService {
         }
     }
 
-    private async updateBackendToken(token: string): Promise<void> {
+    private async updateBackendToken(token: string | null): Promise<void> {
+        if (!token) {
+            console.error('No token to update on backend');
+            return;
+        }
+
         try {
-            await this.http.post(`http://localhost:8080/api/auth/token-refresh`, { token }).toPromise();
+            // Use regular HTTP client but with custom headers to avoid interceptor
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // Send token in header, not as query param
+            };
+
+            // Create a non-intercepted fetch request
+            const response = await fetch(`${environment.apiUrl}/api/auth/token-refresh`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ token }),
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error(`Token refresh failed with status: ${response.status}`);
+            }
+
+            console.log('Backend token updated successfully');
         } catch (error) {
-            this.logSecurityEvent('token_refresh_failed', { message: 'Failed to update backend token' });
+            console.error('Token refresh error:', error);
+            // Continue auth flow even if backend sync fails
         }
     }
 }

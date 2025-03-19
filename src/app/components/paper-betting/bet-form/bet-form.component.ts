@@ -46,7 +46,7 @@ export class BetFormComponent {
     authService = inject(AuthService);
 
     @Input() game!: Game;
-    @Input() uid: string;
+    @Input() uid: string = ''; // Optional if passed, otherwise fetched
     @Input() sportType!: SportType;
     @Output() betPlaced = new EventEmitter<{ game: Game, balance: number }>();
 
@@ -56,13 +56,13 @@ export class BetFormComponent {
     potentialWinnings: number = 0;
 
     betTypes: BetTypeOption[] = [
-        {id: BetTypes.MONEYLINE, label: 'Money Line', icon: '💰', isEnabled: true},
-        {id: BetTypes.POINT_SPREAD, label: 'Point Spread', icon: '📊', isEnabled: true},
-        {id: BetTypes.OVER_UNDER, label: 'Over/Under', icon: '⚖️', isEnabled: true},
-        {id: BetTypes.PARLAY, label: 'Parlay', icon: '🎲', isEnabled: false},
-        {id: BetTypes.TEASER, label: 'Teaser', icon: '🎯', isEnabled: false},
-        {id: BetTypes.ROUND_ROBIN, label: 'Round Robin', icon: '🔄', isEnabled: false},
-        {id: BetTypes.PLEASER, label: 'Pleaser', icon: '🎪', isEnabled: false}
+        { id: BetTypes.MONEYLINE, label: 'Money Line', icon: '💰', isEnabled: true },
+        { id: BetTypes.POINT_SPREAD, label: 'Point Spread', icon: '📊', isEnabled: true },
+        { id: BetTypes.OVER_UNDER, label: 'Over/Under', icon: '⚖️', isEnabled: true },
+        { id: BetTypes.PARLAY, label: 'Parlay', icon: '🎲', isEnabled: false },
+        { id: BetTypes.TEASER, label: 'Teaser', icon: '🎯', isEnabled: false },
+        { id: BetTypes.ROUND_ROBIN, label: 'Round Robin', icon: '🔄', isEnabled: false },
+        { id: BetTypes.PLEASER, label: 'Pleaser', icon: '🎪', isEnabled: false }
     ];
 
     constructor(
@@ -99,21 +99,14 @@ export class BetFormComponent {
 
         let profit: number;
         if (odds > 0) {
-            // Positive odds: Profit for the given amount
             profit = (amount * odds) / 100;
         } else if (odds < 0) {
-            // Negative odds: Profit for the given amount
             profit = amount * (100 / Math.abs(odds));
         } else {
-            // Odds of 0 (edge case, theoretically even money)
-            profit = amount; // 1:1 payout, profit equals stake
+            profit = amount;
         }
 
-        // Round to 2 decimal places
         this.potentialWinnings = Math.round(profit * 100) / 100;
-
-        // Optional: If you want total payout instead of profit
-        // this.potentialWinnings = Math.round((profit + amount) * 100) / 100;
     }
 
     isFormValid(): boolean {
@@ -124,30 +117,38 @@ export class BetFormComponent {
 
     async onSubmit() {
         if (this.isFormValid()) {
-            const betHistory = new BetHistory();
-            betHistory.gameId = this.game.id;
-            betHistory.userId = await this.authService.getUID()
-            betHistory.homeTeam = this.game.homeTeam.name;
-            betHistory.awayTeam = this.game.awayTeam.name;
-            betHistory.gameStart = new Date(this.game.scheduled);
-            betHistory.sport = this.sportType;
-            betHistory.betType = this.selectedBetType;
-            betHistory.wagerValue = parseFloat(this.selectedTeam.odds);
-            betHistory.wagerAmount = this.bettingForm.value.amount;
-            betHistory.amount = this.bettingForm.value.amount;
-            betHistory.status = Status.PENDING;
-            betHistory.selectedTeam = this.selectedTeam.name;
-            betHistory.potentialWinnings = this.potentialWinnings;
+            const userId = this.uid || (await this.authService.getUID());
+            if (!userId) {
+                console.error('No user ID available');
+                return;
+            }
 
-            // Update the game with the new bet
-            const updatedGame = {...this.game, betSettlement: betHistory};
+            const betHistory: BetHistory = {
+                gameId: this.game.id,
+                userId,
+                homeTeam: this.game.homeTeam.name,
+                awayTeam: this.game.awayTeam.name,
+                gameStart: new Date(this.game.scheduled),
+                sport: this.sportType,
+                betType: this.selectedBetType,
+                wagerValue: parseFloat(this.selectedTeam.odds),
+                wagerAmount: this.bettingForm.value.amount,
+                amount: this.bettingForm.value.amount,
+                status: Status.PENDING,
+                selectedTeam: this.selectedTeam.name,
+                potentialWinnings: this.potentialWinnings
+            };
 
-            this.betSettlementService.addHistory(betHistory).subscribe(s => console.log(s))
-            // Emit both game and balance (balance will be handled by the parent)
-            //  this.betPlaced.emit({ game: updatedGame, balance: 0 });
+            const updatedGame = { ...this.game, betSettlement: betHistory };
 
-            // Close the modal
-            this.activeModal.close();
+            this.betSettlementService.addHistory(betHistory).subscribe({
+                next: (newBalance) => {
+                    console.log('Bet placed, new balance:', newBalance);
+                    this.betPlaced.emit({ game: updatedGame, balance: newBalance });
+                    this.activeModal.close();
+                },
+                error: (err) => console.error('Bet placement failed:', err)
+            });
         }
     }
 }

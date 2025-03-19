@@ -72,4 +72,20 @@ export class UserService {
             throw error;
         }
     }
+
+    getRoles(): Observable<any[]> {
+        return null
+    }
+
+    createRole(roleData: { name: string; description: string }) : Observable<boolean> {
+        return null;
+    }
+
+    updateRole(id: number, roleData: { name: string; description: string }) : Observable<boolean> {
+        return null;
+    }
+
+    deleteRole(roleId: number)  : Observable<boolean> {
+        return null;
+    }
 }

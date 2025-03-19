@@ -3,14 +3,10 @@ import {MdbAccordionModule} from "mdb-angular-ui-kit/accordion";
 import {GameCardComponent} from "./game-card/game-card.component";
 import {SportType} from "../../../shared/model/SportType";
 import {BetSettlementService} from "../../../shared/services/betSettlement.service";
-import {Game} from "../../../shared/model/paper-betting/Game";
-import {BehaviorSubject, firstValueFrom, Observable, of, retry, timeout} from "rxjs";
+import {firstValueFrom, of, retry, timeout} from "rxjs";
 import {CurrencyPipe, DatePipe} from "@angular/common";
 import {SportDetail} from "../../../shared/model/SportDetail";
 import {PaginationComponent} from "../../../shared/components/pagination/pagination.component";
-
-import {BetHistory} from "../../../shared/model/paper-betting/BetHistory";
-import {HttpClient} from "@angular/common/http";
 import {catchError, filter, tap} from "rxjs/operators";
 import {ToastrService} from "ngx-toastr";
 
