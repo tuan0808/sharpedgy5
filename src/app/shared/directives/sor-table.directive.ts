@@ -1,5 +1,4 @@
 import { Directive, EventEmitter, Input, Output } from '@angular/core';
-import { any } from '../data/data-table/data-table';
 
 export type SortColumn = keyof any | '';
 export type SortDirection = 'asc' | 'desc' | '';

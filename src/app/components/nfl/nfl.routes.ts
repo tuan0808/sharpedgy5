@@ -4,11 +4,11 @@ import {TransactionsComponent} from "./transactions/transactions";
 import {TeamStatsComponent} from "./team-stats/team-stats.component";
 import {TeamsComponent} from "./teams/teams.component";
 import {StandingComponent} from "./standing/standing.component";
-import {ScheduleComponent} from "./schedule/Schedule.component";
 import {PlayersSearchComponent} from "./players-search/players-search.component";
 import {PlayersComponent} from "./players/players.component";
 import {InjuriesComponent} from "./injuries/injuries.component";
 import {NewsComponent} from "./news/news.component";
+import {ScheduleComponent} from "./schedule/Schedule.component";
 
 
 export const nflRoutes: Routes = [

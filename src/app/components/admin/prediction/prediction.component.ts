@@ -1,29 +1,38 @@
-import {Component, computed, effect, HostListener, inject, OnInit, Signal, signal, WritableSignal} from '@angular/core';
-import {MdbAccordionModule} from "mdb-angular-ui-kit/accordion";
-import {GameCardComponent} from "./game-card/game-card.component";
-import {SportType} from "../../../shared/model/SportType";
-import {BetSettlementService} from "../../../shared/services/betSettlement.service";
-import {firstValueFrom, of, retry, timeout} from "rxjs";
-import {CurrencyPipe, DatePipe} from "@angular/common";
-import {SportDetail} from "../../../shared/model/SportDetail";
+import {Component, computed, effect, HostListener, inject, signal} from '@angular/core';
+import {FormsModule} from "@angular/forms";
+import {CurrencyPipe, NgForOf, NgIf} from "@angular/common";
+import {GameCardComponent} from "../../paper-betting/home/game-card/game-card.component";
 import {PaginationComponent} from "../../../shared/components/pagination/pagination.component";
-import {catchError, filter, tap} from "rxjs/operators";
+import {BetSettlementService} from "../../../shared/services/betSettlement.service";
 import {ToastrService} from "ngx-toastr";
+import {SportDetail} from "../../../shared/model/SportDetail";
+import {SportType} from "../../../shared/model/SportType";
+import {firstValueFrom, of, retry, timeout} from "rxjs";
+import {catchError, tap} from "rxjs/operators";
+
+interface Game {
+  id: number;
+  homeTeam: string;
+  awayTeam: string;
+  gameTime: Date;
+  league: string;
+}
 
 @Component({
-  selector: 'app-home',
-  templateUrl: './home.component.html',
+  selector: 'app-prediction',
   standalone: true,
-  imports: [
-    MdbAccordionModule,
-    GameCardComponent,
-    DatePipe,
-    PaginationComponent,
-    CurrencyPipe
-  ],
-  styleUrls: ['./home.component.scss']
+    imports: [
+        FormsModule,
+        NgIf,
+        NgForOf,
+        CurrencyPipe,
+        GameCardComponent,
+        PaginationComponent
+    ],
+  templateUrl: './prediction.component.html',
+  styleUrl: './prediction.component.scss'
 })
-export class HomeComponent implements OnInit {
+export class PredictionComponent {
   private readonly betSettlement = inject(BetSettlementService);
   private readonly toastr = inject(ToastrService);
   private readonly MAX_LOAD_RETRIES = 3;

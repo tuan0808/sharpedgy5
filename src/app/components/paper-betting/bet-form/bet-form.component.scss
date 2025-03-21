@@ -133,6 +133,20 @@ h2 {
   }
 }
 
+.control-note-input {
+  width: 100%;
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 16px;
+
+  &:focus {
+    outline: none;
+    border-color: #d1d5db;
+    box-shadow: 0 0 0 2px rgba(209, 213, 219, 0.2);
+  }
+}
+
 .error-message {
   color: #ef4444;
   font-size: 14px;

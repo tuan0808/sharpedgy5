@@ -1,14 +1,12 @@
-import { Routes } from '@angular/router';
-import { ContentLayoutComponent } from './shared/components/layout/content-layout/content-layout.component';
-import { content } from './shared/routes/content-routes';
-import { FullLayoutComponent } from './shared/components/layout/full-layout/full-layout.component';
-import { fullRoutes } from './shared/routes/full.routes';
-import { AdminGuard } from './shared/guard/admin.guard';
-// import {RegisterComponent} from "./auth/register/register.component";
+import {Routes} from '@angular/router';
+import {ContentLayoutComponent} from './shared/components/layout/content-layout/content-layout.component';
+import {content} from './shared/routes/content-routes';
+import {FullLayoutComponent} from './shared/components/layout/full-layout/full-layout.component';
+import {fullRoutes} from './shared/routes/full.routes';
 import {VerificationComponent} from "./auth/verification/verification.component";
 import {ResetPwdComponent} from "./auth/reset-pwd/reset-pwd.component";
-//import {PopupGridComponent} from "./components/dashboard/popup-grid/popup-grid.component";
 import {LoginComponent} from "./auth/login/login.component";
+import {Error400Component} from "./pages/error-pages/error400/error400.component";
 
 export const routes: Routes = [
     // {
@@ -44,9 +42,6 @@ export const routes: Routes = [
         //canActivate: [AdminGuard],
         children: fullRoutes,
     },
-    // {
-    //     path: 'popup-grid',
-    //     component: PopupGridComponent,
-    //     children: content
-    // }
+    {path: '404', component: Error400Component},
+    {path: '**', redirectTo: '/404', pathMatch: 'full'}
 ];
