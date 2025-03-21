@@ -1,11 +1,13 @@
-import { Routes } from '@angular/router';
-import { ContentLayoutComponent } from './shared/components/layout/content-layout/content-layout.component';
-import { content } from './shared/routes/content-routes';
-import { FullLayoutComponent } from './shared/components/layout/full-layout/full-layout.component';
-import { fullRoutes } from './shared/routes/full.routes';
+import {Routes} from '@angular/router';
+import {ContentLayoutComponent} from './shared/components/layout/content-layout/content-layout.component';
+import {content} from './shared/routes/content-routes';
+import {FullLayoutComponent} from './shared/components/layout/full-layout/full-layout.component';
+import {fullRoutes} from './shared/routes/full.routes';
 import {VerificationComponent} from "./auth/verification/verification.component";
 import {ResetPwdComponent} from "./auth/reset-pwd/reset-pwd.component";
 import {LoginComponent} from "./auth/login/login.component";
+import {Error400Component} from "./pages/error-pages/error400/error400.component";
+
 export const routes: Routes = [
     // {
     //     path: "",
@@ -39,5 +41,7 @@ export const routes: Routes = [
         component: FullLayoutComponent,
         //canActivate: [AdminGuard],
         children: fullRoutes,
-    }
+    },
+    {path: '404', component: Error400Component},
+    {path: '**', redirectTo: '/404', pathMatch: 'full'}
 ];

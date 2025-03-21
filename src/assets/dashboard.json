@@ -151,7 +151,8 @@
     "type": "sub",
     "active": false,
     "children": [
-      {"path": "admin/prediction", "title": "Prediction", "type": "link"}
+      {"path": "admin/prediction", "title": "Prediction", "type": "link"},
+      {"path":  "admin/user-manager", "title":  "User Manager", "type": "link"}
     ]
   },
   {

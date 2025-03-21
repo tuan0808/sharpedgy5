@@ -42,11 +42,14 @@ export interface PotentialWinnings {
     styleUrls: ['./bet-form.component.scss']
 })
 export class BetFormComponent {
-    betSettlementService = inject(BetSettlementService);
-    authService = inject(AuthService);
+    protected betSettlementService = inject(BetSettlementService);
+    protected authService = inject(AuthService);
+    protected fb = inject(FormBuilder)
+    public activeModal = inject(NgbActiveModal)
+
 
     @Input() game!: Game;
-    @Input() uid: string = ''; // Optional if passed, otherwise fetched
+    @Input() uid: string = '';
     @Input() sportType!: SportType;
     @Output() betPlaced = new EventEmitter<{ game: Game, balance: number }>();
 
@@ -65,10 +68,7 @@ export class BetFormComponent {
         { id: BetTypes.PLEASER, label: 'Pleaser', icon: '🎪', isEnabled: false }
     ];
 
-    constructor(
-        private fb: FormBuilder,
-        public activeModal: NgbActiveModal
-    ) {
+    constructor() {
         this.bettingForm = this.fb.group({
             amount: ['', [Validators.required, Validators.min(0), Validators.max(5000)]]
         });
@@ -123,21 +123,20 @@ export class BetFormComponent {
                 return;
             }
 
-            const betHistory: BetHistory = {
-                gameId: this.game.id,
-                userId,
-                homeTeam: this.game.homeTeam.name,
-                awayTeam: this.game.awayTeam.name,
-                gameStart: new Date(this.game.scheduled),
-                sport: this.sportType,
-                betType: this.selectedBetType,
-                wagerValue: parseFloat(this.selectedTeam.odds),
-                wagerAmount: this.bettingForm.value.amount,
-                amount: this.bettingForm.value.amount,
-                status: Status.PENDING,
-                selectedTeam: this.selectedTeam.name,
-                potentialWinnings: this.potentialWinnings
-            };
+            const betHistory = new BetHistory();
+            betHistory.gameId = this.game.id;
+            betHistory.userId = userId;
+            betHistory.homeTeam = this.game.homeTeam.name;
+            betHistory.awayTeam = this.game.awayTeam.name;
+            betHistory.gameStart = new Date(this.game.scheduled);
+            betHistory.sport = this.sportType;
+            betHistory.betType = this.selectedBetType;
+            betHistory.wagerValue = parseFloat(this.selectedTeam.odds);
+            betHistory.wagerAmount = this.bettingForm.value.amount;
+            betHistory.amount = this.bettingForm.value.amount;
+            betHistory.status = Status.PENDING; // Optional, since it’s the default
+            betHistory.selectedTeam = this.selectedTeam.name;
+            betHistory.potentialWinnings = this.potentialWinnings;
 
             const updatedGame = { ...this.game, betSettlement: betHistory };
 

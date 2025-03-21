@@ -76,6 +76,21 @@
                     <div class="error-message">Minimum bet amount is $0</div>
                 }
             </div>
+
+            <!-- Control Note Input -->
+            <div class="form-section">
+                <label for="controlNote">Control Note</label>
+                <input
+                        id="controlNote"
+                        type="text"
+                        formControlName="controlNote"
+                        placeholder="Enter control note"
+                        class="control-note-input">
+                @if (bettingForm.get('controlNote')?.errors?.['required']) {
+                    <div class="error-message">Control note is required</div>
+                }
+            </div>
+
             <!-- Potential Winnings Display -->
             @if (potentialWinnings > 0) {
                 <div class="potential-winnings">

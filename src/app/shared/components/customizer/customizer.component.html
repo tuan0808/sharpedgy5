@@ -9,7 +9,7 @@
             <div class="settings color-settings"><i class="icofont icofont-color-bucket"></i></div>
         </a>
         <!-- New Components Tab - Only visible on dashboard -->
-        @if (router.url === '') {
+        @if (router.url === '/dashboard') {
             <a href="javascript:void(0)" class="nav-link" [ngClass]="{'active show': customizer == 'components' }"
                id="c-pills-components-tab" (click)="openCustomizerSetting('components')">
                 <div class="settings component-settings"><i class="icofont icofont-tasks-alt"></i></div>

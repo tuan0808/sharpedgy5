@@ -1,12 +1,9 @@
 import {Component, EventEmitter, inject, input, Input, Output, signal, Signal} from '@angular/core';
 import {Game} from "../../../../shared/model/paper-betting/Game";
 import {RouterLink} from "@angular/router";
-import {NFLGame} from "../../../../shared/model/paper-betting/ b23/NFLGame";
 import {DatePipe, NgClass, NgIf} from "@angular/common";
 import {BetFormComponent} from "../../bet-form/bet-form.component";
-import {getDatabase} from "@angular/fire/database";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
-import {BetFormData} from "../../../../shared/model/paper-betting/BetFormData";
 import {BetTypes} from "../../../../shared/model/enums/BetTypes";
 import {SportType} from "../../../../shared/model/SportType";
 import {BetSettlementService} from "../../../../shared/services/betSettlement.service";

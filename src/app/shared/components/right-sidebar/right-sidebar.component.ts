@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { ChatUsers } from '../../../shared/model/chat.model';
-import { ChatService } from '../../../shared/services/chat.service';
+import { ChatUsers } from '../../model/chat.model';
+import { ChatService } from '../../services/chat.service';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';

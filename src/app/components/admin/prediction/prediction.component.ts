@@ -1,6 +1,14 @@
-import { Component } from '@angular/core';
+import {Component, computed, effect, HostListener, inject, signal} from '@angular/core';
 import {FormsModule} from "@angular/forms";
-import {NgForOf, NgIf} from "@angular/common";
+import {CurrencyPipe, NgForOf, NgIf} from "@angular/common";
+import {GameCardComponent} from "../../paper-betting/home/game-card/game-card.component";
+import {PaginationComponent} from "../../../shared/components/pagination/pagination.component";
+import {BetSettlementService} from "../../../shared/services/betSettlement.service";
+import {ToastrService} from "ngx-toastr";
+import {SportDetail} from "../../../shared/model/SportDetail";
+import {SportType} from "../../../shared/model/SportType";
+import {firstValueFrom, of, retry, timeout} from "rxjs";
+import {catchError, tap} from "rxjs/operators";
 
 interface Game {
   id: number;
@@ -13,151 +21,186 @@ interface Game {
 @Component({
   selector: 'app-prediction',
   standalone: true,
-  imports: [
-    FormsModule,
-    NgIf,
-    NgForOf
-  ],
+    imports: [
+        FormsModule,
+        NgIf,
+        NgForOf,
+        CurrencyPipe,
+        GameCardComponent,
+        PaginationComponent
+    ],
   templateUrl: './prediction.component.html',
   styleUrl: './prediction.component.scss'
 })
 export class PredictionComponent {
-// Form state
-  formData = {
-    gameId: '',
-    predictedWinner: '',
-    confidence: 3,
-    analysis: '',
-    oddsHomeTeam: '',
-    oddsAwayTeam: '',
-    spreadFavorite: '',
-    spreadPoints: '',
-    overUnderTotal: '',
-    recommendedBet: ''
-  };
+  private readonly betSettlement = inject(BetSettlementService);
+  private readonly toastr = inject(ToastrService);
+  private readonly MAX_LOAD_RETRIES = 3;
+  private readonly RETRY_DELAY = 2000; // 2 seconds
+  private previousBalance: number | null = null;
 
-  // UI states
-  upcomingGames: Game[] = [];
-  isSubmitting = false;
-  submitSuccess = false;
-  errorMessage = '';
+  // Scroll tracking
+  protected isAtTop = signal<boolean>(true);
 
-  // Confidence level options
-  confidenceLevels = [
-    { value: 1, label: '1 - Low Confidence' },
-    { value: 2, label: '2 - Somewhat Confident' },
-    { value: 3, label: '3 - Moderately Confident' },
-    { value: 4, label: '4 - Very Confident' },
-    { value: 5, label: '5 - Extremely Confident' }
-  ];
+  // Signals
+  protected readonly account = this.betSettlement.account;
+  protected readonly displayedGames = computed(() => {
+    const allGames = this.betSettlement.allGames();
+    const startIndex = (this.currentPage() - 1) * this.pageSize();
+    const endIndex = Math.min(startIndex + this.pageSize(), allGames.length);
+    return allGames.slice(startIndex, endIndex);
+  });
 
-  // Recommended bet options
-  recommendedBetOptions = [
-    { value: 'moneyline_home', label: 'Moneyline - Home Team' },
-    { value: 'moneyline_away', label: 'Moneyline - Away Team' },
-    { value: 'spread_favorite', label: 'Spread - Favorite' },
-    { value: 'spread_underdog', label: 'Spread - Underdog' },
-    { value: 'over', label: 'Over Total Points' },
-    { value: 'under', label: 'Under Total Points' },
-    { value: 'none', label: 'No Bet Recommended' }
-  ];
+  protected readonly sports = signal<SportDetail[]>([
+    new SportDetail("NFL", "🏈", SportType.NFL),
+    new SportDetail("NHL", "🏒", SportType.NHL),
+  ]);
+  protected readonly selectedSport = signal<SportType>(SportType.NFL);
+  protected readonly isLoading = signal<boolean>(false);
+  protected readonly hasError = signal<boolean>(false);
+  protected readonly errorMessage = signal<string>('');
+  protected readonly currentPage = signal<number>(1);
+  protected readonly pageSize = signal<number>(10);
+  protected readonly totalPages = computed(() => {
+    const totalGames = this.betSettlement.allGames().length;
+    return Math.ceil(totalGames / this.pageSize());
+  });
 
-  ngOnInit() {
-    // Mock data - would normally be an API call
-    this.upcomingGames = [
-      {
-        id: 1,
-        homeTeam: 'Boston Celtics',
-        awayTeam: 'LA Lakers',
-        gameTime: new Date(Date.now() + 86400000),
-        league: 'NBA'
-      },
-      {
-        id: 2,
-        homeTeam: 'Kansas City Chiefs',
-        awayTeam: 'San Francisco 49ers',
-        gameTime: new Date(Date.now() + 172800000),
-        league: 'NFL'
-      },
-      {
-        id: 3,
-        homeTeam: 'Manchester United',
-        awayTeam: 'Liverpool',
-        gameTime: new Date(Date.now() + 259200000),
-        league: 'Premier League'
+  constructor() {
+    // Setup effect to watch for account changes
+    effect(() => {
+      const account = this.account();
+      if (account) {
+        this.hasError.set(false);
+        this.errorMessage.set('');
+
+        this.toastr.info(account.balance.toFixed(), "Balance Change");
+        // Check for balance changes and show notification
+        if (this.previousBalance !== null && this.previousBalance !== account.balance) {
+          const difference = account.balance - this.previousBalance;
+          const message = difference > 0
+              ? `Balance increased by ${difference.toFixed(2)}!`
+              : `Balance decreased by ${Math.abs(difference).toFixed(2)}`;
+
+          const toastrType = difference > 0 ? 'success' : 'info';
+          this.toastr[toastrType](message, 'Balance Update');
+        }
+        this.previousBalance = account.balance;
       }
-    ];
+    });
   }
 
-  getSelectedGame(): Game | undefined {
-    return this.upcomingGames.find(game => game.id.toString() === this.formData.gameId.toString());
+  async ngOnInit(): Promise<void> {
+    await this.waitForUser();
+    console.log('User ID ready:', this.betSettlement.currentUserId());
+    await this.loadGames();
   }
 
-  handleSubmit(event: Event) {
-    event.preventDefault();
+  // Use Angular's HostListener for scroll events
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    const wasAtTop = this.isAtTop();
+    this.isAtTop.set(scrollTop <= 10);
 
-    // Validation
-    if (!this.formData.gameId || !this.formData.predictedWinner || !this.formData.analysis) {
-      this.errorMessage = 'Please fill out all required fields';
+    // If user just scrolled away from the top, show notification
+    if (wasAtTop && !this.isAtTop()) {
+      this.toastr.info('Scroll back to top to see all options', 'Scrolled Down');
+    }
+  }
+
+  private async waitForUser(retryCount = 0): Promise<void> {
+    try {
+      while (!this.betSettlement.currentUserId()) {
+        if (retryCount >= this.MAX_LOAD_RETRIES) {
+          throw new Error('Failed to load user after maximum retries');
+        }
+        console.log(`Waiting for user, attempt ${retryCount + 1}/${this.MAX_LOAD_RETRIES}`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        retryCount++;
+      }
+    } catch (error) {
+      console.error('Error waiting for user:', error);
+      this.handleError(error);
+    }
+  }
+
+  private async loadGames(): Promise<void> {
+    if (this.isLoading() || !this.betSettlement.currentUserId()) {
+      console.log('Skipping loadGames: Loading in progress or no user ID');
       return;
     }
 
-    if (this.formData.analysis.length < 20) {
-      this.errorMessage = 'Analysis must be at least 20 characters';
+    try {
+      this.isLoading.set(true);
+      this.hasError.set(false);
+      this.errorMessage.set('');
+
+      const gamesObservable = this.betSettlement.getSportsByNFL(this.selectedSport()).pipe(
+          timeout(10000),
+          retry({
+            count: 2,
+            delay: (error, retryCount) => {
+              console.log(`Retrying game load attempt ${retryCount}`, error);
+              return new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY));
+            },
+          }),
+          tap(games => console.log(`Retrieved ${games?.length} games`)),
+          catchError(err => {
+            console.error('Game fetch failed:', err);
+            return of([]); // Return an empty array as a fallback
+          })
+      );
+
+      gamesObservable.subscribe(s=>console.log(JSON.stringify(s)))
+
+      await firstValueFrom(gamesObservable);
+    } catch (error) {
+      console.error('Failed to load games:', error);
+      this.handleError(error);
+      this.betSettlement.allGames.set([]);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  private handleError(error: any) {
+    this.hasError.set(true);
+    if (error instanceof Error) {
+      this.errorMessage.set(error.message);
+      this.toastr.error(error.message, 'Error');
+    } else {
+      this.errorMessage.set('An unexpected error occurred');
+      this.toastr.error('An unexpected error occurred', 'Error');
+    }
+  }
+
+  // Event Handlers
+  async onSportSelect(type: SportType): Promise<void> {
+    if (this.selectedSport() === type && this.betSettlement.allGames().length > 0) {
       return;
     }
 
-    if (
-        (this.formData.oddsHomeTeam && isNaN(parseFloat(this.formData.oddsHomeTeam))) ||
-        (this.formData.oddsAwayTeam && isNaN(parseFloat(this.formData.oddsAwayTeam))) ||
-        (this.formData.spreadPoints && isNaN(parseFloat(this.formData.spreadPoints))) ||
-        (this.formData.overUnderTotal && isNaN(parseFloat(this.formData.overUnderTotal)))
-    ) {
-      this.errorMessage = 'Betting odds must be valid numbers';
-      return;
-    }
-
-    this.isSubmitting = true;
-    this.errorMessage = '';
-
-    // Simulated API call
-    setTimeout(() => {
-      console.log('Submitting prediction:', this.formData);
-      this.isSubmitting = false;
-      this.submitSuccess = true;
-
-      this.resetForm();
-
-      setTimeout(() => {
-        this.submitSuccess = false;
-      }, 3000);
-    }, 1000);
+    this.selectedSport.set(type);
+    this.currentPage.set(1);
+    await this.loadGames();
   }
 
-  resetForm() {
-    this.formData = {
-      gameId: '',
-      predictedWinner: '',
-      confidence: 3,
-      analysis: '',
-      oddsHomeTeam: '',
-      oddsAwayTeam: '',
-      spreadFavorite: '',
-      spreadPoints: '',
-      overUnderTotal: '',
-      recommendedBet: ''
-    };
-    this.errorMessage = '';
+  async onPageChange(page: number): Promise<void> {
+    this.currentPage.set(page);
   }
 
-  formatGameTime(date: Date): string {
-    return new Intl.DateTimeFormat('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      timeZoneName: 'short'
-    }).format(date);
+  async onPageSizeChange(size: number): Promise<void> {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
+  }
+
+  async onRetry(): Promise<void> {
+    await this.loadGames();
+  }
+
+  // Scroll to top helper method
+  scrollToTop(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
