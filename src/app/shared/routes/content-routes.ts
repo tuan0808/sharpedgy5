@@ -3,11 +3,11 @@ import {authGuard} from "../guard/AuthGuard";
 import {adminGuard} from "../guard/admin.guard";
 
 export const content: Routes = [
-    {
-        path: '',
-        pathMatch: 'full',
-        redirectTo: '/dashboard'
-    },
+    // {
+    //     path: '',
+    //     pathMatch: 'full',
+    //     redirectTo: '/dashboard'
+    // },
     {
         path: 'dashboard',
         canActivate: [authGuard],
@@ -33,7 +33,7 @@ export const content: Routes = [
     },
     {
         path: 'admin',
-        canActivate: [adminGuard],
+        // canActivate: [adminGuard],
         loadChildren: () => import('../../components/admin/admin.routes').then(r=>r.adminRoutes),
         data: {
             breadcrumb: "admin"

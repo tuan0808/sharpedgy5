@@ -224,7 +224,8 @@ export class BetSettlementService extends BaseApiService<Game> {
                 ...game, betSettlement: {
                     betType: betHistory.betType,
                     wagerValue: betHistory.wagerValue,
-                    wagerAmount: betHistory.wagerAmount
+                    wagerAmount: betHistory.wagerAmount,
+                    comment: ''
                 }
             } : game
         ));
@@ -318,7 +319,8 @@ export class BetSettlementService extends BaseApiService<Game> {
                 ...game, betSettlement: {
                     betType: betRecord.betType,
                     wagerValue: betRecord.wagerValue,
-                    wagerAmount: betRecord.wagerAmount
+                    wagerAmount: betRecord.wagerAmount,
+                    comment: ''
                 }
             } : game;
         });

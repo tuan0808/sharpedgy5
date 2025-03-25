@@ -1,0 +1,151 @@
+/* user-admin.component.scss */
+/* Custom styles to complement Bootstrap */
+
+.admin-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Sidebar styling */
+.sidebar {
+  width: 250px;
+  background-color: #f7f9fc;
+  border-right: 1px solid #e1e4e8;
+  height: 100%;
+  overflow-y: auto;
+
+  .logo {
+    padding: 16px;
+    font-size: 18px;
+    font-weight: 500;
+    border-bottom: 1px solid #e1e4e8;
+  }
+
+  .menu-section {
+    margin-top: 16px;
+
+    .section-title {
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #6c757d;
+      font-weight: 500;
+    }
+
+    .nav-link {
+      padding: 8px 16px;
+      color: #3e4b5b;
+
+      i {
+        margin-right: 8px;
+      }
+
+      &.active {
+        background-color: #eaf0f7;
+        color: #0d6efd;
+        border-left: 3px solid #0d6efd;
+        font-weight: 500;
+      }
+
+      &:hover:not(.active) {
+        background-color: #e9ecef;
+      }
+    }
+  }
+}
+
+/* Content area styling */
+.content-area {
+  flex: 1;
+  padding: 0 24px 24px;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+
+  .page-header {
+    padding: 24px 0;
+    border-bottom: 1px solid #e1e4e8;
+    margin-bottom: 24px;
+
+    .header-title {
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 400;
+      }
+
+      .subtitle {
+        font-size: 14px;
+        color: #6c757d;
+      }
+    }
+  }
+
+  .summary-title {
+    font-size: 16px;
+    color: #343a40;
+  }
+}
+
+/* Table customization */
+.table {
+  th {
+    border-top: none;
+    border-bottom-width: 1px;
+    font-weight: 500;
+  }
+
+  td {
+    vertical-align: middle;
+  }
+}
+
+/* Action buttons sizing */
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+/* Float action button customization */
+.float-action-button {
+  width: 56px;
+  height: 56px;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    margin: 0;
+  }
+}
+
+/* Hide floating button on larger screens */
+@media (min-width: 992px) {
+  .float-action-button {
+    display: none;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 50vh;
+    border-right: none;
+    border-bottom: 1px solid #e1e4e8;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+
+    .header-actions {
+      margin-top: 1rem;
+    }
+  }
+}

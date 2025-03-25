@@ -1,3 +1,4 @@
+<!-- bet-form.component.html -->
 <div class="betting-card">
     <h2>Place Your Bet</h2>
 
@@ -39,6 +40,9 @@
                         <div class="team-odds">
                             {{ game.moneylineHome >= 0 ? '+' : '' }}{{ game.moneylineHome }}
                         </div>
+                        <div class="team-probability">
+                            {{ homeTeamWinProbability.toFixed(2) }}% chance to win
+                        </div>
                     </button>
                     <!-- Away Team -->
                     <button
@@ -53,6 +57,9 @@
                         <div class="team-name">{{ game.awayTeam.name }}</div>
                         <div class="team-odds">
                             {{ game.moneylineAway >= 0 ? '+' : '' }}{{ game.moneylineAway }}
+                        </div>
+                        <div class="team-probability">
+                            {{ awayTeamWinProbability.toFixed(2) }}% chance to win
                         </div>
                     </button>
                 </div>

@@ -19,4 +19,5 @@ export class BetHistory implements BetSettlement {
     selectedTeam: string;
     potentialWinnings: number
     controlNote : string = ''
+    comment: string = '';
 }

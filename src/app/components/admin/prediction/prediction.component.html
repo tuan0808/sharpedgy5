@@ -1,99 +1,132 @@
-<!-- home.component.html -->
-<div class="header">
-    <h1>Bet Simulator</h1>
-    <div class="right">
-    <span class="balance">
-      <i class="bi bi-wallet2"></i> {{ account()?.balance | currency }}
-    </span>
-        <i class="bi bi-bell notification"></i>
-    </div>
-</div>
-
-<div class="top-container">
-    <div class="achievement">
-        <div>
-            <i class="bi bi-trophy-fill badge"></i>
-            Recent Achievement:
-            <span class="badge">Hot Streak! 🔥 Won 5 bets in a row</span>
+<!-- bet-simulator.component.html with updated bet results -->
+<div class="bet-simulator-container">
+    <div class="bet-simulator-card">
+        <div class="simulator-header">
+            <h1 class="simulator-title">Bet Simulator</h1>
+            <div class="achievement-banner">
+                <p class="achievement-text">Recent Achievement: 🏆 Won 5 bets in a row!</p>
+            </div>
+            <div class="sport-buttons">
+                <button class="sport-button">🏈 NFL</button>
+                <button class="sport-button">🏒 NHL</button>
+            </div>
         </div>
-        <a href="#" class="badge">View All Achievements</a>
-    </div>
-    <div class="sports-scroll border-bottom card">
-        <div class="container-fluid px-4 position-relative">
-            <div class="d-flex overflow-auto py-2">
-                @for (sport of sports(); track sport.name) {
-                    <button class="btn sport-tab"
-                            [class.active]="selectedSport() === sport.type"
-                            (click)="onSportSelect(sport.type)"
-                            [disabled]="isLoading()">
-                        {{ sport.icon }}{{ sport.name }}<span class="badge"></span>
-                    </button>
-                }
+
+        <h2 class="section-title">Today's Games</h2>
+
+        <div class="games-list">
+            <div *ngFor="let game of games" class="game-item">
+                <div class="game-header">
+                    <div class="game-info" (click)="toggleAccordion(game.id)">
+                        <span class="game-date">{{ formatDate(game.scheduled) }}</span>
+                        <span class="game-teams">{{ game.homeTeam.name }} vs {{ game.awayTeam.name }}</span>
+                        <span class="game-status">{{ game.status }}</span>
+                    </div>
+                    <div class="game-actions">
+                        <!-- Place Bet Icon -->
+                        <button class="action-icon place-bet-icon" aria-label="Place Bet" (click)="submitPrediction(game, $event)">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                        </button>
+
+                        <!-- View Matchup Icon -->
+                        <button class="action-icon view-matchup-icon" aria-label="View Matchup" (click)="viewMatchup(game.id, $event)">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Edit Icon -->
+                        <button class="action-icon edit-icon" aria-label="Edit" (click)="editGame(game.id, $event)">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Expand/Collapse Icon -->
+                        <button class="action-icon expand-icon" (click)="toggleAccordion(game.id)" aria-label="Expand or Collapse">
+                            <svg
+                                    width="20"
+                                    height="20"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    [class.rotated]="expandedGame === game.id"
+                            >
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="game-content" *ngIf="expandedGame === game.id">
+                    <div class="content-grid">
+                        <!-- Left side: Betting info -->
+                        <div class="betting-info">
+                            <div class="betting-grid">
+                                <p class="label">Spread:</p>
+                                <p class="value">{{ game.spread.toFixed(2) }}</p>
+
+                                <p class="label">Money Line:</p>
+                                <p class="value">{{ game.homeTeam.id.toUpperCase() }} {{ game.moneylineHome }} | {{ game.awayTeam.id.toUpperCase() }} {{ game.moneylineAway }}</p>
+
+                                <p class="label">O/U:</p>
+                                <p class="value">{{ game.overUnderTotal.toFixed(1) }}</p>
+                            </div>
+
+                            <div class="matchup-analysis">
+                                <p class="analysis-text">
+                                    This matchup features two teams with contrasting styles. The home team has been strong in recent games,
+                                    winning 3 of their last 4, while the visitors have struggled on the road this season. Weather conditions
+                                    are expected to be ideal for this game.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Right side: Bet Results -->
+                        <div class="bet-results">
+                            <h3 class="bet-results-title">Bet Results</h3>
+                            <div class="bet-results-grid">
+                                <p class="label">Bet Type:</p>
+                                <p class="value">{{ getBetTypeName(game.betSettlement.betType) }}</p>
+
+                                <p class="label">Bet Amount:</p>
+                                <p class="value" *ngIf="game.betSettlement.wagerAmount">${{ game.betSettlement.wagerAmount.toFixed(2) }}</p>
+                                <p class="value" *ngIf="!game.betSettlement.wagerAmount">$0.00</p>
+
+                                <p class="label">Team Selected:</p>
+                                <p class="value">{{ getSelectedTeam(game) }}</p>
+
+                                <p class="label">Confidence:</p>
+                                <p class="value confidence-indicator">
+                                    <span>{{ formatConfidence(game.betSettlement.confidence) }}</span>
+                                    <span class="confidence-bar">
+                    <span class="confidence-fill" [style.width.%]="game.betSettlement.confidence || 0"></span>
+                  </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pagination-container">
+            <div class="page-size-selector">
+                <select class="page-size-select">
+                    <option>10 per page</option>
+                </select>
+            </div>
+            <div class="pagination-controls">
+                <button class="pagination-button">«</button>
+                <button class="pagination-button active">1</button>
+                <button class="pagination-button">2</button>
+                <button class="pagination-button">»</button>
+                <span class="pagination-text">Page 1 of 2</span>
             </div>
         </div>
     </div>
 </div>
-
-<div class="games-container">
-    <div class="games-header">
-        <h2 class="title">Today's Games</h2>
-        @if (!isLoading() && !hasError() && displayedGames().length > 0) {
-            <app-pagination
-                    [currentPage]="currentPage()"
-                    [totalPages]="totalPages()"
-                    [pageSize]="pageSize()"
-                    (pageChange)="onPageChange($event)"
-                    (pageSizeChange)="onPageSizeChange($event)">
-            </app-pagination>
-        }
-    </div>
-
-    @if (isLoading()) {
-        <div class="loading-container">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p>Loading games...</p>
-        </div>
-    } @else if (hasError()) {
-        <div class="error-container">
-            <div class="alert alert-danger" role="alert">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                {{ errorMessage() }}
-            </div>
-            <button class="btn btn-primary mt-3" (click)="onRetry()">
-                <i class="bi bi-arrow-clockwise"></i> Retry
-            </button>
-        </div>
-    } @else if (displayedGames().length === 0) {
-        <div class="empty-container">
-            <p>No games available at the moment.</p>
-        </div>
-    } @else {
-        <div class="games">
-            @for (game of displayedGames(); track game.id) {
-                <app-game-card
-                        [sportType]="selectedSport()"
-                        [gameData]="game">
-                </app-game-card>
-            }
-        </div>
-
-        <div class="games-footer">
-            <app-pagination
-                    [currentPage]="currentPage()"
-                    [totalPages]="totalPages()"
-                    [pageSize]="pageSize()"
-                    (pageChange)="onPageChange($event)"
-                    (pageSizeChange)="onPageSizeChange($event)">
-            </app-pagination>
-        </div>
-    }
-</div>
-
-<!-- Scroll to top button, only shown when not at top -->
-@if (!isAtTop()) {
-    <button class="btn btn-primary scroll-to-top" (click)="scrollToTop()">
-        <i class="bi bi-arrow-up"></i>
-    </button>
-}

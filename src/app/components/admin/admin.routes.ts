@@ -10,19 +10,13 @@ export const adminRoutes: Routes = [
             {
                 path: 'prediction',
                 component: PredictionComponent,
-                data: {
-                    title: "Prediction",
-                    breadcrumb: "prediction",
-                }
+                data: { title: "Predictions", breadcrumb: "prediction" }
             },
             {
                 path: 'user-manager',
                 component: UserManagerComponent,
-                data: {
-                    title: "User Manager",
-                    breadcrumb: "user-manager",
-                }
+                data: { title: "User Manager", breadcrumb: "user-manager" }
             }
         ]
     }
-]
+];
