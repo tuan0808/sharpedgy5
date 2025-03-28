@@ -9,7 +9,7 @@ import { LoginMetrics } from "../model/auth/LoginMetrics";
 import { environment } from "../../../environments/environment";
 import { HttpClient } from "@angular/common/http";
 import { UserService } from "./user.service";
-import {firstValueFrom, throwError, timeout} from "rxjs";
+import {firstValueFrom, of, throwError, timeout} from "rxjs";
 import {catchError} from "rxjs/operators";
 
 @Injectable({
@@ -282,7 +282,18 @@ export class AuthService {
             const user = this.user();
             await signOut(this.auth);
             this.user.set(null);
+            const token = this.cachedToken?.token;
             this.cachedToken = null; // Clear cached token on logout
+
+            //if the token for the API exists, then it will immediately revoke access.
+            if (token && user) {
+                await firstValueFrom(
+                    this.http.post(`${environment.apiUrl}/api/auth/revoke`, { uid: user.uid }, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).pipe(catchError(err => of(null)))
+                );
+            }
+            await this.router.navigate(['/auth/login']);
             await this.router.navigate(['/auth/login']);
             this.logSecurityEvent('logout_success', { uid: user?.uid });
         } catch (error) {

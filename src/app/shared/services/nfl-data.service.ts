@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {Observable, shareReplay} from "rxjs";
 import {map} from "rxjs/operators";
@@ -13,10 +13,11 @@ import {ScheduledGame} from "../model/nfl/ScheduledGame";
   providedIn: 'root'
 })
 export class NflDataService {
+  private httpClient = inject(HttpClient)
   private apiKey = '7aa548651a2e44d9bb7cd74a73cb1b75';
   private endpoint = 'https://api.sportsdata.io';
 
-  constructor(private httpClient: HttpClient) {
+  constructor() {
   }
 
   /**

@@ -1,17 +1,16 @@
-import {computed, DestroyRef, inject, Injectable, signal} from '@angular/core';
-import {Game} from "../model/paper-betting/Game";
-import {Account} from "../model/paper-betting/Account";
-import {firstValueFrom, Observable, of, retry, throwError, timeout, timer} from "rxjs";
-import {catchError, map} from "rxjs/operators";
-import {BaseApiService} from "./base-api.service";
-import {SportType} from "../model/SportType";
-import {BetHistory} from "../model/paper-betting/BetHistory";
-import {AuthService} from "./auth.service";
-import {environment} from "../../../environments/environment";
-import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
+import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
+import { Game } from "../model/paper-betting/Game";
+import { Account } from "../model/paper-betting/Account";
+import { firstValueFrom, Observable, of, throwError } from "rxjs";
+import { catchError, map } from "rxjs/operators";
+import { BaseApiService } from "./base-api.service";
+import { SportType } from "../model/SportType";
+import { BetHistory } from "../model/paper-betting/BetHistory";
+import { AuthService } from "./auth.service";
+import { environment } from "../../../environments/environment";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { Client, messageCallbackType } from '@stomp/stompjs';
 import SockJS from "sockjs-client";
-
 
 // Dynamic WebSocket URL based on environment
 const getWebSocketUrl = (): string => {
@@ -26,11 +25,7 @@ export class BetSettlementService extends BaseApiService<Game> {
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
     private stompClient: Client | null = null; // STOMP client instance
-    protected override apiUrl = environment.apiUrl + '/paper-betting/v1';
-
-    private readonly MAX_API_RETRIES = 3;
-    private readonly BASE_RETRY_DELAY = 2000;
-    private readonly REQUEST_TIMEOUT = 15000;
+    protected override apiUrl = `${environment.apiUrl}/paper-betting/v1`;
 
     readonly account = signal<Account | null>(null);
     readonly allGames = signal<Game[]>([]);
@@ -71,8 +66,8 @@ export class BetSettlementService extends BaseApiService<Game> {
             console.error('Error initializing user:', error);
             this.errorMessage.set('Failed to initialize user');
 
-            if (retryCount < this.MAX_API_RETRIES) {
-                this.errorMessage.set(`Retrying initialization (${retryCount + 1}/${this.MAX_API_RETRIES})...`);
+            if (retryCount < 3) { // Manual retry logic for initialization
+                this.errorMessage.set(`Retrying initialization (${retryCount + 1}/3)...`);
                 await this.retryInitialize(retryCount);
             } else {
                 console.error('Failed to initialize user after max retries');
@@ -82,18 +77,11 @@ export class BetSettlementService extends BaseApiService<Game> {
             }
         }
     }
+
     private async fetchInitialAccount(userId: string): Promise<void> {
         try {
             const initialAccount = await firstValueFrom(
                 this.getAccount(userId).pipe(
-                    timeout(this.REQUEST_TIMEOUT),
-                    retry({
-                        count: 2,
-                        delay: (error, retryCount) => {
-                            console.log(`Retrying account fetch (${retryCount})...`);
-                            return timer(this.BASE_RETRY_DELAY * Math.pow(1.5, retryCount));
-                        }
-                    }),
                     catchError(error => {
                         console.error('Failed to get initial account:', error);
                         this.errorMessage.set('Could not load account data');
@@ -113,13 +101,11 @@ export class BetSettlementService extends BaseApiService<Game> {
     }
 
     private async retryInitialize(retryCount: number): Promise<void> {
-        const delayMs = this.BASE_RETRY_DELAY * Math.pow(1.5, retryCount);
-        console.log(`Retry ${retryCount + 1} of ${this.MAX_API_RETRIES} in ${delayMs}ms`);
+        const delayMs = 2000 * Math.pow(1.5, retryCount); // Exponential backoff
+        console.log(`Retry ${retryCount + 1} of 3 in ${delayMs}ms`);
         await new Promise(resolve => setTimeout(resolve, delayMs));
         return this.initializeUser(retryCount + 1);
     }
-
-    // ... (other methods unchanged until setupWebSocket)
 
     private async setupWebSocket(userId: string): Promise<void> {
         try {
@@ -130,16 +116,15 @@ export class BetSettlementService extends BaseApiService<Game> {
                 return;
             }
 
-            // Initialize STOMP client with SockJS fallback
             this.stompClient = new Client({
-                webSocketFactory: () => new  SockJS(getWebSocketUrl()), // Use default-imported SockJS
+                webSocketFactory: () => new SockJS(getWebSocketUrl()),
                 connectHeaders: {
                     Authorization: `Bearer ${token}`,
-                    userId: userId // Pass userId in headers if needed by backend
+                    userId: userId
                 },
-                reconnectDelay: 2000, // Reconnect after 2 seconds
-                heartbeatIncoming: 4000, // Server heartbeat
-                heartbeatOutgoing: 4000, // Client heartbeat
+                reconnectDelay: 2000,
+                heartbeatIncoming: 4000,
+                heartbeatOutgoing: 4000,
                 onConnect: () => {
                     console.log('STOMP WebSocket connected for user:', userId);
                     this.errorMessage.set(null);
@@ -155,13 +140,8 @@ export class BetSettlementService extends BaseApiService<Game> {
                 }
             });
 
-            // Optional: Enable debug logging
-            // this.stompClient.debug = (str) => console.log(str);
-
-            // Activate the STOMP client
             this.stompClient.activate();
 
-            // Clean up on service destruction
             this.destroyRef.onDestroy(() => {
                 if (this.stompClient) {
                     this.stompClient.deactivate();
@@ -177,7 +157,6 @@ export class BetSettlementService extends BaseApiService<Game> {
     private subscribeToUpdates(userId: string): void {
         if (!this.stompClient) return;
 
-        // Subscribe to account updates
         this.stompClient.subscribe(`/topic/accountUpdate/${userId}`, (message) => {
             const account: Account = JSON.parse(message.body);
             console.log('Received account update:', account);
@@ -186,7 +165,6 @@ export class BetSettlementService extends BaseApiService<Game> {
             }
         });
 
-        // Subscribe to game updates
         this.stompClient.subscribe('/topic/gameUpdate', (message) => {
             const game: Game = JSON.parse(message.body);
             console.log('Received game update:', game);
@@ -199,8 +177,6 @@ export class BetSettlementService extends BaseApiService<Game> {
             });
         });
     }
-
-    // ... (rest of the methods unchanged)
 
     private isValidAccount(account: Account | null): account is Account {
         return !!account && typeof account.balance === 'number' && Array.isArray(account.betHistory);
@@ -252,8 +228,6 @@ export class BetSettlementService extends BaseApiService<Game> {
 
         console.log(`Submitting bet history: ${JSON.stringify(betHistory)}`);
         return this.http.post<number>(`${this.apiUrl}/saveBetHistory`, betHistory).pipe(
-            timeout(this.REQUEST_TIMEOUT),
-            retry({ count: 1, delay: this.BASE_RETRY_DELAY }),
             takeUntilDestroyed(this.destroyRef),
             map(response => {
                 this.isLoading.set(false);
@@ -285,21 +259,12 @@ export class BetSettlementService extends BaseApiService<Game> {
         return this.http.get<Game[]>(`${this.apiUrl}/${userId}/${sportType}/getUpcomingGames`, {
             withCredentials: true
         }).pipe(
-            timeout(this.REQUEST_TIMEOUT),
+            takeUntilDestroyed(this.destroyRef),
             map(games => {
                 this.isLoading.set(false);
                 this.errorMessage.set(null);
                 return this.updateGamesWithBetHistory(games);
             }),
-            retry({
-                count: this.MAX_API_RETRIES,
-                delay: (error, retryCount) => {
-                    console.log(`Retrying game load attempt ${retryCount}`);
-                    this.errorMessage.set(`Loading games (retry ${retryCount}/${this.MAX_API_RETRIES})...`);
-                    return timer(this.BASE_RETRY_DELAY * Math.pow(1.5, retryCount));
-                }
-            }),
-            takeUntilDestroyed(this.destroyRef),
             catchError(error => {
                 console.error('Error fetching games:', error);
                 this.isLoading.set(false);
@@ -332,14 +297,6 @@ export class BetSettlementService extends BaseApiService<Game> {
         return this.http.get<Account>(`${this.apiUrl}/${uid}/getAccount`, {
             withCredentials: true
         }).pipe(
-            timeout(this.REQUEST_TIMEOUT),
-            retry({
-                count: this.MAX_API_RETRIES,
-                delay: (error, retryCount) => {
-                    console.log(`Retrying account fetch attempt ${retryCount}`);
-                    return timer(this.BASE_RETRY_DELAY * Math.pow(1.5, retryCount));
-                }
-            }),
             takeUntilDestroyed(this.destroyRef),
             catchError(error => {
                 console.error('Error fetching account:', error);
@@ -358,14 +315,6 @@ export class BetSettlementService extends BaseApiService<Game> {
         console.log(url);
 
         return this.http.get<Account[]>(url).pipe(
-            timeout(this.REQUEST_TIMEOUT),
-            retry({
-                count: this.MAX_API_RETRIES,
-                delay: (error, retryCount) => {
-                    console.log(`Retrying accounts fetch attempt ${retryCount}`);
-                    return timer(this.BASE_RETRY_DELAY * Math.pow(1.5, retryCount));
-                }
-            }),
             takeUntilDestroyed(this.destroyRef),
             map(accounts => {
                 this.isLoading.set(false);

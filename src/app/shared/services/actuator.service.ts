@@ -1,4 +1,4 @@
-import {computed, Injectable, Signal, signal} from '@angular/core';
+import {computed, inject, Injectable, Signal, signal} from '@angular/core';
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {interval, of} from "rxjs";
 import {catchError, map, switchMap} from "rxjs/operators";
@@ -7,10 +7,11 @@ import {catchError, map, switchMap} from "rxjs/operators";
   providedIn: 'root'
 })
 export class ActuatorService {
+  private http = inject(HttpClient)
   private status = signal<'UP' | 'DOWN'>('UP');
   private url = 'http://localhost:8080/actuator/health';
 
-  constructor(private http: HttpClient) {
+  constructor() {
     this.initialCheck();
     this.checkHealthPeriodically();
   }

@@ -153,6 +153,7 @@ export class PredictionComponent {
     modalRef.componentInstance.sportType = this.gameType
     modalRef.componentInstance.uid = ''; // Pass userId
 
+    console.log('hi')
     modalRef.componentInstance.betPlaced.subscribe((result: { game: Game, balance: number }) => {
      // this.betPlaced.emit(result);
     });

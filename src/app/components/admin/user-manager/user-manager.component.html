@@ -1,4 +1,3 @@
-<!-- user-admin.component.html -->
 <div class="admin-layout">
     <!-- Left sidebar -->
     <div class="sidebar">
@@ -98,7 +97,7 @@
         </div>
 
         <!-- Loading spinner -->
-        @if (isLoading) {
+        @if (isLoading()) {
             <div class="d-flex justify-content-center my-5">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
@@ -107,7 +106,7 @@
         }
 
         <!-- Roles table -->
-        @if (!isLoading) {
+        @if (!isLoading()) {
             <div class="card">
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -151,7 +150,6 @@
                                         </td>
                                     </tr>
                                 }
-
                                 @if (roles().length === 0) {
                                     <tr>
                                         <td colspan="6" class="text-center py-4">
@@ -181,15 +179,13 @@
     </div>
 </div>
 
-<!-- Role Modal -->
-<div class="modal fade" #roleModal tabindex="-1" aria-labelledby="roleModalLabel" aria-hidden="true">
+<!-- Role Modal as ng-template -->
+<ng-template #roleModal let-modal>
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-<!--
-                <h5 class="modal-title" id="roleModalLabel">{{ modalTitle }}</h5>
--->
-                <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
+                <h5 class="modal-title" id="roleModalLabel">{{ modalTitle() }}</h5>
+                <button type="button" class="btn-close" (click)="modal.dismiss('Close click')" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form [formGroup]="roleForm">
@@ -240,11 +236,11 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
-                <button type="button" class="btn btn-primary" [disabled]="roleForm.invalid" (click)="saveRole()">
-                    {{ editingRole ? 'Update' : 'Create' }}
+                <button type="button" class="btn btn-secondary" (click)="modal.dismiss('Cancel click')">Cancel</button>
+                <button type="button" class="btn btn-primary" [disabled]="roleForm.invalid" (click)="saveRole(); modal.close('Save click')">
+                    {{ editingRole() ? 'Update' : 'Create' }}
                 </button>
             </div>
         </div>
     </div>
-</div>
+</ng-template>

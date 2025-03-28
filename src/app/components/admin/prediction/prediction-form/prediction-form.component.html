@@ -58,8 +58,7 @@
                 type: 'away'
               })"
                                 [class.selected]="selectedTeam?.type === 'away'"
-                                class="team-btn"
-                        >
+                                class="team-btn">
                             <div class="team-name">{{ game.awayTeam.name }}</div>
                             <div class="team-odds">
                                 {{ game.moneylineAway | americanOdds }}
@@ -71,29 +70,9 @@
                     </div>
                 </div>
 
-                <div class="form-section">
-                    <label for="betAmount">Bet Amount ($)</label>
-                    <div class="amount-input">
-                        <span class="dollar-sign">$</span>
-                        <input
-                                id="betAmount"
-                                type="number"
-                                formControlName="amount"
-                                placeholder="Enter amount"
-                                (input)="updatePotentialWinnings()"
-                        />
-                    </div>
-                    @if (bettingForm.get('amount')?.errors?.['max']) {
-                        <div class="error-message">Maximum bet amount is $5000</div>
-                    }
-                    @if (bettingForm.get('amount')?.errors?.['min']) {
-                        <div class="error-message">Minimum bet amount is $0</div>
-                    }
-                </div>
-
                 <!-- Confidence Slider -->
                 <div class="form-section">
-                    <label for="confidenceSlider">Confidence Level</label>
+                    <label for= "confidenceSlider">Confidence Level</label>
                     <div class="slider-container">
                         <mdb-range
                                 formControlName="confidence"

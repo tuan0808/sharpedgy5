@@ -15,6 +15,8 @@
         <h2 class="section-title">Today's Games</h2>
 
         <div class="games-list">
+            @for (game of games; track game.id) {
+            }
             <div *ngFor="let game of games" class="game-item">
                 <div class="game-header">
                     <div class="game-info" (click)="toggleAccordion(game.id)">

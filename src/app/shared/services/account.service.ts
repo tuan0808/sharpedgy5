@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {BehaviorSubject, Observable} from "rxjs";
 import {Account} from "../model/paper-betting/Account";
@@ -7,10 +7,11 @@ import {Account} from "../model/paper-betting/Account";
   providedIn: 'root'
 })
 export class AccountService {
+  private http = inject(HttpClient)
   private accountsSubject = new BehaviorSubject<Account[]>([]);
   accounts$ = this.accountsSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor() {
     this.loadAccounts();
   }
 
