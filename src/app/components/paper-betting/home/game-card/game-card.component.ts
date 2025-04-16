@@ -2,11 +2,11 @@ import {Component, EventEmitter, inject, input, Input, Output, signal, Signal} f
 import {Game} from "../../../../shared/model/paper-betting/Game";
 import {RouterLink} from "@angular/router";
 import {DatePipe, NgClass, NgIf} from "@angular/common";
-import {BetFormComponent} from "../bet-form/bet-form.component";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {BetTypes} from "../../../../shared/model/enums/BetTypes";
 import {SportType} from "../../../../shared/model/SportType";
 import {BetSettlementService} from "../../../../shared/services/betSettlement.service";
+import {BetFormComponent} from "../bet-form/bet-form.component";
 
 @Component({
   selector: 'app-game-card',

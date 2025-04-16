@@ -1,3 +1,4 @@
+/* Existing styles for the form view (unchanged) */
 .betting-card {
   background: white;
   border-radius: 8px;
@@ -224,5 +225,151 @@ h2 {
     resize: vertical; // Allow vertical resizing only
     box-sizing: border-box; // Ensure padding and borders don't affect the width
     min-height: 80px; // Optional: Set a minimum height to match the design
+  }
+}
+
+/* New styles for the confirmation view */
+.confirmation-view {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.confirmation-details {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.game-header {
+  text-align: center;
+  margin-bottom: 20px;
+
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+  }
+}
+
+.details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex: 1;
+  }
+
+  .value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    flex: 1;
+    text-align: right;
+  }
+
+  .highlight {
+    color: #047857; // Green for potential winnings, matching form view
+  }
+
+  .status-pending {
+    color: #d97706; // Amber for pending status
+    font-weight: 500;
+  }
+}
+
+.confirmation-prompt {
+  text-align: center;
+
+  p {
+    font-size: 14px;
+    color: #374151;
+    margin-bottom: 16px;
+  }
+
+  .confirmation-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+  }
+}
+
+.btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-secondary {
+  background-color: #e5e7eb;
+  color: #374151;
+
+  &:hover {
+    background-color: #d1d5db;
+  }
+}
+
+.btn-primary {
+  background-color: #4b5563; // Match the place-bet-btn color
+  color: #ffffff;
+
+  &:hover {
+    background-color: #374151;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .confirmation-details {
+    padding: 16px;
+  }
+
+  .game-header h3 {
+    font-size: 16px;
+  }
+
+  .detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+
+    .label,
+    .value {
+      text-align: left;
+      flex: none;
+    }
+  }
+
+  .confirmation-prompt p {
+    font-size: 13px;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    font-size: 13px;
   }
 }

@@ -5,12 +5,12 @@ import { firstValueFrom, Observable, of, throwError } from "rxjs";
 import { catchError, map } from "rxjs/operators";
 import { BaseApiService } from "./base-api.service";
 import { SportType } from "../model/SportType";
-import { BetHistory } from "../model/paper-betting/BetHistory";
 import { AuthService } from "./auth.service";
 import { environment } from "../../../environments/environment";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { Client, messageCallbackType } from '@stomp/stompjs';
 import SockJS from "sockjs-client";
+import {PaperBetRecord} from "../model/paper-betting/PaperBetRecord";
 
 // Dynamic WebSocket URL based on environment
 const getWebSocketUrl = (): string => {
@@ -194,31 +194,30 @@ export class BetSettlementService extends BaseApiService<Game> {
         }
     }
 
-    private updateGameBetRecord(gameId: string, betHistory: BetHistory): void {
+    private updateGameBetRecord(gameId: string, paperBetRecord: PaperBetRecord): void {
         this.allGames.update(games => games.map(game =>
             game.id === gameId ? {
                 ...game, betSettlement: {
-                    betType: betHistory.betType,
-                    wagerValue: betHistory.wagerValue,
-                    wagerAmount: betHistory.wagerAmount,
-                    comment: ''
+                    betType: paperBetRecord.betType,
+                    wagerValue: paperBetRecord.wagerValue,
+                    wagerAmount: paperBetRecord.wagerAmount
                 }
             } : game
         ));
     }
 
-    addHistory(betHistory: BetHistory): Observable<number> {
+    addHistory(paperBetRecord: PaperBetRecord): Observable<number> {
         this.isLoading.set(true);
         this.errorMessage.set(null);
 
         const currentAccount = this.account();
-        if (currentAccount && currentAccount.balance >= betHistory.wagerAmount) {
-            const newBalance = currentAccount.balance - betHistory.wagerAmount;
+        if (currentAccount && currentAccount.balance >= paperBetRecord.wagerAmount) {
+            const newBalance = currentAccount.balance - paperBetRecord.wagerAmount;
             this.balance.set(newBalance);
             this.account.set({
                 ...currentAccount,
                 balance: newBalance,
-                betHistory: [...currentAccount.betHistory, betHistory]
+                betHistory: [...currentAccount.betHistory, paperBetRecord]
             });
         } else {
             this.errorMessage.set('Insufficient funds');
@@ -226,8 +225,8 @@ export class BetSettlementService extends BaseApiService<Game> {
             return throwError(() => new Error('Insufficient funds'));
         }
 
-        console.log(`Submitting bet history: ${JSON.stringify(betHistory)}`);
-        return this.http.post<number>(`${this.apiUrl}/saveBetHistory`, betHistory).pipe(
+        console.log(`Submitting paper bet record: ${JSON.stringify(paperBetRecord)}`);
+        return this.http.post<number>(`${this.apiUrl}/saveBetHistory`, paperBetRecord).pipe(
             takeUntilDestroyed(this.destroyRef),
             map(response => {
                 this.isLoading.set(false);
@@ -284,8 +283,7 @@ export class BetSettlementService extends BaseApiService<Game> {
                 ...game, betSettlement: {
                     betType: betRecord.betType,
                     wagerValue: betRecord.wagerValue,
-                    wagerAmount: betRecord.wagerAmount,
-                    comment: ''
+                    wagerAmount: betRecord.wagerAmount
                 }
             } : game;
         });

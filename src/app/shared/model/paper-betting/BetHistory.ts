@@ -18,6 +18,5 @@ export class BetHistory implements BetSettlement {
     status : Status = Status.PENDING
     selectedTeam: string;
     potentialWinnings: number
-    controlNote : string = ''
     comment: string = '';
 }

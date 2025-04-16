@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import {authGuard} from "../guard/AuthGuard";
 import {adminGuard} from "../guard/admin.guard";
+import {StatusComponent} from "../../components/status/status.component";
 
 export const content: Routes = [
     // {
@@ -38,7 +39,14 @@ export const content: Routes = [
         data: {
             breadcrumb: "admin"
         }
-    }
-
+    },
+    {
+        path: 'status',
+        pathMatch: 'full',
+        component: StatusComponent, // Changed from redirectTo to load StatusPageComponent
+        data: {
+            breadcrumb: "Status"
+        }
+    },
 
 ]

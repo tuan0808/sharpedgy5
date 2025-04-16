@@ -1,0 +1,199 @@
+<div class="leaderboard-container">
+    <div class="header">
+        <h1 class="title">Betting Leaderboard</h1>
+        <div class="filter-buttons">
+            @for (period of filterPeriods; track period) {
+                <button
+                        type="button"
+                        class="filter-btn"
+                        [ngClass]="{'active': activePeriod === period}"
+                        (click)="setActivePeriod(period)"
+                >
+                    {{ period }}
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Current User Card -->
+    <div class="current-user-card">
+        <div class="current-user-header" (click)="toggleCurrentUserAccordion()">
+            <div class="rank-section">
+                <div class="rank-icon" [ngClass]="getRankClass(getCurrentUserIndex())">
+                    @if (getCurrentUserIndex() < 3) {
+                        <i class="fas fa-star"></i>
+                        <span class="rank-number">{{ currentUser.rank }}</span>
+                    } @else {
+                        <span class="rank-number">{{ currentUser.rank }}</span>
+                    }
+                </div>
+                <div class="user-info">
+                    <div class="label">Your Current Rank</div>
+                    <div class="username">{{ currentUser.username }}</div>
+                </div>
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Total Bets</div>
+                    <div class="stat-value">{{ currentUser.totalBets }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Win Rate</div>
+                    <div class="stat-value" [ngClass]="getWinRateClass(currentUser.winRate)">
+                        {{ currentUser.winRate }}%
+                    </div>
+                </div>
+                <button class="expand-btn">
+                    <i class="fas" [ngClass]="expandedCurrentUser ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Current User Accordion Content -->
+        @if (expandedCurrentUser) {
+            <div class="accordion-content">
+                <div class="stats-section">
+                    <h3 class="section-title"><i class="fas fa-chart-line"></i> Your Betting Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Avg. Bet Amount</div>
+                            <div class="stat-value">${{ currentUser.statistics.avgBetAmount }}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Highest Win</div>
+                            <div class="stat-value">${{ currentUser.statistics.highestWin }}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Favorite Category</div>
+                            <div class="stat-value">{{ currentUser.statistics.favoriteCategory }}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Avg. Odds</div>
+                            <div class="stat-value">{{ currentUser.statistics.avgOdds }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="history-section">
+                    <h3 class="section-title"><i class="fas fa-clock"></i> Your Recent Betting History</h3>
+                    <table class="history-table">
+                        <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Event</th>
+                            <th>Amount</th>
+                            <th>Odds</th>
+                            <th>Result</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            @for (bet of currentUser.lastBets; track bet.id) {
+                                <tr>
+                                    <td>{{ bet.date }}</td>
+                                    <td>{{ bet.event }}</td>
+                                    <td>${{ bet.amount }}</td>
+                                    <td>{{ bet.odds }}</td>
+                                    <td><span [ngClass]="getResultClass(bet.result)">{{ bet.result.toUpperCase() }}</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Leaderboard Table -->
+    <div class="leaderboard-table">
+        <table>
+            <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Username</th>
+                <th>Total Bets</th>
+                <th>Win Rate</th>
+                <th>Total Amount</th>
+                <th>Details</th>
+            </tr>
+            </thead>
+            <tbody>
+                @for (user of users; track user.id; let index = $index) {
+                    <tr (click)="toggleAccordion(user.id)" class="table-row">
+                        <td>
+                            <div class="rank-icon" [ngClass]="getRankClass(index)">
+                                @if (index < 3) {
+                                    <i class="fas fa-star"></i>
+                                    <span class="rank-number">{{ index + 1 }}</span>
+                                } @else {
+                                    <span class="rank-number">{{ index + 1 }}</span>
+                                }
+                            </div>
+                        </td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.totalBets }}</td>
+                        <td [ngClass]="getWinRateClass(user.winRate)">{{ user.winRate }}%</td>
+                        <td>${{ user.totalAmount | number }}</td>
+                        <td>
+                            <button>
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    @if (expandedUser === user.id) {
+                        <tr class="accordion-row">
+                            <td colspan="6">
+                                <div class="accordion-content">
+                                    <div class="stats-section">
+                                        <h3 class="section-title"><i class="fas fa-chart-line"></i> Betting Statistics</h3>
+                                        <div class="stats-grid">
+                                            <div class="stat-card">
+                                                <div class="stat-label">Avg. Bet Amount</div>
+                                                <div class="stat-value">${{ user.statistics.avgBetAmount }}</div>
+                                            </div>
+                                            <div class="stat-card">
+                                                <div class="stat-label">Highest Win</div>
+                                                <div class="stat-value">${{ user.statistics.highestWin }}</div>
+                                            </div>
+                                            <div class="stat-card">
+                                                <div class="stat-label">Favorite Category</div>
+                                                <div class="stat-value">{{ user.statistics.favoriteCategory }}</div>
+                                            </div>
+                                            <div class="stat-card">
+                                                <div class="stat-label">Avg. Odds</div>
+                                                <div class="stat-value">{{ user.statistics.avgOdds }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="history-section">
+                                        <h3 class="section-title"><i class="fas fa-clock"></i> Recent Betting History</h3>
+                                        <table class="history-table">
+                                            <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Event</th>
+                                                <th>Amount</th>
+                                                <th>Odds</th>
+                                                <th>Result</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                                @for (bet of user.lastBets; track bet.id) {
+                                                    <tr>
+                                                        <td>{{ bet.date }}</td>
+                                                        <td>{{ bet.event }}</td>
+                                                        <td>${{ bet.amount }}</td>
+                                                        <td>{{ bet.odds }}</td>
+                                                        <td><span [ngClass]="getResultClass(bet.result)">{{ bet.result.toUpperCase() }}</span></td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

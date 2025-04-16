@@ -2,9 +2,10 @@ import {Component, OnInit, TemplateRef, inject, signal, ViewChild} from '@angula
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize, catchError, EMPTY } from 'rxjs';
+import {finalize, catchError, EMPTY, Observable, retry, of} from 'rxjs';
 import { Auth, authState } from '@angular/fire/auth';
 import { getFirestore, collection, CollectionReference, addDoc, updateDoc, deleteDoc, doc, query, where, getDocs, DocumentReference, DocumentData, UpdateData } from 'firebase/firestore';
+import {HttpClient, HttpErrorResponse} from "@angular/common/http";
 
 interface RoleData {
   name: string;
@@ -34,13 +35,16 @@ interface Alert {
   templateUrl: './user-manager.component.html',
   styleUrls: ['./user-manager.component.scss']
 })
-export class UserManagerComponent implements OnInit {
+export class UserManagerComponent {
   @ViewChild('roleModal', { static: false }) roleModalTemplate!: TemplateRef<any>;
 
   private auth = inject(Auth);
   private db = getFirestore();
+
   private fb = inject(FormBuilder);
   private modalService = inject(NgbModal);
+
+  private http = inject(HttpClient);
 
   isLoading = signal(false);
   roles = signal<RoleViewModel[]>([]);
@@ -53,6 +57,8 @@ export class UserManagerComponent implements OnInit {
   private modalRef: NgbModalRef | null = null;
 
   constructor() {
+    this.testGetRidOfLater().subscribe(s=>console.log(s))
+
     this.roleForm = this.fb.group({
       name: ['', [Validators.required]],
       description: [''],
@@ -61,6 +67,8 @@ export class UserManagerComponent implements OnInit {
       canManageRoles: [false],
       canManageSettings: [false]
     });
+
+
 
     authState(this.auth)
         .pipe(takeUntilDestroyed())
@@ -74,9 +82,28 @@ export class UserManagerComponent implements OnInit {
         });
   }
 
-  ngOnInit(): void {
-    this.loadRoles();
+  testGetRidOfLater(): Observable<UserData | null> {
+    console.log('hii')
+    return this.http.get<UserData>(`http://localhost:8080/users/v1/derp`).pipe(
+        retry(3),
+        catchError((error) => {
+          if (error instanceof HttpErrorResponse) {
+            console.error('getAccount failed:', error);
+            if (error.status === 0) {
+              console.error('Network or client-side error:', error.error);
+            } else {
+              console.error(
+                  `Backend returned code ${error.status}, body was:`,
+                  error.error
+              );
+            }
+          }
+          return of(null);
+        })
+    );
   }
+
+
 
   async loadRoles(): Promise<void> {
     this.isLoading.set(true);

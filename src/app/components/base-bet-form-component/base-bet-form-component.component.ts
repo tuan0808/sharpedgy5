@@ -1,16 +1,7 @@
-import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
-import {Status} from "../../shared/model/enums/Status";
-import {BetHistory} from "../../shared/model/paper-betting/BetHistory";
-import {BetTypes} from "../../shared/model/enums/BetTypes";
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
-import {Game} from "../../shared/model/paper-betting/Game";
-import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
-import {AuthService} from "../../shared/services/auth.service";
-import {BetSettlementService} from "../../shared/services/betSettlement.service";
-import {SportType} from "../../shared/model/SportType";
-import {DatePipe, NgClass, NgIf} from "@angular/common";
-import {MdbRangeModule} from "mdb-angular-ui-kit/range";
-import {AmericanOddsPipe} from "../../shared/pipes/american-odds.pipe";
+import { Component, Input, inject } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { BetTypes } from '../../shared/model/enums/BetTypes';
+import { Game } from '../../shared/model/paper-betting/Game';
 
 interface BetTypeOption {
   id: BetTypes;
@@ -20,29 +11,15 @@ interface BetTypeOption {
 }
 
 @Component({
-  selector: 'app-prediction-form',
+  selector: 'app-base-bet-form',
   standalone: true,
-  imports: [
-    DatePipe,
-    ReactiveFormsModule,
-    NgClass,
-    MdbRangeModule,
-    NgIf,
-    AmericanOddsPipe
-  ],
+  imports: [ReactiveFormsModule],
   template: ''
 })
 export abstract class BaseBetFormComponent {
-  protected betSettlementService = inject(BetSettlementService);
-  protected authService = inject(AuthService);
   protected fb = inject(FormBuilder);
-  public activeModal = inject(NgbActiveModal);
 
   @Input() game!: Game;
-  @Input() uid: string = '';
-  @Input() sportType!: SportType;
-  @Output() betPlaced = new EventEmitter<{ game: Game, balance: number }>();
-
   bettingForm: FormGroup;
   selectedBetType = BetTypes.MONEYLINE;
   selectedTeam: any = null;
@@ -60,7 +37,7 @@ export abstract class BaseBetFormComponent {
     { id: BetTypes.PLEASER, label: 'Pleaser', icon: '🎪', isEnabled: false }
   ];
 
-  protected constructor() {
+  constructor() {
     this.bettingForm = this.fb.group({
       amount: ['', [Validators.required, Validators.min(0), Validators.max(5000)]]
     });
@@ -136,38 +113,5 @@ export abstract class BaseBetFormComponent {
     return this.bettingForm.valid &&
         this.selectedTeam !== null &&
         this.bettingForm.get('amount')?.value > 0;
-  }
-
-  async submitBet(betHistory: BetHistory): Promise<void> {
-    const userId = this.uid || (await this.authService.getUID());
-    if (!userId) {
-      console.error('No user ID available');
-      return;
-    }
-
-    betHistory.gameId = this.game.id;
-    betHistory.userId = userId;
-    betHistory.homeTeam = this.game.homeTeam.name;
-    betHistory.awayTeam = this.game.awayTeam.name;
-    betHistory.gameStart = new Date(this.game.scheduled);
-    betHistory.sport = this.sportType;
-    betHistory.betType = this.selectedBetType;
-    betHistory.wagerValue = parseFloat(this.selectedTeam.odds);
-    betHistory.wagerAmount = this.bettingForm.value.amount;
-    betHistory.amount = this.bettingForm.value.amount;
-    betHistory.status = Status.PENDING;
-    betHistory.selectedTeam = this.selectedTeam.name;
-    betHistory.potentialWinnings = this.potentialWinnings;
-
-    const updatedGame = { ...this.game, betSettlement: betHistory };
-
-    this.betSettlementService.addHistory(betHistory).subscribe({
-      next: (newBalance) => {
-        console.log('Bet placed, new balance:', newBalance);
-        this.betPlaced.emit({ game: updatedGame, balance: newBalance });
-        this.activeModal.close();
-      },
-      error: (err) => console.error('Bet placement failed:', err)
-    });
   }
 }

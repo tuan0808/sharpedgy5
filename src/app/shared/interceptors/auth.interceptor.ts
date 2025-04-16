@@ -21,7 +21,8 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
         '/dashboard/v1',
         '/users/v1',
         '/webhooks/v1',
-        '/paper-betting/v1'
+        '/paper-betting/v1',
+        '/predictions/v1'
     ];
 
     // Skip auth (but not timeout/retry) if not a protected path

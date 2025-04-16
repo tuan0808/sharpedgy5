@@ -3,7 +3,7 @@
     <h2 *ngIf="!showConfirmation">Place Your Bet</h2>
     <h2 *ngIf="showConfirmation">Confirm Your Bet</h2>
 
-    <!-- Form View -->
+    <!-- Form View (unchanged) -->
     <div *ngIf="!showConfirmation">
         <div class="layout-container">
             <!-- Left Side - Bet Types -->
@@ -58,7 +58,8 @@
                 type: 'away'
               })"
                                 [class.selected]="selectedTeam?.type === 'away'"
-                                class="team-btn">
+                                class="team-btn"
+                        >
                             <div class="team-name">{{ game.awayTeam.name }}</div>
                             <div class="team-odds">
                                 {{ game.moneylineAway | americanOdds }}
@@ -72,7 +73,7 @@
 
                 <!-- Confidence Slider -->
                 <div class="form-section">
-                    <label for= "confidenceSlider">Confidence Level</label>
+                    <label for="confidenceSlider">Confidence Level</label>
                     <div class="slider-container">
                         <mdb-range
                                 formControlName="confidence"
@@ -115,59 +116,59 @@
         </div>
     </div>
 
-    <!-- Confirmation View -->
+    <!-- Updated Confirmation View -->
     <div *ngIf="showConfirmation" class="confirmation-view">
         <div class="confirmation-details">
-            <h3>Bet Details</h3>
-            <div class="detail-row">
-                <span class="label">Game:</span>
-                <span class="value">{{ submittedBetData?.betHistory.homeTeam }} vs {{ submittedBetData?.betHistory.awayTeam }}</span>
+            <div class="game-header">
+                <h3>{{ submittedBetData?.gameDetails?.homeTeam || 'N/A' }} vs {{ submittedBetData?.gameDetails?.awayTeam || 'N/A' }}</h3>
             </div>
-            <div class="detail-row">
-                <span class="label">Bet Type:</span>
-                <span class="value">{{ submittedBetData?.betHistory.betType }}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Selected Team:</span>
-                <span class="value">{{ submittedBetData?.betHistory.selectedTeam }}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Odds:</span>
-                <span class="value">{{ submittedBetData?.betHistory.wagerValue | americanOdds }}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Win Probability:</span>
-                <span class="value">
-          {{ (submittedBetData?.betHistory.selectedTeam === game.homeTeam.name ? homeTeamWinProbability : awayTeamWinProbability).toFixed(2) }}%
-        </span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Bet Amount:</span>
-                <span class="value">${{ submittedBetData?.betHistory.amount }}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Potential Winnings:</span>
-                <span class="value">${{ submittedBetData?.betHistory.potentialWinnings.toFixed(2) }}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Confidence Level:</span>
-                <span class="value">{{ formatConfidence(JSON.parse(submittedBetData?.betHistory.comment).confidence) }}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Notes:</span>
-                <span class="value">{{ JSON.parse(submittedBetData?.betHistory.comment).notes || 'None' }}</span>
-            </div>
-            <div class="detail-row">
-                <span class="label">Control Note:</span>
-                <span class="value">{{ submittedBetData?.betHistory.controlNote }}</span>
+            <div class="details-list">
+                <div class="detail-item">
+                    <span class="label">Bet Type:</span>
+                    <span class="value">{{ submittedBetData?.gameDetails?.betType || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Selected Team:</span>
+                    <span class="value">{{ submittedBetData?.gameDetails?.selectedTeam || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Odds:</span>
+                    <span class="value">{{ submittedBetData?.gameDetails?.wagerValue | americanOdds }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Win Probability:</span>
+                    <span class="value">
+            {{ (submittedBetData?.gameDetails?.selectedTeam === submittedBetData?.gameDetails?.homeTeam ? homeTeamWinProbability : awayTeamWinProbability).toFixed(2) }}%
+          </span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Bet Amount:</span>
+                    <span class="value">${{ submittedBetData?.gameDetails?.amount?.toFixed(2) || '0.00' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Potential Winnings:</span>
+                    <span class="value highlight">${{ submittedBetData?.gameDetails?.potentialWinnings?.toFixed(2) || '0.00' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Confidence Level:</span>
+                    <span class="value">{{ formatConfidence(JSON.parse(submittedBetData?.gameDetails?.comment)?.confidence) || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Notes:</span>
+                    <span class="value">{{ JSON.parse(submittedBetData?.gameDetails?.comment)?.notes || 'None' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Status:</span>
+                    <span class="value status-pending">{{ submittedBetData?.gameDetails?.controlNote || 'N/A' }}</span>
+                </div>
             </div>
         </div>
 
         <div class="confirmation-prompt">
             <p>Is this information correct?</p>
             <div class="confirmation-buttons">
-                <button class="edit-btn" (click)="editBet()">Edit</button>
-                <button class="confirm-btn" (click)="confirmBet()">Confirm</button>
+                <button class="btn btn-secondary" (click)="editBet()">Edit</button>
+                <button class="btn btn-primary" (click)="confirmBet()">Confirm</button>
             </div>
         </div>
     </div>

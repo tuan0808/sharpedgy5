@@ -1,14 +1,9 @@
 import { Routes } from '@angular/router';
 import {HomeComponent} from "./home/home.component";
 import {AchievementsComponent} from "./achievements/achievements.component";
-import {EducationalContentComponent} from "./educational-content/educational-content.component";
 import {VirtualWalletComponent} from "./virtual-wallet/virtual-wallet.component";
-import {betSettlementResolver} from "../../shared/user.resolver";
-import {canActivate} from "@angular/fire/auth-guard";
-import {authGuard} from "../../shared/guard/AuthGuard";
-import {LoginComponent} from "../../auth/login/login.component";
 import {BettingHistoryComponent} from "./betting-history/betting-history.component";
-import {HealthCheckDirective} from "../../shared/directives/HealthCheckDirective";
+import {BettingRankingsComponent} from "./rankings/betting-rankings.component";
 
 export const paperBettingRoutes: Routes = [
     {
@@ -31,14 +26,6 @@ export const paperBettingRoutes: Routes = [
                 }
             },
             {
-                path: 'educational-content',
-                component: EducationalContentComponent,
-                data: {
-                    title: "Educational Content",
-                    breadcrumb: "educational-content"
-                }
-            },
-            {
                 path: 'history',
                 component: BettingHistoryComponent,
                 data: {
@@ -53,6 +40,14 @@ export const paperBettingRoutes: Routes = [
                 data: {
                     title: "Virtual Wallet",
                     breadcrumb: "virtual-wallet"
+                }
+            },
+            {
+                path: 'rankings',
+                component: BettingRankingsComponent,
+                data: {
+                    title: "Rankings",
+                    breadcrumb: "rankings"
                 }
             }
         ]

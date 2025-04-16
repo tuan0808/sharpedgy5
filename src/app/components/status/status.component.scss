@@ -1,0 +1,71 @@
+/* Adjust header background color to match the darker blue */
+.header {
+  background-color: #0D47A1; /* Darker blue from second image */
+  color: white;
+  padding: 2rem 0;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Refresh button styling */
+.refresh-button {
+  background-color: #1976D2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: none; /* Remove uppercase */
+}
+
+.refresh-button span {
+  color: #42A5F5; /* Lighter blue for "refresh" */
+  margin-right: 4px;
+}
+
+.refresh-button:hover {
+  background-color: #1565C0;
+}
+
+/* Status badge adjustments */
+.status-operational {
+  background-color: #E8F5E9;
+  color: #2E7D32;
+  padding: 4px 10px; /* Slightly smaller padding */
+}
+
+.status-partial {
+  background-color: #FFF8E1;
+  color: #F57F17;
+  padding: 4px 10px;
+}
+
+.status-offline {
+  background-color: #FFEBEE;
+  color: #C62828;
+  padding: 4px 10px;
+}
+
+/* Ensure incident icon is visible */
+.incident-icon {
+  color: #C62828;
+  margin-right: 10px;
+  margin-top: 2px;
+  display: inline-block; /* Ensure visibility */
+}
+
+/* Uptime bar thickness */
+.uptime-bar {
+  height: 10px; /* Thicker bar */
+  width: 100%;
+  background-color: #ECEFF1;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+/* Uppercase uptime stats */
+.uptime-stats div {
+  text-transform: uppercase;
+}

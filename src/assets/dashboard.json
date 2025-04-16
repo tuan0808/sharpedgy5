@@ -139,6 +139,7 @@
     "active": false,
     "children": [
       {"path": "paper-betting/home", "title": "Home", "type": "link"},
+      {"path": "paper-betting/rankings", "title":  "Rankings", "type":  "link"},
       {"path": "paper-betting/history", "title": "History", "type": "link"},
       {"path": "paper-betting/achievements", "title": "Achievements", "type": "link"},
       {"path": "paper-betting/virtual-wallet", "title": "Virtual Wallet", "type": "link"},
