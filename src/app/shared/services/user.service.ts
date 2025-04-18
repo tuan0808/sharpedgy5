@@ -1,91 +1,67 @@
-import {DestroyRef, inject, Injectable, Signal, signal} from '@angular/core';
-import {UserData} from "../model/UserData";
-import {HttpClient, HttpErrorResponse} from "@angular/common/http";
-import {lastValueFrom, Observable, of, retry, takeUntil, throwError} from "rxjs";
-import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
-import {catchError} from "rxjs/operators";
-import {PartialUser} from "../model/auth/PartialUser";
+import { Injectable, Signal, signal } from '@angular/core';
+import { UserData } from '../model/UserData';
+import { Observable, of, throwError } from 'rxjs';
+import { lastValueFrom } from 'rxjs';
+import { PartialUser } from '../model/auth/PartialUser';
+import { BaseService } from './base.service';
+import {map} from "rxjs/operators";
 
 @Injectable({
     providedIn: 'root'
 })
-export class UserService {
-    private http = inject(HttpClient)
-    protected user: Signal<UserData> = signal(null)
-    private apiUrl = "http://localhost:8080/user/v1"
-    private readonly destroyRef = inject(DestroyRef);
-
-    private readonly MAX_INIT_RETRIES = 3;
-    private readonly MAX_SSE_RETRIES = 5;
-    private readonly BASE_RETRY_DELAY = 2000; // 2 seconds
-    private sseRetryCount = 0;
+export class UserService extends BaseService<UserData> {
+    protected override apiUrl = 'http://localhost:8080/user/v1';
+    protected user = signal<UserData | null>(null);
 
     constructor() {
+        super();
     }
 
     getUser(uid: string): Observable<UserData | null> {
-        return this.http.get<UserData>(`${this.apiUrl}/${uid}/getUser`).pipe(
-            retry(3),
-            takeUntilDestroyed(this.destroyRef),
-            catchError((error) => {
-                if (error instanceof HttpErrorResponse) {
-                    console.error('getAccount failed:', error);
-                    if (error.status === 0) {
-                        console.error('Network or client-side error:', error.error);
-                    } else {
-                        console.error(
-                            `Backend returned code ${error.status}, body was:`,
-                            error.error
-                        );
-                    }
-                }
-                return of(null);
-            })
+        return this.get<UserData | null>(
+            `${this.apiUrl}/${uid}/getUser`,
+            'Failed to fetch user'
         );
     }
 
     async createUser(user: PartialUser): Promise<void> {
         try {
-            console.log('Sending:', user);
-            console.log('Before HTTP call');
-
             const response = await lastValueFrom(
-                this.http.post(`${this.apiUrl}/register`, user, {
-                    observe: 'response', // Get full HttpResponse
-                    responseType: 'text', // Treat as text to avoid JSON parsing issues
-                    withCredentials: true
-                }).pipe(
-                    retry({
-                        count: 3,
-                        delay: 1000,
-                        resetOnSuccess: true
-                    })
+                this.post<string, PartialUser>(
+                    `${this.apiUrl}/register`,
+                    user,
+                    'Failed to register user',
+                    { withCredentials: true }
+                ).pipe(
+                    map(() => true) // Convert text response to boolean
                 )
             );
-
-            if (response.status !== 200) {
-                throw new Error(`Unexpected status: ${response.status}`);
+            if (!response) {
+                throw new Error('Unexpected response');
             }
-            // Success, no need to parse body
         } catch (error) {
-            console.error('Failed to register user after retries:', error);
+            console.error('Failed to register user:', error);
             throw error;
         }
     }
 
     getRoles(): Observable<any[]> {
-        return null
+        return of([]); // Placeholder
     }
 
-    createRole(roleData: { name: string; description: string }) : Observable<boolean> {
-        return null;
+    createRole(roleData: { name: string; description: string }): Observable<boolean> {
+        return of(false); // Placeholder
     }
 
-    updateRole(id: number, roleData: { name: string; description: string }) : Observable<boolean> {
-        return null;
+    updateRole(id: number, roleData: { name: string; description: string }): Observable<boolean> {
+        return of(false); // Placeholder
     }
 
-    deleteRole(roleId: number)  : Observable<boolean> {
-        return null;
+    deleteRole(roleId: number): Observable<boolean> {
+        return of(false); // Placeholder
+    }
+
+    get userSignal(): Signal<UserData | null> {
+        return this.user;
     }
 }

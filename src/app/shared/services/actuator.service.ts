@@ -1,34 +1,40 @@
-import {computed, inject, Injectable, Signal, signal} from '@angular/core';
-import {HttpClient, HttpErrorResponse} from '@angular/common/http';
-import {interval, of} from "rxjs";
-import {catchError, map, switchMap} from "rxjs/operators";
+import { Injectable, Signal, signal } from '@angular/core';
+import { Observable, interval, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
+import { BaseService } from './base.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ActuatorService {
-  private http = inject(HttpClient)
+export class ActuatorService extends BaseService<any> {
+  protected override apiUrl = 'http://localhost:8080/actuator';
   private status = signal<'UP' | 'DOWN'>('UP');
-  private url = 'http://localhost:8080/actuator/health';
 
   constructor() {
+    super();
     this.initialCheck();
     this.checkHealthPeriodically();
   }
 
   private initialCheck() {
-    this.http.get(this.url).pipe(
-        map(response => response['status']),
-        catchError(() => of('DOWN'))
-    ).subscribe(status => this.status.set(status));
+    this.getHealth().subscribe(status => this.status.set(status));
   }
 
   private checkHealthPeriodically() {
     interval(30000).pipe( // Check every 30 seconds
-        switchMap(() => this.http.get(this.url)),
-        map(response => response['status']),
-        catchError(() => of('DOWN'))
+        switchMap(() => this.getHealth())
     ).subscribe(status => this.status.set(status));
+  }
+
+  private getHealth(): Observable<'UP' | 'DOWN'> {
+    return this.get<any>(
+        `${this.apiUrl}/health`,
+        'Failed to check health',
+        { withCredentials: false } // Actuator typically doesn't need credentials
+    ).pipe(
+        map(response => response?.status || 'DOWN'),
+        catchError(() => of('DOWN'))
+    );
   }
 
   get statusSignal(): Signal<'UP' | 'DOWN'> {

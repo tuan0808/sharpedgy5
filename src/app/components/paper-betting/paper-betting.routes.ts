@@ -3,7 +3,7 @@ import {HomeComponent} from "./home/home.component";
 import {AchievementsComponent} from "./achievements/achievements.component";
 import {VirtualWalletComponent} from "./virtual-wallet/virtual-wallet.component";
 import {BettingHistoryComponent} from "./betting-history/betting-history.component";
-import {BettingRankingsComponent} from "./rankings/betting-rankings.component";
+import {LeaderboardComponent} from "./rankings/leaderboard.component";
 
 export const paperBettingRoutes: Routes = [
     {
@@ -44,7 +44,7 @@ export const paperBettingRoutes: Routes = [
             },
             {
                 path: 'rankings',
-                component: BettingRankingsComponent,
+                component: LeaderboardComponent,
                 data: {
                     title: "Rankings",
                     breadcrumb: "rankings"

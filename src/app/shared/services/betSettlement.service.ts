@@ -1,110 +1,53 @@
-import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
-import { Game } from "../model/paper-betting/Game";
-import { Account } from "../model/paper-betting/Account";
-import { firstValueFrom, Observable, of, throwError } from "rxjs";
-import { catchError, map } from "rxjs/operators";
-import { BaseApiService } from "./base-api.service";
-import { SportType } from "../model/SportType";
-import { AuthService } from "./auth.service";
-import { environment } from "../../../environments/environment";
-import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+// src/app/services/betSettlement.service.ts
+import { computed, Injectable, signal } from '@angular/core';
+import {firstValueFrom, Observable, of, throwError} from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { Game } from '../model/paper-betting/Game';
+import { Account } from '../model/paper-betting/Account';
+import { SportType } from '../model/SportType';
+import { PaperBetRecord } from '../model/paper-betting/PaperBetRecord';
+import { BaseService } from './base.service';
 import { Client, messageCallbackType } from '@stomp/stompjs';
-import SockJS from "sockjs-client";
-import {PaperBetRecord} from "../model/paper-betting/PaperBetRecord";
+import SockJS from 'sockjs-client';
+import { environment } from '../../../environments/environment';
 
-// Dynamic WebSocket URL based on environment
 const getWebSocketUrl = (): string => {
     const baseUrl = environment.apiUrl.replace('http://', 'ws://').replace('https://', 'wss://');
-    return `${baseUrl}/ws`; // Matches Spring Boot STOMP endpoint
+    return `${baseUrl}/ws`;
 };
 
 @Injectable({
     providedIn: 'root'
 })
-export class BetSettlementService extends BaseApiService<Game> {
-    private readonly destroyRef = inject(DestroyRef);
-    private readonly auth = inject(AuthService);
-    private stompClient: Client | null = null; // STOMP client instance
+export class BetSettlementService extends BaseService<Account> {
     protected override apiUrl = `${environment.apiUrl}/paper-betting/v1`;
-
     readonly account = signal<Account | null>(null);
     readonly allGames = signal<Game[]>([]);
-    readonly isLoading = signal<boolean>(false);
-    readonly errorMessage = signal<string | null>(null);
-    private readonly balance = signal<number>(0);
-    private readonly uid = signal<string | null>(null);
+    readonly balance = signal<number>(0);
+    readonly currentUserId = computed(() => this.userId());
 
-    readonly currentUserId = computed(() => this.uid());
+    private stompClient: Client | null = null;
 
     constructor() {
         super();
-        this.initializeUser();
+        this.initializeAccount();
     }
 
-    private async initializeUser(retryCount = 0): Promise<void> {
-        try {
-            this.isLoading.set(true);
-            this.errorMessage.set(null);
+    private async initializeAccount(): Promise<void> {
+        const userId = await this.initializeUser();
+        if (!userId) return;
 
-            const userId = await Promise.race<string | null>([
-                this.auth.getUID(),
-                new Promise<null>((_, reject) =>
-                    setTimeout(() => reject(new Error('Auth timeout')), 5000)
-                ),
-            ]);
-
-            if (!userId) {
-                throw new Error('Failed to get user ID');
-            }
-
-            this.uid.set(userId);
-            console.log('User initialized with ID:', userId);
-            await this.fetchInitialAccount(userId);
-            this.setupWebSocket(userId);
-            this.isLoading.set(false);
-        } catch (error) {
-            console.error('Error initializing user:', error);
-            this.errorMessage.set('Failed to initialize user');
-
-            if (retryCount < 3) { // Manual retry logic for initialization
-                this.errorMessage.set(`Retrying initialization (${retryCount + 1}/3)...`);
-                await this.retryInitialize(retryCount);
-            } else {
-                console.error('Failed to initialize user after max retries');
-                this.errorMessage.set('Failed to initialize after multiple attempts. Please refresh the page.');
-                this.uid.set(null);
-                this.isLoading.set(false);
-            }
-        }
+        await this.fetchInitialAccount(userId);
+        await this.setupWebSocket(userId);
     }
 
     private async fetchInitialAccount(userId: string): Promise<void> {
-        try {
-            const initialAccount = await firstValueFrom(
-                this.getAccount(userId).pipe(
-                    catchError(error => {
-                        console.error('Failed to get initial account:', error);
-                        this.errorMessage.set('Could not load account data');
-                        return of(null);
-                    })
-                )
-            );
-
-            if (this.isValidAccount(initialAccount)) {
-                this.updateAccountState(initialAccount);
-                this.errorMessage.set(null);
-            }
-        } catch (error) {
-            console.error('Error fetching initial account:', error);
-            this.errorMessage.set('Failed to fetch account data');
+        const initialAccount = await firstValueFrom(
+            this.get<Account | null>(`${this.apiUrl}/${userId}/getAccount`, 'Could not load account data')
+        );
+        if (this.isValidAccount(initialAccount)) {
+            this.updateAccountState(initialAccount);
         }
-    }
-
-    private async retryInitialize(retryCount: number): Promise<void> {
-        const delayMs = 2000 * Math.pow(1.5, retryCount); // Exponential backoff
-        console.log(`Retry ${retryCount + 1} of 3 in ${delayMs}ms`);
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-        return this.initializeUser(retryCount + 1);
     }
 
     private async setupWebSocket(userId: string): Promise<void> {
@@ -207,9 +150,6 @@ export class BetSettlementService extends BaseApiService<Game> {
     }
 
     addHistory(paperBetRecord: PaperBetRecord): Observable<number> {
-        this.isLoading.set(true);
-        this.errorMessage.set(null);
-
         const currentAccount = this.account();
         if (currentAccount && currentAccount.balance >= paperBetRecord.wagerAmount) {
             const newBalance = currentAccount.balance - paperBetRecord.wagerAmount;
@@ -226,50 +166,34 @@ export class BetSettlementService extends BaseApiService<Game> {
         }
 
         console.log(`Submitting paper bet record: ${JSON.stringify(paperBetRecord)}`);
-        return this.http.post<number>(`${this.apiUrl}/saveBetHistory`, paperBetRecord).pipe(
-            takeUntilDestroyed(this.destroyRef),
-            map(response => {
-                this.isLoading.set(false);
-                this.errorMessage.set(null);
-                return response;
-            }),
+        return this.post<number, PaperBetRecord>(
+            `${this.apiUrl}/saveBetHistory`,
+            paperBetRecord,
+            'Failed to save bet'
+        ).pipe(
+            map(response => response),
             catchError(error => {
                 if (currentAccount) {
                     this.balance.set(currentAccount.balance);
                     this.account.set(currentAccount);
                 }
-                this.isLoading.set(false);
-                this.errorMessage.set('Failed to save bet');
                 return throwError(() => error);
             })
         );
     }
 
     getSportsByNFL(sportType: SportType): Observable<Game[]> {
-        const userId = this.uid();
+        const userId = this.userId();
         if (!userId) {
             this.errorMessage.set('User not authenticated');
             return of([]);
         }
 
-        this.isLoading.set(true);
-        this.errorMessage.set(null);
-
-        return this.http.get<Game[]>(`${this.apiUrl}/${userId}/${sportType}/getUpcomingGames`, {
-            withCredentials: true
-        }).pipe(
-            takeUntilDestroyed(this.destroyRef),
-            map(games => {
-                this.isLoading.set(false);
-                this.errorMessage.set(null);
-                return this.updateGamesWithBetHistory(games);
-            }),
-            catchError(error => {
-                console.error('Error fetching games:', error);
-                this.isLoading.set(false);
-                this.errorMessage.set('Failed to load games. Please try again.');
-                return of([]);
-            })
+        return this.get<Game[]>(
+            `${this.apiUrl}/${userId}/${sportType}/getUpcomingGames`,
+            'Failed to load games'
+        ).pipe(
+            map(games => this.updateGamesWithBetHistory(games))
         );
     }
 
@@ -292,38 +216,19 @@ export class BetSettlementService extends BaseApiService<Game> {
     }
 
     getAccount(uid: string): Observable<Account | null> {
-        return this.http.get<Account>(`${this.apiUrl}/${uid}/getAccount`, {
-            withCredentials: true
-        }).pipe(
-            takeUntilDestroyed(this.destroyRef),
-            catchError(error => {
-                console.error('Error fetching account:', error);
-                return of(null);
-            })
+        return this.get<Account | null>(
+            `${this.apiUrl}/${uid}/getAccount`,
+            'Error fetching account'
         );
     }
 
     getAccounts(): Observable<Account[] | null> {
-        const userId = this.uid();
+        const userId = this.userId();
         if (!userId) return of(null);
 
-        this.isLoading.set(true);
-
-        const url = `${this.apiUrl}/${userId}/getAccounts`;
-        console.log(url);
-
-        return this.http.get<Account[]>(url).pipe(
-            takeUntilDestroyed(this.destroyRef),
-            map(accounts => {
-                this.isLoading.set(false);
-                return accounts;
-            }),
-            catchError(error => {
-                console.error('Error fetching accounts:', error);
-                this.isLoading.set(false);
-                this.errorMessage.set('Failed to load accounts');
-                return of(null);
-            })
+        return this.get<Account[]>(
+            `${this.apiUrl}/${userId}/getAccounts`,
+            'Failed to load accounts'
         );
     }
 }

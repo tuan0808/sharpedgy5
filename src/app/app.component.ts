@@ -11,5 +11,7 @@ import {LoaderComponent} from "./shared/components/loader/loader.component";
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-
+  constructor() {
+    (window as any).global = window;
+  }
 }
