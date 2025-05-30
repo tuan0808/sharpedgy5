@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
+import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import {NgClass} from "@angular/common";
 import {ReactiveFormsModule} from "@angular/forms";
 import {BaseBetFormComponent} from "../../../base-bet-form-component/base-bet-form-component.component";
@@ -55,15 +55,16 @@ export class BetFormComponent extends BaseBetFormComponent {
         paperBetRecord.selectedTeam = this.selectedTeam.name;
         paperBetRecord.potentialWinnings = this.potentialWinnings;
 
-        const updatedGame = { ...this.game, betSettlement: paperBetRecord };
+        const updatedGame = {...this.game, betSettlement: paperBetRecord};
 
-        this.betSettlementService.addHistory(paperBetRecord).subscribe({
-            next: (newBalance) => {
-                console.log('Bet placed, new balance:', newBalance);
-                this.betPlaced.emit({ game: updatedGame, balance: newBalance });
-                this.activeModal.close();
-            },
-            error: (err) => console.error('Bet placement failed:', err)
-        });
+        this.betSettlementService.addRecord(paperBetRecord)
+        //.subscribe({
+        //     next: (newBalance) => {
+        //         console.log('Bet placed, new balance:', newBalance);
+        //         this.betPlaced.emit({ game: updatedGame, balance: newBalance });
+        //         this.activeModal.close();
+        //     },
+        //     error: (err) => console.error('Bet placement failed:', err)
+        // });
     }
 }

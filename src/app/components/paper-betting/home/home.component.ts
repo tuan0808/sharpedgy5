@@ -1,14 +1,17 @@
-import {Component, computed, effect, HostListener, inject, OnInit, Signal, signal, WritableSignal} from '@angular/core';
-import {MdbAccordionModule} from "mdb-angular-ui-kit/accordion";
-import {GameCardComponent} from "./game-card/game-card.component";
-import {SportType} from "../../../shared/model/SportType";
-import {BetSettlementService} from "../../../shared/services/betSettlement.service";
-import {firstValueFrom, of, retry, timeout} from "rxjs";
-import {CurrencyPipe, DatePipe} from "@angular/common";
-import {SportDetail} from "../../../shared/model/SportDetail";
-import {PaginationComponent} from "../../../shared/components/pagination/pagination.component";
-import {catchError, filter, tap} from "rxjs/operators";
-import {ToastrService} from "ngx-toastr";
+import { Component, computed, effect, HostListener, inject, OnInit, Signal, signal, ChangeDetectorRef } from '@angular/core';
+import { MdbAccordionModule } from 'mdb-angular-ui-kit/accordion';
+import { GameCardComponent } from './game-card/game-card.component';
+import { SportType } from '../../../shared/model/SportType';
+import { BetSettlementService } from '../../../shared/services/betSettlement.service';
+import { CurrencyPipe, DatePipe } from '@angular/common';
+import { SportDetail } from '../../../shared/model/SportDetail';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { ToastrService } from 'ngx-toastr';
+import { Credit } from '../../../shared/model/paper-betting/Credit';
+import { Game } from '../../../shared/model/paper-betting/Game';
+import { firstValueFrom } from 'rxjs';
+import { timeout, retry, tap, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -26,25 +29,33 @@ import {ToastrService} from "ngx-toastr";
 export class HomeComponent implements OnInit {
   private readonly betSettlement = inject(BetSettlementService);
   private readonly toastr = inject(ToastrService);
+  private readonly cdr = inject(ChangeDetectorRef); // For forcing change detection
   private readonly MAX_LOAD_RETRIES = 3;
-  private readonly RETRY_DELAY = 2000; // 2 seconds
+  private readonly RETRY_DELAY = 2000;
   private previousBalance: number | null = null;
 
-  // Scroll tracking
-  protected isAtTop = signal<boolean>(true);
-
   // Signals
+  protected isAtTop = signal<boolean>(true);
   protected readonly account = this.betSettlement.account;
+  protected readonly balance = this.betSettlement.credit;
   protected readonly displayedGames = computed(() => {
     const allGames = this.betSettlement.allGames();
     const startIndex = (this.currentPage() - 1) * this.pageSize();
     const endIndex = Math.min(startIndex + this.pageSize(), allGames.length);
+    console.log('Computing displayedGames:', {
+      allGamesLength: allGames.length,
+      currentPage: this.currentPage(),
+      pageSize: this.pageSize(),
+      startIndex,
+      endIndex,
+      games: allGames.slice(startIndex, endIndex)
+    });
     return allGames.slice(startIndex, endIndex);
   });
 
   protected readonly sports = signal<SportDetail[]>([
-    new SportDetail("NFL", "🏈", SportType.NFL),
-    new SportDetail("NHL", "🏒", SportType.NHL),
+    new SportDetail('NFL', '🏈', SportType.NFL),
+    new SportDetail('NHL', '🏒', SportType.NHL),
   ]);
   protected readonly selectedSport = signal<SportType>(SportType.NFL);
   protected readonly isLoading = signal<boolean>(false);
@@ -58,26 +69,31 @@ export class HomeComponent implements OnInit {
   });
 
   constructor() {
-    // Setup effect to watch for account changes
+    // Effect to monitor account, credit, and games
     effect(() => {
       const account = this.account();
-      if (account) {
+      const credit = this.balance();
+      const games = this.displayedGames();
+      console.log('Effect triggered:', {
+        account: account ? 'present' : 'null',
+        credit: credit ? credit.balance : 'null',
+        gamesLength: games.length
+      });
+      if (account && credit) {
         this.hasError.set(false);
         this.errorMessage.set('');
-
-        this.toastr.info(account.balance.toFixed(), "Balance Change");
-        // Check for balance changes and show notification
-        if (this.previousBalance !== null && this.previousBalance !== account.balance) {
-          const difference = account.balance - this.previousBalance;
+        if (this.previousBalance !== null && this.previousBalance !== credit.balance) {
+          const difference = credit.balance - this.previousBalance;
           const message = difference > 0
               ? `Balance increased by ${difference.toFixed(2)}!`
               : `Balance decreased by ${Math.abs(difference).toFixed(2)}`;
-
           const toastrType = difference > 0 ? 'success' : 'info';
           this.toastr[toastrType](message, 'Balance Update');
         }
-        this.previousBalance = account.balance;
+        this.previousBalance = credit.balance;
       }
+      // Force change detection to ensure UI updates
+      this.cdr.markForCheck();
     });
   }
 
@@ -87,14 +103,11 @@ export class HomeComponent implements OnInit {
     await this.loadGames();
   }
 
-  // Use Angular's HostListener for scroll events
   @HostListener('window:scroll')
   onWindowScroll(): void {
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
     const wasAtTop = this.isAtTop();
     this.isAtTop.set(scrollTop <= 10);
-
-    // If user just scrolled away from the top, show notification
     if (wasAtTop && !this.isAtTop()) {
       this.toastr.info('Scroll back to top to see all options', 'Scrolled Down');
     }
@@ -139,19 +152,21 @@ export class HomeComponent implements OnInit {
           tap(games => console.log(`Retrieved ${games?.length} games`)),
           catchError(err => {
             console.error('Game fetch failed:', err);
-            return of([]); // Return an empty array as a fallback
+            this.errorMessage.set('Failed to load games');
+            return of([]);
           })
       );
 
-      gamesObservable.subscribe(s=>console.log(JSON.stringify(s)))
-
       await firstValueFrom(gamesObservable);
+      // Force change detection after loading games
+      this.cdr.markForCheck();
     } catch (error) {
       console.error('Failed to load games:', error);
       this.handleError(error);
       this.betSettlement.allGames.set([]);
     } finally {
       this.isLoading.set(false);
+      this.cdr.markForCheck(); // Ensure UI updates
     }
   }
 
@@ -164,33 +179,37 @@ export class HomeComponent implements OnInit {
       this.errorMessage.set('An unexpected error occurred');
       this.toastr.error('An unexpected error occurred', 'Error');
     }
+    this.cdr.markForCheck();
   }
 
-  // Event Handlers
   async onSportSelect(type: SportType): Promise<void> {
     if (this.selectedSport() === type && this.betSettlement.allGames().length > 0) {
       return;
     }
-
     this.selectedSport.set(type);
     this.currentPage.set(1);
     await this.loadGames();
   }
 
   async onPageChange(page: number): Promise<void> {
-    this.currentPage.set(page);
+    const totalPages = this.totalPages();
+    const validPage = Math.max(1, Math.min(page, totalPages));
+    console.log('Page changed to:', validPage, 'Total pages:', totalPages);
+    this.currentPage.set(validPage);
+    this.cdr.markForCheck();
   }
 
   async onPageSizeChange(size: number): Promise<void> {
+    console.log('Page size changed to:', size);
     this.pageSize.set(size);
     this.currentPage.set(1);
+    this.cdr.markForCheck();
   }
 
   async onRetry(): Promise<void> {
     await this.loadGames();
   }
 
-  // Scroll to top helper method
   scrollToTop(): void {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }

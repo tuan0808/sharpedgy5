@@ -13,7 +13,7 @@ export const environment = {
     messagingSenderId: "688825740425",
     appId: "1:688825740425:web:ca365bc25406874030ea58"
   },
-  apiUrl: "http://localhost:8080",
+  apiUrl: "http://localhost:9080",
 
   timeouts : {
     maxApiRetries: 3,

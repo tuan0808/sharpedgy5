@@ -371,34 +371,34 @@ export class AuthService {
     }
 
     private async updateBackendToken(token: string | null): Promise<void> {
-        if (!token) {
-            console.error('No token to update on backend');
-            return;
-        }
-
-        try {
-            // Use regular HTTP client but with custom headers to avoid interceptor
-            const headers = {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` // Send token in header, not as query param
-            };
-
-            // Create a non-intercepted fetch request
-            const response = await fetch(`${environment.apiUrl}/api/auth/token-refresh`, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({ token }),
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                throw new Error(`Token refresh failed with status: ${response.status}`);
-            }
-
-            console.log('Backend token updated successfully');
-        } catch (error) {
-            console.error('Token refresh error:', error);
-            // Continue auth flow even if backend sync fails
-        }
+        //   if (!token) {
+        //     console.error('No token to update on backend');
+        //     return;
+        // }
+        //
+        // try {
+        //     // Use regular HTTP client but with custom headers to avoid interceptor
+        //     const headers = {
+        //         'Content-Type': 'application/json',
+        //         'Authorization': `Bearer ${token}` // Send token in header, not as query param
+        //     };
+        //
+        //     // Create a non-intercepted fetch request
+        //     const response = await fetch(`${environment.apiUrl}/api/auth/token-refresh`, {
+        //         method: 'POST',
+        //         headers: headers,
+        //         body: JSON.stringify({ token }),
+        //         credentials: 'include'
+        //     });
+        //
+        //     if (!response.ok) {
+        //         throw new Error(`Token refresh failed with status: ${response.status}`);
+        //     }
+        //
+        //     console.log('Backend token updated successfully');
+        // } catch (error) {
+        //     console.error('Token refresh error:', error);
+        //     // Continue auth flow even if backend sync fails
+        // }
     }
 }

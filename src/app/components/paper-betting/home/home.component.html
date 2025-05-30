@@ -2,22 +2,17 @@
 <div class="header">
     <h1>Bet Simulator</h1>
     <div class="right">
+        <span class="balance">
+      <i class="bi bi-wallet2"></i> {{balance().remainingCredit }} / {{balance().totalCredit}}
+    </span>
     <span class="balance">
-      <i class="bi bi-wallet2"></i> {{ account()?.balance | currency }}
+      <i class="bi bi-wallet2"></i> {{balance().balance }}
     </span>
         <i class="bi bi-bell notification"></i>
     </div>
 </div>
 
 <div class="top-container">
-    <div class="achievement">
-        <div>
-            <i class="bi bi-trophy-fill badge"></i>
-            Recent Achievement:
-            <span class="badge">Hot Streak! 🔥 Won 5 bets in a row</span>
-        </div>
-        <a href="#" class="badge">View All Achievements</a>
-    </div>
     <div class="sports-scroll border-bottom card">
         <div class="container-fluid px-4 position-relative">
             <div class="d-flex overflow-auto py-2">

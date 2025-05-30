@@ -1,6 +1,6 @@
 
 export enum Status {
-    WIN,
-    LOSS,
-    PENDING
+    WIN = 'Win',
+    LOSS = 'Loss',
+    PENDING = 'Pending'
 }
