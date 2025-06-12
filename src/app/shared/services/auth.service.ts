@@ -9,16 +9,16 @@ import { LoginMetrics } from "../model/auth/LoginMetrics";
 import { environment } from "../../../environments/environment";
 import { HttpClient } from "@angular/common/http";
 import { UserService } from "./user.service";
-import {firstValueFrom, of, throwError, timeout} from "rxjs";
-import {catchError} from "rxjs/operators";
+import { firstValueFrom, of, Subject } from "rxjs";
+import { catchError } from "rxjs/operators";
 
 @Injectable({
     providedIn: 'root'
 })
 export class AuthService {
-    private readonly SESSION_DURATION = 24 * 60 * 60 * 1000;
+    private readonly SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
     private readonly MAX_LOGIN_ATTEMPTS = 3;
-    private readonly LOCKOUT_DURATION = 15 * 60 * 1000;
+    private readonly LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
     private redirectUrl: string | null = null;
     private readonly userService: UserService = inject(UserService);
     private readonly router = inject(Router);
@@ -29,6 +29,11 @@ export class AuthService {
     private readonly authInitialized = signal<boolean>(false);
     private readonly loginMetrics = signal<LoginMetrics>(this.loadLoginMetrics());
     private cachedToken: { token: string, expiresAt: number } | null = null; // Token cache
+
+    private readonly authErrorSubject = new Subject<void>(); // Added for navigation handling
+    get authError$() {
+        return this.authErrorSubject.asObservable();
+    }
 
     readonly isAuthenticated: Signal<boolean> = computed(() => !!this.user());
     readonly displayName: Signal<string> = computed(() =>
@@ -41,6 +46,7 @@ export class AuthService {
     private sessionTimeout?: number;
 
     constructor() {
+        // Session timeout effect
         effect(() => {
             const user = this.user();
             if (user) {
@@ -55,14 +61,23 @@ export class AuthService {
             }
         }, { allowSignalWrites: true });
 
+        // Token change listener
         onIdTokenChanged(this.auth, async (user) => {
             this.user.set(user);
             if (user) {
-                const token = await this.getFreshToken(); // Use cached token if valid
+                const token = await this.getFreshToken();
                 console.log("Token from onIdTokenChanged:", token);
-                this.updateBackendToken(token);
+                await this.updateBackendToken(token);
             }
         });
+
+        // Proactive token refresh every 30 minutes
+        setInterval(async () => {
+            if (this.auth.currentUser) {
+                console.log("Proactively refreshing token...");
+                await this.getFreshToken(true); // Force refresh
+            }
+        }, 30 * 60 * 1000); // 30 minutes
     }
 
     async ensureAuthInitialized(): Promise<void> {
@@ -122,26 +137,50 @@ export class AuthService {
 
         const now = Date.now() / 1000; // Current time in seconds
 
-        // If we have a cached token and not forcing refresh, use it
-        if (!forceRefresh && this.cachedToken && this.cachedToken.expiresAt > now + 300) { // 5-min buffer
-            console.log("Using cached token, expires in:", Math.round(this.cachedToken.expiresAt - now), "seconds");
-            return this.cachedToken.token;
+        // Refresh token if forced, no cached token, or token is expired/near expiry
+        if (
+            forceRefresh ||
+            !this.cachedToken ||
+            !this.cachedToken.expiresAt ||
+            this.cachedToken.expiresAt <= now + 60 // 1-minute buffer
+        ) {
+            try {
+                console.log("Fetching fresh token...");
+                const token = await user.getIdToken(true); // Force refresh
+                const decoded = JSON.parse(atob(token.split('.')[1]));
+                this.cachedToken = { token, expiresAt: decoded.exp };
+                console.log("Fresh token acquired, expires at:", new Date(decoded.exp * 1000));
+                await this.updateBackendToken(token); // Ensure backend sync
+                console.log("Token cache status:", {
+                    cached: !!this.cachedToken,
+                    expiresAt: this.cachedToken ? new Date(this.cachedToken.expiresAt * 1000) : null,
+                    timeLeft: this.cachedToken ? Math.round(this.cachedToken.expiresAt - now) : null
+                });
+                return token;
+            } catch (error) {
+                console.error("Error fetching fresh token:", error);
+                this.cachedToken = null; // Clear invalid cache
+                this.authErrorSubject.next(); // Emit error for components
+                return null;
+            }
         }
 
+        console.log("Using cached token, expires in:", Math.round(this.cachedToken.expiresAt - now), "seconds");
+        console.log("Token cache status:", {
+            cached: !!this.cachedToken,
+            expiresAt: this.cachedToken ? new Date(this.cachedToken.expiresAt * 1000) : null,
+            timeLeft: this.cachedToken ? Math.round(this.cachedToken.expiresAt - now) : null
+        });
+        return this.cachedToken.token;
+    }
+
+    async refreshToken(): Promise<string | null> {
+        console.log("Refreshing token...");
         try {
-            console.log("Fetching fresh token...");
-            const token = await user.getIdToken(true); // Force refresh
-            const decoded = JSON.parse(atob(token.split('.')[1]));
-
-            this.cachedToken = { token, expiresAt: decoded.exp };
-            console.log("Fresh token acquired, expires at:", new Date(decoded.exp * 1000));
-
-            // Make sure the token is also refreshed on the backend
-            await this.updateBackendToken(token);
-
-            return token;
+            return await this.getFreshToken(true);
         } catch (error) {
-            console.error("Error fetching fresh token:", error);
+            console.error('Token refresh failed:', error);
+            this.authErrorSubject.next(); // Emit error for components
             return null;
         }
     }
@@ -285,7 +324,7 @@ export class AuthService {
             const token = this.cachedToken?.token;
             this.cachedToken = null; // Clear cached token on logout
 
-            //if the token for the API exists, then it will immediately revoke access.
+            // If the token for the API exists, revoke access
             if (token && user) {
                 await firstValueFrom(
                     this.http.post(`${environment.apiUrl}/api/auth/revoke`, { uid: user.uid }, {
@@ -293,7 +332,6 @@ export class AuthService {
                     }).pipe(catchError(err => of(null)))
                 );
             }
-            await this.router.navigate(['/auth/login']);
             await this.router.navigate(['/auth/login']);
             this.logSecurityEvent('logout_success', { uid: user?.uid });
         } catch (error) {
@@ -319,7 +357,6 @@ export class AuthService {
     }
 
     private generateStateParam(): string {
-
         const state = window.crypto.randomUUID();
         sessionStorage.setItem('auth_state', state);
         return state;
@@ -371,34 +408,27 @@ export class AuthService {
     }
 
     private async updateBackendToken(token: string | null): Promise<void> {
-        //   if (!token) {
-        //     console.error('No token to update on backend');
-        //     return;
-        // }
-        //
-        // try {
-        //     // Use regular HTTP client but with custom headers to avoid interceptor
-        //     const headers = {
-        //         'Content-Type': 'application/json',
-        //         'Authorization': `Bearer ${token}` // Send token in header, not as query param
-        //     };
-        //
-        //     // Create a non-intercepted fetch request
-        //     const response = await fetch(`${environment.apiUrl}/api/auth/token-refresh`, {
-        //         method: 'POST',
-        //         headers: headers,
-        //         body: JSON.stringify({ token }),
-        //         credentials: 'include'
-        //     });
-        //
-        //     if (!response.ok) {
-        //         throw new Error(`Token refresh failed with status: ${response.status}`);
-        //     }
-        //
-        //     console.log('Backend token updated successfully');
-        // } catch (error) {
-        //     console.error('Token refresh error:', error);
-        //     // Continue auth flow even if backend sync fails
-        // }
+        // Note: This method may not be necessary if APISIX validates tokens directly via OpenID Connect.
+        // Verify if your backend requires explicit token updates.
+        if (!token) {
+            console.error('No token to update on backend');
+            return;
+        }
+
+        try {
+            await firstValueFrom(
+                this.http.post(`${environment.apiUrl}/api/auth/token-refresh`, { token }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                }).pipe(
+                    catchError(err => {
+                        console.error('Backend token update failed:', err);
+                        return of(null); // Continue even if sync fails
+                    })
+                )
+            );
+            console.log('Backend token updated successfully');
+        } catch (error) {
+            console.error('Token refresh error:', error);
+        }
     }
 }

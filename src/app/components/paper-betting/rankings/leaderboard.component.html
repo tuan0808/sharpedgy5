@@ -4,6 +4,7 @@
         <div class="error-message text-red-600 p-4">{{ error }}</div>
     }
 
+    <!-- Header -->
     <div class="header">
         <h1 class="title">Betting Leaderboard</h1>
         <div class="filter-buttons">
@@ -23,7 +24,8 @@
     <!-- Current User Card -->
     @if (currentUser) {
         <div class="current-user-card">
-            <div class="current-user-header" (click)="toggleCurrentUserAccordion()">
+            <!-- Header -->
+            <div class="current-user-header" [ngClass]="{'expanded': expandedCurrentUser}" (click)="toggleCurrentUserAccordion()">
                 <div class="rank-section">
                     <div class="rank-icon" [ngClass]="getRankClass(getCurrentUserIndex())">
                         @if (getCurrentUserIndex() < 3 && getCurrentUserIndex() >= 0) {
@@ -40,8 +42,8 @@
                 </div>
                 <div class="stats">
                     <div class="stat-item">
-                        <div class="stat-label">Total Bets</div>
-                        <div class="stat-value">{{ currentUser.totalBets }}</div>
+                        <div class="stat-label">Bet Wins</div>
+                        <div class="stat-value">{{ currentUser.betWins }}</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">Win Rate</div>
@@ -49,60 +51,83 @@
                             {{ currentUser.winRate }}%
                         </div>
                     </div>
-                    <button class="expand-btn">
+                    <button class="expand-btn" aria-label="Toggle user details">
                         <i class="fas" [ngClass]="expandedCurrentUser ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- Current User Accordion Content -->
+            <!-- Accordion Content -->
             @if (expandedCurrentUser) {
                 <div class="accordion-content">
+                    <!-- Statistics Section -->
                     <div class="stats-section">
                         <h3 class="section-title"><i class="fas fa-chart-line"></i> Your Betting Statistics</h3>
                         <div class="stats-grid">
                             <div class="stat-card">
-                                <div class="stat-label">Avg. Bet Amount</div>
-                                <div class="stat-value">${{ currentUser.statistics.avgBetAmount }}</div>
+                                <span class="stat-label">Avg. Bet Amount</span>
+                                <span class="stat-value">${{ currentUser.statistics.avgBetAmount }}</span>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-label">Highest Win</div>
-                                <div class="stat-value">${{ currentUser.statistics.highestWin }}</div>
+                                <span class="stat-label">Highest Win</span>
+                                <span class="stat-value">${{ currentUser.statistics.highestWin }}</span>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-label">Favorite Category</div>
-                                <div class="stat-value">{{ currentUser.statistics.favoriteCategory }}</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-label">Avg. Odds</div>
-                                <div class="stat-value">{{ currentUser.statistics.avgOdds }}</div>
+                                <span class="stat-label">Avg. Odds</span>
+                                <span class="stat-value">{{ currentUser.statistics.avgOdds }}</span>
                             </div>
                         </div>
                     </div>
+                    <!-- Betting History Section -->
                     <div class="history-section">
                         <h3 class="section-title"><i class="fas fa-clock"></i> Your Recent Betting History</h3>
-                        <table class="history-table">
-                            <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Event</th>
-                                <th>Amount</th>
-                                <th>Odds</th>
-                                <th>Result</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                                @for (bet of currentUser.lastBets; track bet.id) {
+                        <div class="history-notice">
+                            <i class="fas fa-info-circle"></i>
+                            Pending bets are obscured. <a href="/upgrade-rank" class="upgrade-link">Upgrade your rank</a> to view active bets.
+                        </div>
+                        @if (currentUser.lastBets.length > 0) {
+                            <div class="history-table-wrapper">
+                                <table class="history-table">
+                                    <thead>
                                     <tr>
-                                        <td>{{ bet.date }}</td>
-                                        <td>{{ bet.event }}</td>
-                                        <td>${{ bet.amount }}</td>
-                                        <td>{{ bet.odds }}</td>
-                                        <td><span [ngClass]="getResultClass(bet.result)">{{ bet.result.toUpperCase() }}</span></td>
+                                        <th>Date</th>
+                                        <th>Game</th>
+                                        <th>Selected Team</th>
+                                        <th>Bet Amount</th>
+                                        <th>Odds</th>
+                                        <th>Result</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
+                                    </thead>
+                                    <tbody>
+                                        @for (bet of currentUser.lastBets; track bet.id) {
+                                            <tr
+                                                    [ngClass]="{'pending-blur': bet.result.toLowerCase() === 'pending'}"
+                                                    [title]="bet.result.toLowerCase() === 'pending' ? 'Higher rank required to view pending bets' : ''"
+                                            >
+                                                <td>{{ bet.result.toLowerCase() === 'pending' ? '...' : bet.date }}</td>
+                                                <td>{{ bet.result.toLowerCase() === 'pending' ? '...' : bet.gameName }}</td>
+                                                <td>{{ bet.result.toLowerCase() === 'pending' ? '...' : bet.selectedTeam }}</td>
+                                                <td>{{ bet.result.toLowerCase() === 'pending' ? '...' : '$' + bet.betAmount }}</td>
+                                                <td>{{ bet.result.toLowerCase() === 'pending' ? '...' : bet.odds }}</td>
+                                                <td>
+                                                    <span [ngClass]="getResultClass(bet.result)">
+                                                        @if (bet.result.toLowerCase() === 'pending') {
+                                                            <i class="fas fa-lock"></i> PENDING
+                                                        } @else {
+                                                            {{ bet.result.toUpperCase() }}
+                                                        }
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        } @else {
+                            <div class="empty-state">
+                                No recent bets available.
+                            </div>
+                        }
                     </div>
                 </div>
             }
@@ -116,38 +141,44 @@
             <tr>
                 <th>Rank</th>
                 <th>Username</th>
-                <th>Total Bets</th>
+                <th>Bet Wins</th>
+                <th>Bet Losses</th>
                 <th>Win Rate</th>
-                <th>Total Amount</th>
+                <th>Total Earnings</th>
                 <th>Details</th>
             </tr>
             </thead>
             <tbody>
                 @for (user of users; track user.id; let index = $index) {
-                    <tr (click)="toggleAccordion(user.id)" class="table-row">
+                    <tr
+                            (click)="toggleAccordion(user.id)"
+                            class="table-row"
+                            [ngClass]="{'selected': isRowSelected(user.id)}"
+                    >
                         <td>
                             <div class="rank-icon" [ngClass]="getRankClass(index)">
                                 @if (index < 3) {
                                     <i class="fas fa-star"></i>
-                                    <span class="rank-number">{{ index + 1 }}</span>
+                                    <span class="rank-number">{{ user.rank }}</span>
                                 } @else {
-                                    <span class="rank-number">{{ index + 1 }}</span>
+                                    <span class="rank-number">{{ user.rank }}</span>
                                 }
                             </div>
                         </td>
                         <td>{{ user.username }}</td>
-                        <td>{{ user.totalBets }}</td>
+                        <td>{{ user.betWins }}</td>
+                        <td>{{ user.betLosses }}</td>
                         <td [ngClass]="getWinRateClass(user.winRate)">{{ user.winRate }}%</td>
                         <td>${{ user.totalAmount | number }}</td>
                         <td>
-                            <button>
-                                <i class="fas fa-chevron-down"></i>
+                            <button class="expand-btn">
+                                <i class="fas" [ngClass]="expandedUser === user.id ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                             </button>
                         </td>
                     </tr>
                     @if (expandedUser === user.id) {
                         <tr class="accordion-row">
-                            <td colspan="6">
+                            <td colspan="7">
                                 <div class="accordion-content">
                                     <div class="stats-section">
                                         <h3 class="section-title"><i class="fas fa-chart-line"></i> Betting Statistics</h3>
@@ -161,10 +192,6 @@
                                                 <div class="stat-value">${{ user.statistics.highestWin }}</div>
                                             </div>
                                             <div class="stat-card">
-                                                <div class="stat-label">Favorite Category</div>
-                                                <div class="stat-value">{{ user.statistics.favoriteCategory }}</div>
-                                            </div>
-                                            <div class="stat-card">
                                                 <div class="stat-label">Avg. Odds</div>
                                                 <div class="stat-value">{{ user.statistics.avgOdds }}</div>
                                             </div>
@@ -172,24 +199,41 @@
                                     </div>
                                     <div class="history-section">
                                         <h3 class="section-title"><i class="fas fa-clock"></i> Recent Betting History</h3>
+                                        <div class="history-notice">
+                                            <i class="fas fa-info-circle"></i>
+                                            Pending bets are obscured. <a href="/upgrade-rank" class="upgrade-link">Upgrade your rank</a> to view active bets.
+                                        </div>
                                         <table class="history-table">
                                             <thead>
                                             <tr>
                                                 <th>Date</th>
-                                                <th>Event</th>
-                                                <th>Amount</th>
+                                                <th>Game</th>
+                                                <th>Selected Team</th>
+                                                <th>Bet Amount</th>
                                                 <th>Odds</th>
                                                 <th>Result</th>
                                             </tr>
                                             </thead>
                                             <tbody>
                                                 @for (bet of user.lastBets; track bet.id) {
-                                                    <tr>
-                                                        <td>{{ bet.date }}</td>
-                                                        <td>{{ bet.event }}</td>
-                                                        <td>${{ bet.amount }}</td>
-                                                        <td>{{ bet.odds }}</td>
-                                                        <td><span [ngClass]="getResultClass(bet.result)">{{ bet.result.toUpperCase() }}</span></td>
+                                                    <tr
+                                                            [ngClass]="{'pending-blur': bet.result.toLowerCase() === 'pending'}"
+                                                            [title]="bet.result.toLowerCase() === 'pending' ? 'Higher rank required to view pending bets' : ''"
+                                                    >
+                                                        <td>{{ bet.result.toLowerCase() === 'pending' ? '...' : bet.date }}</td>
+                                                        <td>{{ bet.result.toLowerCase() === 'pending' ? '...' : bet.gameName }}</td>
+                                                        <td>{{ bet.result.toLowerCase() === 'pending' ? '...' : bet.selectedTeam }}</td>
+                                                        <td>{{ bet.result.toLowerCase() === 'pending' ? '...' : '$' + bet.betAmount }}</td>
+                                                        <td>{{ bet.result.toLowerCase() === 'pending' ? '...' : bet.odds }}</td>
+                                                        <td>
+                                                            <span [ngClass]="getResultClass(bet.result)">
+                                                                @if (bet.result.toLowerCase() === 'pending') {
+                                                                    <i class="fas fa-lock"></i> PENDING
+                                                                } @else {
+                                                                    {{ bet.result.toUpperCase() }}
+                                                                }
+                                                            </span>
+                                                        </td>
                                                     </tr>
                                                 }
                                             </tbody>
@@ -202,5 +246,12 @@
                 }
             </tbody>
         </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="pagination-controls">
+        <button [disabled]="page === 1" (click)="prevPage()" class="pagination-btn">Previous</button>
+        <span class="pagination-info">Page {{ page }}</span>
+        <button [disabled]="!hasNextPage" (click)="nextPage()" class="pagination-btn">Next</button>
     </div>
 </div>
