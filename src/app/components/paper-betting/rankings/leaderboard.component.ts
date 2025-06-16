@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LeaderboardService } from '../../../shared/services/leaderboard.service';
 import { LeaderRow } from '../../../shared/model/paper-betting/rankings/LeaderRow';
+import {AuthService} from "../../../shared/services/auth.service";
 
 @Component({
     selector: 'app-betting-rankings',
@@ -11,6 +12,7 @@ import { LeaderRow } from '../../../shared/model/paper-betting/rankings/LeaderRo
     styleUrls: ['./leaderboard.component.scss']
 })
 export class LeaderboardComponent implements OnInit {
+    private authService = inject(AuthService)
     private leaderboardService = inject(LeaderboardService);
     currentUser: LeaderRow | null = null;
     users: LeaderRow[] = [];
@@ -29,21 +31,10 @@ export class LeaderboardComponent implements OnInit {
     }
 
     loadLeaderboard(): void {
-    //     this.leaderboardService.getLeaderboard(this.page, this.pageSize).subscribe({
-    //         next: (data: LeaderRow[]) => {
-    //             this.users = data;
-    //             this.currentUser = data.find(user => user.id.toString() === 'current') || data[0] || null;
-    //             this.hasNextPage = data.length === this.pageSize;
-    //             this.error = null;
-    //             // Clear selected rows when loading new data
-    //             this.selectedRows.clear();
-    //         },
-    //         error: (err) => {
-    //             this.users = [];
-    //             this.currentUser = null;
-    //             this.error = `Error loading leaderboard: ${err.message || 'Unknown error'}`;
-    //         }
-    //     });
+        this.authService.getUID().then(uuid =>{
+            var data = this.leaderboardService.getRankingsByPage(uuid, 0)
+            data.subscribe(s=> console.log(s))
+        })
      }
 
     nextPage(): void {
