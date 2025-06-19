@@ -4,6 +4,7 @@ import {LeaderboardData} from "../model/paper-betting/rankings/LeaderboardData";
 import {environment} from "../../../environments/environment";
 import {Observable, of} from "rxjs";
 import {LeaderRow} from "../model/paper-betting/rankings/LeaderRow";
+import {LeaderboardResponse} from "../model/paper-betting/rankings/LeaderboardResponse";
 
 @Injectable({
   providedIn: 'root'
@@ -26,8 +27,8 @@ export class LeaderboardService extends BaseService<LeaderRow> {
     this.initialized.set(true); // Mark initialization as complete
   }
 
-  getRankingsByPage(userId : string, page : number) : Observable<LeaderRow[]> {
-    return this.get<LeaderRow[]>(`${this.apiUrl}/${userId}/leaderboards?page=${page}&size=${10}`,
+  getRankingsByPage(userId : string, page : number) : Observable<LeaderboardResponse> {
+    return this.get<LeaderboardResponse>(`${this.apiUrl}/${userId}/getRankings?page=${page}&size=${10}`,
         'Failed to load leaderboard'
   );
   }

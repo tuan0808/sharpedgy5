@@ -13,7 +13,6 @@ import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 
 import {HttpClient, provideHttpClient, withInterceptors} from '@angular/common/http';
 
-console.log(`appconfig is loading`)
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
 }
@@ -23,17 +22,15 @@ import {initializeApp, provideFirebaseApp} from "@angular/fire/app";
 import {environment} from "../environments/environment";
 import {getAuth, provideAuth} from "@angular/fire/auth";
 import {authInterceptor} from "./shared/interceptors/auth.interceptor";
-console.log('🔍 authInterceptor imported:', authInterceptor);
-
+console.log('~~~~~Loading the interceptor at', new Date().toISOString());
 export const appConfig: ApplicationConfig = {
   providers: [
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
     provideAuth(() => getAuth()),
     provideAnimations(),
     provideToastr(),
-    provideHttpClient(
-        withInterceptors([authInterceptor])
-    ),
+    provideHttpClient(withInterceptors([authInterceptor])),
+    { provide: 'INTERCEPTOR_STATUS', useValue: 'authInterceptor registered' },
     provideCharts(withDefaultRegisterables()),
     provideRouter(routes),
     importProvidersFrom(

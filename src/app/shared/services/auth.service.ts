@@ -141,31 +141,17 @@ export class AuthService {
      */
     private async checkTokenValidity(user: User): Promise<void> {
         const now = Date.now() / 1000;
-        if (
-            this.cachedToken &&
-            this.cachedToken.expiresAt &&
-            this.cachedToken.expiresAt > now + this.TOKEN_REFRESH_BUFFER
-        ) {
-            if (!environment.production) {
-                console.log('TESTING: Using cached token:', this.cachedToken.token);
-                console.log('TESTING: Token valid, expires in:', Math.round(this.cachedToken.expiresAt - now), 'seconds');
-            }
+        if (this.cachedToken && this.cachedToken.expiresAt > now + this.TOKEN_REFRESH_BUFFER) {
+            console.log('Using cached token, expires in:', Math.round(this.cachedToken.expiresAt - now), 'seconds');
             this.tokenUpdateSubject.next(this.cachedToken.token);
             return;
         }
 
         try {
-            if (!environment.production) {
-                console.log('TESTING: Token missing or nearing expiry, fetching new token');
-            }
             console.log('Token nearing expiry or invalid, refreshing...');
-            // Use cached token if valid
-            const token = await user.getIdToken(false);
+            const token = await user.getIdToken(true); // Force refresh here
             const decoded = JSON.parse(atob(token.split('.')[1]));
             this.cachedToken = { token, expiresAt: decoded.exp };
-            if (!environment.production) {
-                console.log('TESTING: New token fetched:', token);
-            }
             console.log('New token acquired, expires at:', new Date(decoded.exp * 1000));
             this.tokenUpdateSubject.next(token);
         } catch (error) {

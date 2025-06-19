@@ -2,7 +2,7 @@ import {Statistics} from "./Statistics";
 import {Bet} from "./Bet";
 import {LastBet} from "./LastBet";
 
-export interface LeaderRow {
+export interface  LeaderRow {
     id: number; // e.g., 30
     username: string; // e.g., "Ryan Kilpatrick"
     totalBets: number; // e.g., 3

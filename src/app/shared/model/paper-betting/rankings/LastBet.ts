@@ -3,7 +3,7 @@ export interface LastBet {
     date: string,
     gameName: string,
     selectedTeam: string,
-    betAmount: number,
-    odds: number,
-    result: string
+    wagerAmount: number,
+    wagerValue: number,
+    status: string
 }
