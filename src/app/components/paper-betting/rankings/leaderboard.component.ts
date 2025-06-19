@@ -1,5 +1,5 @@
 // leaderboard.component.ts
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LeaderboardService } from '../../../shared/services/leaderboard.service';
@@ -37,6 +37,15 @@ export class LeaderboardComponent implements OnInit {
     searchTerm: string = '';
     sortColumn: string = 'rank';
     sortDirection: 'asc' | 'desc' = 'asc';
+
+    // Mobile support
+    screenWidth: number = window.innerWidth;
+    showMenu: boolean = false;
+
+    @HostListener('window:resize', ['$event'])
+    onResize(event: any) {
+        this.screenWidth = window.innerWidth;
+    }
 
     ngOnInit(): void {
         this.loadLeaderboard();
@@ -154,37 +163,13 @@ export class LeaderboardComponent implements OnInit {
     }
 
     // Utility methods
-    getWinRateClass(winRate: number): string {
-        if (winRate > 55) return 'text-green-600';
-        if (winRate < 50) return 'text-red-600';
-        return 'text-yellow-600';
-    }
-
-    getWinRateBarClass(winRate: number): string {
-        if (winRate >= 70) return 'bg-green-500';
-        if (winRate >= 50) return 'bg-yellow-500';
-        return 'bg-red-500';
-    }
-
-    getResultClass(result: string): string {
-        return result.toLowerCase() === 'win' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-    }
-
-    getRankClass(index: number): string {
-        switch (index) {
-            case 0: return 'bg-yellow-100 text-yellow-800';
-            case 1: return 'bg-gray-100 text-gray-800';
-            case 2: return 'bg-orange-100 text-orange-800';
-            default: return 'bg-gray-50 text-gray-600';
-        }
-    }
-
-    getCurrentUserIndex(): number {
-        return this.currentUser ? this.users.findIndex(u => u.id === this.currentUser!.id) : -1;
-    }
-
-    isRowSelected(userId: number): boolean {
-        return this.selectedRows.has(userId);
+    formatCurrency(amount: number): string {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount);
     }
 
     // Filter users based on search term
@@ -198,6 +183,11 @@ export class LeaderboardComponent implements OnInit {
         );
     }
 
+    // Check if a row is selected for accordion
+    isRowSelected(userId: number): boolean {
+        return this.selectedRows.has(userId);
+    }
+
     // Pagination info
     get paginationStart(): number {
         return (this.page * this.pageSize) + 1;
@@ -207,18 +197,8 @@ export class LeaderboardComponent implements OnInit {
         return Math.min((this.page + 1) * this.pageSize, this.totalElements);
     }
 
-    // Check if bet is pending/active
-    isBetPending(status: string): boolean {
-        return status.toLowerCase() === 'pending';
-    }
-
-    // Format currency
-    formatCurrency(amount: number): string {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(amount);
+    // Mobile menu toggle
+    toggleMenu(): void {
+        this.showMenu = !this.showMenu;
     }
 }

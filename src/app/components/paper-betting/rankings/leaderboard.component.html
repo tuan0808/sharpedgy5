@@ -1,13 +1,24 @@
 <div class="rankings-container">
     <div class="header-section">
         <h1 class="page-title">Player Rankings</h1>
-        <div class="sorting-tabs">
+        <div class="sorting-tabs" *ngIf="screenWidth >= 768">
             <button *ngFor="let period of filterPeriods"
                     class="sort-tab"
                     [class.active]="activePeriod === period"
                     (click)="setActivePeriod(period)">
                 {{ period }}
             </button>
+        </div>
+        <div class="mobile-menu" *ngIf="screenWidth < 768">
+            <button class="menu-toggle" (click)="toggleMenu()">Filter Period</button>
+            <div class="menu-options" [ngClass]="{'active': showMenu}">
+                <button *ngFor="let period of filterPeriods"
+                        class="menu-option"
+                        [class.active]="activePeriod === period"
+                        (click)="setActivePeriod(period); toggleMenu()">
+                    {{ period }}
+                </button>
+            </div>
         </div>
     </div>
 
@@ -27,68 +38,15 @@
             </div>
         </div>
 
-        <!-- Table Header -->
-        <div class="table-header">
-            <div class="header-cell rank-col sortable" (click)="sortBy('rank')"
-                 [class.sorted-asc]="sortColumn === 'rank' && sortDirection === 'asc'"
-                 [class.sorted-desc]="sortColumn === 'rank' && sortDirection === 'desc'">
-                Rank
-                <svg class="sort-icon" width="12" height="12" viewBox="0 0 12 12">
-                    <path d="M6 2l3 3H3l3-3zM6 10L3 7h6l-3 3z" fill="currentColor"/>
-                </svg>
-            </div>
-            <div class="header-cell username-col sortable" (click)="sortBy('username')"
-                 [class.sorted-asc]="sortColumn === 'username' && sortDirection === 'asc'"
-                 [class.sorted-desc]="sortColumn === 'username' && sortDirection === 'desc'">
-                Username
-                <svg class="sort-icon" width="12" height="12" viewBox="0 0 12 12">
-                    <path d="M6 2l3 3H3l3-3zM6 10L3 7h6l-3 3z" fill="currentColor"/>
-                </svg>
-            </div>
-            <div class="header-cell wins-col sortable" (click)="sortBy('betWins')"
-                 [class.sorted-asc]="sortColumn === 'betWins' && sortDirection === 'asc'"
-                 [class.sorted-desc]="sortColumn === 'betWins' && sortDirection === 'desc'">
-                Wins
-                <svg class="sort-icon" width="12" height="12" viewBox="0 0 12 12">
-                    <path d="M6 2l3 3H3l3-3zM6 10L3 7h6l-3 3z" fill="currentColor"/>
-                </svg>
-            </div>
-            <div class="header-cell losses-col sortable" (click)="sortBy('betLosses')"
-                 [class.sorted-asc]="sortColumn === 'betLosses' && sortDirection === 'asc'"
-                 [class.sorted-desc]="sortColumn === 'betLosses' && sortDirection === 'desc'">
-                Losses
-                <svg class="sort-icon" width="12" height="12" viewBox="0 0 12 12">
-                    <path d="M6 2l3 3H3l3-3zM6 10L3 7h6l-3 3z" fill="currentColor"/>
-                </svg>
-            </div>
-            <div class="header-cell winrate-col sortable" (click)="sortBy('winRate')"
-                 [class.sorted-asc]="sortColumn === 'winRate' && sortDirection === 'asc'"
-                 [class.sorted-desc]="sortColumn === 'winRate' && sortDirection === 'desc'">
-                Win Rate
-                <svg class="sort-icon" width="12" height="12" viewBox="0 0 12 12">
-                    <path d="M6 2l3 3H3l3-3zM6 10L3 7h6l-3 3z" fill="currentColor"/>
-                </svg>
-            </div>
-            <div class="header-cell returns-col sortable" (click)="sortBy('totalAmount')"
-                 [class.sorted-asc]="sortColumn === 'totalAmount' && sortDirection === 'asc'"
-                 [class.sorted-desc]="sortColumn === 'totalAmount' && sortDirection === 'desc'">
-                Total Returns
-                <svg class="sort-icon" width="12" height="12" viewBox="0 0 12 12">
-                    <path d="M6 2l3 3H3l3-3zM6 10L3 7h6l-3 3z" fill="currentColor"/>
-                </svg>
-            </div>
-            <div class="header-cell expand-col"></div>
-        </div>
-
         <!-- Table Body -->
         <div class="table-body">
             <div class="player-row-container" *ngFor="let user of filteredUsers; let i = index">
-                <div class="player-row" (click)="toggleAccordion(user.id)">
+                <div class="player-row" *ngIf="screenWidth >= 768" (click)="toggleAccordion(user.id)">
                     <div class="cell rank-col">
                         <span class="rank-badge" [ngClass]="{
-                            'top-3': user.rank <= 3,
-                            'top-10': user.rank > 3 && user.rank <= 10,
-                            'default': user.rank > 10
+                            'top-3': (user.rank || (i + 1 + page * pageSize)) <= 3,
+                            'top-10': (user.rank || (i + 1 + page * pageSize)) > 3 && (user.rank || (i + 1 + page * pageSize)) <= 10,
+                            'default': (user.rank || (i + 1 + page * pageSize)) > 10
                         }">{{ user.rank || (i + 1 + page * pageSize) }}</span>
                     </div>
                     <div class="cell username-col">
@@ -107,6 +65,25 @@
                         </span>
                     </div>
                     <div class="cell expand-col">
+                        <svg class="expand-icon" [ngClass]="{'rotated': isRowSelected(user.id)}" width="20" height="20" viewBox="0 0 20 20">
+                            <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="player-card" *ngIf="screenWidth < 768" (click)="toggleAccordion(user.id)">
+                    <div class="card-header">
+                        <span class="rank-badge" [ngClass]="{
+                            'top-3': (user.rank || (i + 1 + page * pageSize)) <= 3,
+                            'top-10': (user.rank || (i + 1 + page * pageSize)) > 3 && (user.rank || (i + 1 + page * pageSize)) <= 10,
+                            'default': (user.rank || (i + 1 + page * pageSize)) > 10
+                        }">{{ user.rank || (i + 1 + page * pageSize) }}</span>
+                        <span class="username">{{ user.username }}</span>
+                        <div class="stats">
+                            <span>Wins: {{ user.betWins || 0 }}</span>
+                            <span>Losses: {{ user.betLosses || 0 }}</span>
+                            <span>Win Rate: {{ user.winRate ? (user.winRate | number:'1.1-1') + '%' : '0%' }}</span>
+                            <span>Total Returns: {{ user.totalAmount ? formatCurrency(user.totalAmount) : '$0.00' }}</span>
+                        </div>
                         <svg class="expand-icon" [ngClass]="{'rotated': isRowSelected(user.id)}" width="20" height="20" viewBox="0 0 20 20">
                             <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
@@ -178,7 +155,7 @@
 
             <!-- Current User Section -->
             <div class="player-row-container" *ngIf="currentUser">
-                <div class="player-row" (click)="toggleCurrentUserAccordion()">
+                <div class="player-row" *ngIf="screenWidth >= 768" (click)="toggleCurrentUserAccordion()">
                     <div class="cell rank-col">
                         <span class="rank-badge" [ngClass]="{
                             'top-3': currentUser.rank <= 3,
@@ -202,6 +179,25 @@
                         </span>
                     </div>
                     <div class="cell expand-col">
+                        <svg class="expand-icon" [ngClass]="{'rotated': expandedCurrentUser}" width="20" height="20" viewBox="0 0 20 20">
+                            <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="player-card" *ngIf="screenWidth < 768" (click)="toggleCurrentUserAccordion()">
+                    <div class="card-header">
+                        <span class="rank-badge" [ngClass]="{
+                            'top-3': currentUser.rank <= 3,
+                            'top-10': currentUser.rank > 3 && currentUser.rank <= 10,
+                            'default': currentUser.rank > 10
+                        }">{{ currentUser.rank || 'N/A' }}</span>
+                        <span class="username">{{ currentUser.username }} (You)</span>
+                        <div class="stats">
+                            <span>Wins: {{ currentUser.betWins || 0 }}</span>
+                            <span>Losses: {{ currentUser.betLosses || 0 }}</span>
+                            <span>Win Rate: {{ currentUser.winRate ? (currentUser.winRate | number:'1.1-1') + '%' : '0%' }}</span>
+                            <span>Total Returns: {{ currentUser.totalAmount ? formatCurrency(currentUser.totalAmount) : '$0.00' }}</span>
+                        </div>
                         <svg class="expand-icon" [ngClass]="{'rotated': expandedCurrentUser}" width="20" height="20" viewBox="0 0 20 20">
                             <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
@@ -247,7 +243,7 @@
                                 </div>
                                 <div class="bets-body">
                                     <div class="bet-row" *ngFor="let bet of currentUser.lastBets">
-                                        <div class="bet-cell">{{ bet.date }}</div>
+                                        <div class="bet-cell">{{ (bet.date || '').split('T')[0] }}</div>
                                         <div class="bet-cell">{{ bet.gameName }}</div>
                                         <div class="bet-cell">{{ bet.selectedTeam }}</div>
                                         <div class="bet-cell">{{ formatCurrency(bet.wagerAmount) }}</div>
