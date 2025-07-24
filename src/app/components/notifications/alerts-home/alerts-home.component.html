@@ -1,285 +1,313 @@
-<!-- Header -->
-<header class="header">
-    <div class="header-content">
-        <div class="logo">SportAlert Pro</div>
-        <div class="header-actions">
-            <button class="notification-badge" (click)="toggleNotifications()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-                </svg>
-                <span class="notification-count">{{ notificationCount }}</span>
-            </button>
-            <button class="btn btn-secondary" (click)="openSettings()">Settings</button>
-        </div>
-    </div>
-</header>
-
-<!-- Main Content -->
-<div class="container">
-    <!-- Stats Section -->
-    <section class="section">
-        <div class="stats-grid">
-            <div class="stat-card" *ngFor="let stat of stats">
-                <div class="stat-header">
+<div class="container-fluid min-vh-100 bg-light">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-bottom py-4">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <svg class="me-3 text-primary" width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5-5-5h5v-12"></path>
+                    </svg>
                     <div>
-                        <div class="stat-value">{{ stat.value }}</div>
-                        <div class="stat-label">{{ stat.label }}</div>
-                        <div class="stat-change" [ngClass]="stat.trend" *ngIf="stat.change">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" *ngIf="stat.trend === 'positive'">
-                                <path d="M7 14l5-5 5 5z"/>
-                            </svg>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" *ngIf="stat.trend === 'negative'">
-                                <path d="M7 10l5 5 5-5z"/>
-                            </svg>
-                            {{ stat.change }}
-                        </div>
+                        <h1 class="h4 mb-0 text-dark">SportAlert Pro</h1>
+                        <p class="text-muted small">Intelligent Sports Alerts Platform</p>
                     </div>
-                    <div class="stat-icon" [ngClass]="stat.iconType">
-                        <div [innerHTML]="stat.icon"></div>
-                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-primary">{{ notificationCount }} Alerts</span>
+                    <a class="btn btn-outline-secondary" routerLink="/settings">Settings</a>
                 </div>
             </div>
         </div>
-    </section>
+    </header>
 
-    <!-- Games Section -->
-    <section class="section">
-        <div class="games-container">
-            <div class="games-header">
-                <div class="section-header">
-                    <h2 class="section-title">Live & Upcoming Games</h2>
-                    <button class="btn btn-primary" (click)="openNotificationCreator()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                        </svg>
-                        Create Alert
-                    </button>
-                </div>
-            </div>
-
-            <div class="games-list">
-                <div class="game-card" *ngFor="let game of games">
-                    <div class="game-meta">
-                        <div class="league-info">
-                            <span>{{ game.leagueIcon }}</span>
-                            <span>{{ game.league }}</span>
-                        </div>
-                        <div class="game-status" [ngClass]="'status-' + game.status">{{ game.statusText }}</div>
-                    </div>
-
-                    <div class="matchup">
-                        <div class="team away">
-                            <div class="team-logo">{{ game.awayTeam.abbreviation }}</div>
-                            <div class="team-details">
-                                <h3>{{ game.awayTeam.name }}</h3>
-                                <div class="team-record">{{ game.awayTeam.record }}</div>
-                            </div>
-                        </div>
-
-                        <div class="score-section">
-                            <div class="score" *ngIf="game.awayTeam.score !== undefined && game.homeTeam.score !== undefined">
-                                {{ game.awayTeam.score }} - {{ game.homeTeam.score }}
-                            </div>
-                            <div class="score" *ngIf="game.awayTeam.score === undefined">vs</div>
-                            <div class="vs-text">{{ game.statusText }}</div>
-                        </div>
-
-                        <div class="team home">
-                            <div class="team-logo">{{ game.homeTeam.abbreviation }}</div>
-                            <div class="team-details">
-                                <h3>{{ game.homeTeam.name }}</h3>
-                                <div class="team-record">{{ game.homeTeam.record }}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="game-info">
-                        <div class="info-block">
-                            <h4>Betting Lines</h4>
-                            <div class="betting-lines">
-                                <div class="line-row" *ngFor="let line of game.bettingLines">
-                                    <span class="line-label">{{ line.label }}</span>
-                                    <span class="line-value">
-                    {{ line.value }}
-                                        <span
-                                                class="line-movement"
-                                                [ngClass]="'movement-' + line.movement?.direction"
-                                                *ngIf="line.movement"
-                                        >
-                      {{ line.movement.direction === 'up' ? '↑' : '↓' }}{{ line.movement.amount }}
-                    </span>
+    <!-- Main Content -->
+    <div class="container py-5">
+        <!-- Stats -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    @for (stat of stats; track stat.label) {
+                        <div class="col-md-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <div class="mb-2" [ngClass]="{
+                    'text-primary': stat.iconType === 'primary',
+                    'text-success': stat.iconType === 'success',
+                    'text-warning': stat.iconType === 'warning',
+                    'text-danger': stat.iconType === 'error'
+                  }" [innerHTML]="stat.icon"></div>
+                                    <h3 class="h5 mb-1 text-dark">{{ stat.value }}</h3>
+                                    <p class="text-muted small mb-2">{{ stat.label }}</p>
+                                    <span [ngClass]="{
+                    'text-success': stat.trend === 'positive',
+                    'text-danger': stat.trend === 'negative',
+                    'text-muted': stat.trend === 'neutral'
+                  }" class="small">
+                    {{ stat.change }}
                   </span>
+                                    <div class="mt-2">
+                                        <button (click)="createAlert()" class="btn btn-sm btn-outline-primary me-1">
+                                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                            </svg>
+                                        </button>
+                                        <button (click)="toggleStatSetting(stat.label)" class="btn btn-sm btn-outline-secondary">
+                                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="info-block" *ngIf="game.weather">
-                            <h4>Weather</h4>
-                            <div>{{ game.weather }}</div>
-                        </div>
-
-                        <div class="info-block" *ngIf="game.injuries">
-                            <h4>Key Injuries</h4>
-                            <div>{{ game.injuries }}</div>
-                        </div>
-                    </div>
-
-                    <div class="alerts-section">
-                        <div class="alerts-label">Alert Settings</div>
-                        <div class="alert-tags">
-              <span
-                      *ngFor="let alert of game.alerts"
-                      class="alert-tag"
-                      [ngClass]="{ 'active': game.activeAlerts.includes(alert) }"
-                      (click)="toggleAlert(game.id, alert)"
-              >
-                {{ alert }}
-              </span>
-                        </div>
-                    </div>
+                    }
                 </div>
             </div>
         </div>
-    </section>
-</div>
 
-<!-- Live Updates Panel -->
-<div class="live-panel" *ngIf="showLivePanel">
-    <div class="live-header">
-        <div class="live-title">
-            <div class="live-indicator"></div>
-            <span>Live Updates</span>
-        </div>
-        <button class="close-button" (click)="closeLivePanel()">×</button>
-    </div>
-    <div class="updates-list">
-        <div class="update-item" *ngFor="let update of liveUpdates">
-            <div class="update-header">
-                <span class="update-time">{{ update.time }}</span>
-                <span class="update-category">{{ update.category }}</span>
+        <!-- Live & Upcoming Games -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header p-4 d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0 text-dark">Live & Upcoming Games</h2>
+                <button (click)="createAlert()" class="btn btn-primary d-flex align-items-center">
+                    <svg class="me-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Create Alert
+                </button>
             </div>
-            <div class="update-text">{{ update.text }}</div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal -->
-<div class="modal-overlay" [style.display]="showModal ? 'flex' : 'none'" (click)="closeModal($event)">
-    <div class="modal">
-        <div class="modal-header">
-            <h2 class="modal-title">{{ modalTitle }}</h2>
-            <button class="close-button" (click)="closeModal()">&times;</button>
-        </div>
-        <div class="modal-body">
-            <ng-container [ngSwitch]="modalType">
-                <!-- Notification Creator -->
-                <div *ngSwitchCase="'notification-creator'">
-                    <!-- Step 1: Select Game -->
-                    <div class="wizard-step" [ngClass]="{ 'active': currentStep === 1 }">
-                        <div class="step-header">
-                            <h3 class="step-title">Select Game or Team</h3>
-                            <p class="step-description">Choose a specific game or follow a team for ongoing alerts</p>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Search Games</label>
-                            <input
-                                    type="text"
-                                    class="form-control"
-                                    placeholder="Search teams, leagues, or games..."
-                                    [(ngModel)]="gameSearchQuery"
-                                    (input)="filterGames()"
-                            >
-                        </div>
-
-                        <div class="selection-grid">
-                            <div
-                                    class="selection-card"
-                                    *ngFor="let game of filteredGames"
-                                    [ngClass]="{ 'selected': selectedGame === game.id }"
-                                    (click)="selectGame(game.id)"
-                            >
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <span style="font-size: 14px; font-weight: 500;">{{ game.leagueIcon }} {{ game.league }}</span>
-                                    <span
-                                            style="font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: 600;"
-                                            [ngClass]="'status-' + game.status"
-                                    >
-                    {{ game.status.toUpperCase() }}
-                  </span>
+            <div class="card-body p-4">
+                @for (game of games; track game.id) {
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body p-4">
+                            <!-- Game Header -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span>{{ game.leagueIcon }}</span>
+                                    <span class="text-dark">{{ game.league }}</span>
                                 </div>
-                                <div class="card-title">{{ game.awayTeam.name }} @ {{ game.homeTeam.name }}</div>
-                                <div class="card-description">{{ game.statusText }}</div>
+                                <span class="text-muted small">{{ game.statusText }}</span>
+                            </div>
+
+                            <!-- Teams and Score -->
+                            <div class="row align-items-center mb-3">
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fw-bold">{{ game.awayTeam.abbreviation }}</span>
+                                        <span>{{ game.awayTeam.name }}</span>
+                                        <span class="text-muted small">({{ game.awayTeam.record }})</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    @if (game.status === 'live') {
+                                        <span class="fw-bold">{{ game.awayTeam.score ?? 0 }} - {{ game.homeTeam.score ?? 0 }}</span>
+                                    } @else {
+                                        <span class="text-muted">vs</span>
+                                    }
+                                    <div class="text-muted small">{{ game.statusText }}</div>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <div class="d-flex align-items-center gap-2 justify-content-end">
+                                        <span class="fw-bold">{{ game.homeTeam.abbreviation }}</span>
+                                        <span>{{ game.homeTeam.name }}</span>
+                                        <span class="text-muted small">({{ game.homeTeam.record }})</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Betting Lines -->
+                            <div class="mb-3">
+                                <h3 class="h6 text-dark">Betting Lines</h3>
+                                <div class="row g-2">
+                                    @for (line of game.bettingLines; track line.label) {
+                                        <div class="col-md-4">
+                                            <div class="p-2 bg-light rounded">
+                                                <span class="text-dark">{{ line.label }}</span>
+                                                <span class="ms-2">{{ line.value }}</span>
+                                                @if (line.movement) {
+                                                    <span [ngClass]="{
+                            'text-success': line.movement.direction === 'up',
+                            'text-danger': line.movement.direction === 'down'
+                          }" class="small ms-2">
+                            {{ line.movement.direction === 'up' ? '↑' : '↓' }}{{ line.movement.amount }}
+                          </span>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Weather and Injuries -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-6">
+                                    <h3 class="h6 text-dark">Weather</h3>
+                                    <p class="text-muted small">{{ game.weather || 'N/A' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h3 class="h6 text-dark">Key Injuries</h3>
+                                    <p class="text-muted small">{{ game.injuries || 'None reported' }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Alert Settings -->
+                            <div>
+                                <h3 class="h6 text-dark">Alert Settings</h3>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @for (alert of game.activeAlerts; track alert) {
+                                        <span class="badge bg-primary">{{ alert }}</span>
+                                    }
+                                </div>
                             </div>
                         </div>
-
-                        <div class="wizard-navigation">
-                            <div></div>
-                            <button class="btn btn-primary" [disabled]="!selectedGame" (click)="nextStep()">Next</button>
-                        </div>
                     </div>
+                }
+            </div>
+        </div>
 
-                    <!-- Step 2: Choose Alert Type -->
-                    <div class="wizard-step" [ngClass]="{ 'active': currentStep === 2 }">
-                        <div class="step-header">
-                            <h3 class="step-title">Choose Alert Type</h3>
-                            <p class="step-description">Select the type of notifications you want to receive</p>
+        <!-- Live Updates -->
+        <div class="card shadow-sm">
+            <div class="card-header p-4">
+                <h2 class="h5 mb-0 text-dark">Live Updates</h2>
+            </div>
+            <div class="card-body p-4">
+                @for (update of liveUpdates; track update.id) {
+                    <div class="alert alert-info d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <span class="text-muted small">{{ update.time }} | {{ update.category }}</span>
+                            <p class="mb-0">{{ update.text }}</p>
                         </div>
-
-                        <div class="selection-grid">
-                            <div
-                                    class="selection-card"
-                                    *ngFor="let alertType of alertTypes"
-                                    [ngClass]="{ 'selected': selectedAlertType === alertType.id }"
-                                    (click)="selectAlertType(alertType.id)"
-                            >
-                                <span class="card-icon">{{ alertType.icon }}</span>
-                                <div class="card-title">{{ alertType.title }}</div>
-                                <div class="card-description">{{ alertType.description }}</div>
-                            </div>
-                        </div>
-
-                        <div class="wizard-navigation">
-                            <button class="btn btn-secondary" (click)="previousStep()">← Back</button>
-                            <button class="btn btn-primary" [disabled]="!selectedAlertType" (click)="createNotification()">Create Alert</button>
-                        </div>
+                        <button (click)="dismissUpdate(update.id)" class="btn-close"></button>
                     </div>
-                </div>
-
-                <!-- Settings -->
-                <div *ngSwitchCase="'settings'">
-                    <div class="form-group">
-                        <label class="form-label">Notification Preferences</label>
-                        <div style="display: flex; flex-direction: column; gap: 12px;">
-                            <label style="display: flex; align-items: center; gap: 8px;">
-                                <input type="checkbox" [(ngModel)]="settings.browserNotifications">
-                                Browser notifications
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 8px;">
-                                <input type="checkbox" [(ngModel)]="settings.emailNotifications">
-                                Email notifications
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 8px;">
-                                <input type="checkbox" [(ngModel)]="settings.soundEnabled">
-                                Sound alerts
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Quiet Hours</label>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                            <input type="time" class="form-control" [(ngModel)]="settings.quietHoursStart">
-                            <input type="time" class="form-control" [(ngModel)]="settings.quietHoursEnd">
-                        </div>
-                    </div>
-
-                    <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
-                        <button class="btn btn-secondary" (click)="closeModal()">Cancel</button>
-                        <button class="btn btn-primary" (click)="saveSettings()">Save Settings</button>
-                    </div>
-                </div>
-            </ng-container>
+                }
+            </div>
         </div>
     </div>
+
+    <!-- Create Alert Modal -->
+    @if (showModal) {
+        <div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header border-bottom">
+                        <h5 class="modal-title">{{ modalTitle }}</h5>
+                        <button (click)="closeModal()" class="btn-close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        @if (modalStep === 'game-selection') {
+                            <!-- Step 1: Select Game or Team -->
+                            <div>
+                                <h3 class="h6 text-dark mb-3">Select Game or Team</h3>
+                                <p class="text-muted small mb-3">Choose a specific game or follow a team for ongoing alerts</p>
+                                <div class="input-group mb-3">
+                  <span class="input-group-text">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                  </span>
+                                    <input type="text" [(ngModel)]="searchQuery" (input)="searchGames()" class="form-control" placeholder="Search Games">
+                                </div>
+                                <div class="list-group">
+                                    @for (game of filteredGames; track game.id) {
+                                        <button (click)="selectGame(game)" class="list-group-item list-group-item-action">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <span>{{ game.leagueIcon }} {{ game.league }}</span>
+                                                    <span class="badge bg-info ms-2">{{ game.status.toUpperCase() }}</span>
+                                                </div>
+                                                <span class="text-muted small">{{ game.statusText }}</span>
+                                            </div>
+                                            <p class="mb-0">{{ game.awayTeam.name }} &#64; {{ game.homeTeam.name }}</p>
+                                        </button>
+                                    }
+                                </div>
+                                <div class="mt-3">
+                                    <button [disabled]="!selectedGame" (click)="nextStep('alert-type')" class="btn btn-primary w-100">Next</button>
+                                </div>
+                            </div>
+                        } @else if (modalStep === 'alert-type') {
+                            <!-- Step 2: Choose Alert Type -->
+                            <div>
+                                <h3 class="h6 text-dark mb-3">Choose Alert Type</h3>
+                                <p class="text-muted small mb-3">Select the type of notifications you want to receive</p>
+                                <div class="row g-3">
+                                    @for (alertType of alertTypes; track alertType.id) {
+                                        <div class="col-md-6">
+                                            <button (click)="selectAlertType(alertType)" class="w-100 text-start p-3 border rounded hover-border-primary hover-shadow">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div class="p-2 rounded me-3" [ngClass]="{
+                            'bg-primary': alertType.title === 'Smart Line Monitoring',
+                            'bg-success': alertType.title === 'Game Events',
+                            'bg-purple': alertType.title === 'Player Performance',
+                            'bg-warning': alertType.title === 'Market Intelligence'
+                          }">
+                                                        <svg class="text-white" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="alertType.iconPath"></path>
+                                                        </svg>
+                                                    </div>
+                                                    <h4 class="mb-0 fw-medium text-dark">{{ alertType.title }}</h4>
+                                                </div>
+                                                <p class="text-muted small mb-0">{{ alertType.description }}</p>
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="d-flex justify-content-between mt-3">
+                                    <button (click)="backStep('game-selection')" class="btn btn-outline-secondary">← Back</button>
+                                    <button [disabled]="!selectedAlertType" (click)="nextStep('subcategory')" class="btn btn-primary">Next</button>
+                                </div>
+                            </div>
+                        } @else if (modalStep === 'subcategory') {
+                            <!-- Step 3: Choose Subcategory -->
+                            <div>
+                                <h3 class="h6 text-dark mb-3">Choose Subcategory</h3>
+                                <p class="text-muted small mb-3">Select specific conditions for your alert</p>
+                                <div class="row g-3">
+                                    @for (subcategory of getSubcategories(selectedAlertType?.id); track subcategory) {
+                                        <div class="col-md-6">
+                                            <button (click)="selectSubcategory(subcategory)" class="w-100 text-start p-3 border rounded hover-border-primary hover-shadow">
+                                                <h4 class="mb-0 fw-medium text-dark">{{ subcategory }}</h4>
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="d-flex justify-content-between mt-3">
+                                    <button (click)="backStep('alert-type')" class="btn btn-outline-secondary">← Back</button>
+                                    <button [disabled]="!selectedSubcategory" (click)="nextStep('preferences')" class="btn btn-primary">Next</button>
+                                </div>
+                            </div>
+                        } @else if (modalStep === 'preferences') {
+                            <!-- Step 4: SportNotification Preferences -->
+                            <form [formGroup]="preferencesForm">
+                                <h3 class="h6 text-dark mb-3">SportNotification Preferences</h3>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input type="checkbox" formControlName="browser" class="form-check-input" id="browserNotifications">
+                                        <label class="form-check-label" for="browserNotifications">Browser notifications</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" formControlName="email" class="form-check-input" id="emailNotifications">
+                                        <label class="form-check-label" for="emailNotifications">Email notifications</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" formControlName="sound" class="form-check-input" id="soundAlerts">
+                                        <label class="form-check-label" for="soundAlerts">Sound alerts</label>
+                                    </div>
+                                </div>
+                                <h3 class="h6 text-dark mb-3">Quiet Hours</h3>
+                                <div class="mb-3">
+                                    <input type="time" formControlName="start" class="form-control" placeholder="Start">
+                                    <input type="time" formControlName="end" class="form-control mt-2" placeholder="End">
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <button (click)="closeModal()" class="btn btn-outline-secondary">Cancel</button>
+                                    <button (click)="saveAlert()" class="btn btn-primary">Save Settings</button>
+                                </div>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>

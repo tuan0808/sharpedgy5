@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+ import { Routes } from '@angular/router';
 import {authGuard} from "../guard/AuthGuard";
 import {adminGuard} from "../guard/admin.guard";
 import {StatusComponent} from "../../components/status/status.component";
@@ -31,6 +31,14 @@ export const content: Routes = [
         data: {
             breadcrumb: "paper-betting"
         }
+    },
+    {
+        path: 'notifications',
+        canActivate: [authGuard],
+        data: {
+            breadcrumb: "notifications"
+        },
+        loadChildren: () => import('../../components/notifications/notifications.routes').then(r => r.notificationsRoutes)
     },
     {
         path: 'admin',

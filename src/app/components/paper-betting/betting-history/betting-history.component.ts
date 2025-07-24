@@ -14,8 +14,6 @@ import {toSignal} from "@angular/core/rxjs-interop";
     imports: [
         FormsModule,
         DatePipe,
-        NgForOf,
-        NgIf,
         CurrencyPipe,
     ],
   templateUrl: './betting-history.component.html',

@@ -1,6 +1,13 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { CommonModule, NgClass } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+import { collection, addDoc, doc, setDoc, query, where, onSnapshot } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { Subscription } from 'rxjs';
+import firebase from "firebase/compat";
+import messaging = firebase.messaging;
 
 // Interfaces
 export interface StatCard {
@@ -22,10 +29,7 @@ export interface Team {
 export interface BettingLine {
   label: string;
   value: string;
-  movement?: {
-    direction: 'up' | 'down';
-    amount: string;
-  };
+  movement?: { direction: 'up' | 'down'; amount: string };
 }
 
 export interface Game {
@@ -55,39 +59,37 @@ export interface AlertType {
   icon: string;
   title: string;
   description: string;
+  iconPath: string;
+  subcategories: string[];
 }
 
-export interface Settings {
-  browserNotifications: boolean;
-  emailNotifications: boolean;
-  soundEnabled: boolean;
-  quietHoursStart: string;
-  quietHoursEnd: string;
+export interface Preferences {
+  browser: boolean;
+  email: boolean;
+  sound: boolean;
+  quietHours: { start: string; end: string };
 }
+
 @Component({
   selector: 'app-alerts-home',
   standalone: true,
-  imports: [],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, NgClass, RouterModule],
   templateUrl: './alerts-home.component.html',
-  styleUrl: './alerts-home.component.scss'
+  styleUrls: ['./alerts-home.component.css']
 })
-export class AlertsHomeComponent {
+export class AlertsHomeComponent implements OnInit, OnDestroy {
   // Component State
-  notificationCount = 12;
-  showLivePanel = true;
-  showModal = false;
-  modalType: 'notification-creator' | 'settings' = 'notification-creator';
-  modalTitle = '';
-
-  // Wizard State
-  currentStep = 1;
-  selectedGame: string | null = null;
-  selectedAlertType: string | null = null;
-  gameSearchQuery = '';
+  notificationCount: number = 12;
+  showModal: boolean = false;
+  modalTitle: string = 'Create New Alert';
+  modalStep: 'game-selection' | 'alert-type' | 'subcategory' | 'preferences' = 'game-selection';
+  searchQuery: string = '';
   filteredGames: Game[] = [];
-
-  // Timer for live updates
-  private liveUpdateTimer: any;
+  selectedGame: Game | null = null;
+  selectedAlertType: AlertType | null = null;
+  selectedSubcategory: string | null = null;
+  preferencesForm: FormGroup;
+  private subscriptions: Subscription[] = [];
 
   // Data Properties
   stats: StatCard[] = [
@@ -132,34 +134,15 @@ export class AlertsHomeComponent {
       leagueIcon: '🏀',
       status: 'live',
       statusText: 'Live Q3 8:42',
-      awayTeam: {
-        name: 'Lakers',
-        abbreviation: 'LAL',
-        record: '32-28',
-        score: 98
-      },
-      homeTeam: {
-        name: 'Warriors',
-        abbreviation: 'GSW',
-        record: '38-22',
-        score: 102
-      },
+      awayTeam: { name: 'Lakers', abbreviation: 'LAL', record: '32-28', score: 98 },
+      homeTeam: { name: 'Warriors', abbreviation: 'GSW', record: '38-22', score: 102 },
       bettingLines: [
-        {
-          label: 'Spread',
-          value: 'GSW -4.5',
-          movement: { direction: 'up', amount: '0.5' }
-        },
-        {
-          label: 'Total',
-          value: '215.5',
-          movement: { direction: 'down', amount: '2.0' }
-        },
-        {
-          label: 'Moneyline',
-          value: 'GSW -180'
-        }
+        { label: 'Spread', value: 'GSW -4.5', movement: { direction: 'up', amount: '0.5' } },
+        { label: 'Total', value: '215.5', movement: { direction: 'down', amount: '2.0' } },
+        { label: 'Moneyline', value: 'GSW -180' }
       ],
+      weather: 'Clear, 75°F',
+      injuries: 'LeBron James (Questionable)',
       alerts: ['Score Updates', 'Line Changes', 'Game End', 'Overtime Alert'],
       activeAlerts: ['Score Updates', 'Game End']
     },
@@ -169,30 +152,14 @@ export class AlertsHomeComponent {
       leagueIcon: '🏈',
       status: 'scheduled',
       statusText: 'Today 8:30 PM',
-      awayTeam: {
-        name: 'Chiefs',
-        abbreviation: 'KC',
-        record: '14-3'
-      },
-      homeTeam: {
-        name: 'Bills',
-        abbreviation: 'BUF',
-        record: '13-4'
-      },
+      awayTeam: { name: 'Chiefs', abbreviation: 'KC', record: '14-3' },
+      homeTeam: { name: 'Bills', abbreviation: 'BUF', record: '13-4' },
       bettingLines: [
-        {
-          label: 'Spread',
-          value: 'KC -2.5',
-          movement: { direction: 'down', amount: '1.0' }
-        },
-        {
-          label: 'Total',
-          value: '48.5',
-          movement: { direction: 'down', amount: '3.0' }
-        }
+        { label: 'Spread', value: 'KC -2.5', movement: { direction: 'down', amount: '1.0' } },
+        { label: 'Total', value: '48.5', movement: { direction: 'down', amount: '3.0' } }
       ],
       weather: '❄️ 28°F, Snow - High delay risk',
-      injuries: '🏥 Mahomes (Questionable)',
+      injuries: 'Mahomes (Questionable)',
       alerts: ['Game Start', 'Weather Updates', 'Lineup Changes', 'Line Threshold: ±1.5'],
       activeAlerts: ['Game Start', 'Weather Updates', 'Line Threshold: ±1.5']
     },
@@ -202,25 +169,11 @@ export class AlertsHomeComponent {
       leagueIcon: '🏀',
       status: 'scheduled',
       statusText: 'Tomorrow 7:00 PM',
-      awayTeam: {
-        name: 'Heat',
-        abbreviation: 'MIA',
-        record: '29-31'
-      },
-      homeTeam: {
-        name: '76ers',
-        abbreviation: 'PHI',
-        record: '31-29'
-      },
+      awayTeam: { name: 'Heat', abbreviation: 'MIA', record: '29-31' },
+      homeTeam: { name: '76ers', abbreviation: 'PHI', record: '31-29' },
       bettingLines: [
-        {
-          label: 'Spread',
-          value: 'PHI -3.0'
-        },
-        {
-          label: 'Total',
-          value: '212.5'
-        }
+        { label: 'Spread', value: 'PHI -3.0' },
+        { label: 'Total', value: '212.5' }
       ],
       alerts: ['Game Start', 'Playoff Implications', 'Line Changes'],
       activeAlerts: ['Game Start', 'Playoff Implications']
@@ -228,144 +181,99 @@ export class AlertsHomeComponent {
   ];
 
   liveUpdates: LiveUpdate[] = [
-    {
-      id: '1',
-      time: '2 min ago',
-      category: 'Line Change',
-      text: 'Lakers vs Warriors spread moved to GSW -4.5'
-    },
-    {
-      id: '2',
-      time: '5 min ago',
-      category: 'Weather',
-      text: 'Chiefs vs Bills: Heavy snow warning issued'
-    },
-    {
-      id: '3',
-      time: '8 min ago',
-      category: 'Arbitrage',
-      text: '5.2% arbitrage opportunity detected'
-    },
-    {
-      id: '4',
-      time: '12 min ago',
-      category: 'Injury',
-      text: 'Mahomes upgraded to PROBABLE for tonight\'s game'
-    }
+    { id: '1', time: '2 min ago', category: 'Line Change', text: 'Lakers vs Warriors spread moved to GSW -4.5' },
+    { id: '2', time: '5 min ago', category: 'Weather', text: 'Chiefs vs Bills: Heavy snow warning issued' },
+    { id: '3', time: '8 min ago', category: 'Arbitrage', text: '5.2% arbitrage opportunity detected' },
+    { id: '4', time: '12 min ago', category: 'Injury', text: 'Mahomes upgraded to PROBABLE for tonight\'s game' }
   ];
 
   alertTypes: AlertType[] = [
     {
+      id: 'smart-line-monitoring',
+      icon: '📈',
+      title: 'Smart Line Monitoring',
+      description: 'Track betting line changes and movements',
+      iconPath: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+      subcategories: ['Point Spread Changes', 'Moneyline Odds Shifts', 'Over/Under Line Movements', 'Prop Bet Line Updates', 'Betting Volume Spikes']
+    },
+    {
       id: 'game-events',
       icon: '🕐',
       title: 'Game Events',
-      description: 'Start time, end, delays, overtime'
-    },
-    {
-      id: 'score-updates',
-      icon: '⚽',
-      title: 'Score & Momentum',
-      description: 'Goals, touchdowns, lead changes, runs'
-    },
-    {
-      id: 'betting-lines',
-      icon: '📈',
-      title: 'Betting Lines',
-      description: 'Spread, total, moneyline changes'
+      description: 'Game start, score updates, and milestones',
+      iconPath: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+      subcategories: ['Game Start', 'Score Updates', 'Lead Changes', 'Quarter/Half/Period End', 'Overtime Alerts', 'Game Milestones', 'Final Score']
     },
     {
       id: 'player-performance',
       icon: '⭐',
       title: 'Player Performance',
-      description: 'Milestones, injuries, prop bets'
+      description: 'Player-specific alerts and updates',
+      iconPath: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z',
+      subcategories: ['Points Scored', 'Assists', 'Rebounds', 'Touchdowns', 'Passing/Rushing Yards', 'Goals/Saves', 'Turnovers', 'Minutes Played', 'Stat Thresholds']
     },
     {
-      id: 'weather-conditions',
-      icon: '🌦️',
-      title: 'Weather & Conditions',
-      description: 'Delays, wind, temperature alerts'
-    },
-    {
-      id: 'market-insights',
+      id: 'market-intelligence',
       icon: '🎯',
-      title: 'Market Insights',
-      description: 'Sharp money, arbitrage, steam moves'
+      title: 'Market Intelligence',
+      description: 'Sharp money and betting patterns',
+      iconPath: 'M9 12l2 2 4-4',
+      subcategories: ['Sharp Money Movements', 'Public Betting Trends', 'Line Movement Due to Big Bets', 'Market Imbalance Alerts', 'Arbitrage Opportunities']
     }
   ];
 
-  settings: Settings = {
-    browserNotifications: true,
-    emailNotifications: false,
-    soundEnabled: true,
-    quietHoursStart: '23:00',
-    quietHoursEnd: '07:00'
-  };
+  constructor(private fb: FormBuilder) {
+    this.preferencesForm = this.fb.group({
+      browser: [true],
+      email: [false],
+      sound: [true],
+      quietHours: this.fb.group({
+        start: ['23:00'],
+        end: ['07:00']
+      })
+    });
+  }
 
   ngOnInit(): void {
     this.filteredGames = [...this.games];
-    this.startLiveUpdates();
+    this.fetchNotificationCount();
+    this.listenForUpdates();
+    this.handleFcmMessages();
   }
 
   ngOnDestroy(): void {
-    this.stopLiveUpdates();
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   // Header Actions
-  toggleNotifications(): void {
-    console.log('Toggle notifications panel');
-    // Implementation for showing/hiding notifications panel
-  }
-
-  openSettings(): void {
-    this.modalType = 'settings';
-    this.modalTitle = 'Settings';
+  createAlert(): void {
     this.showModal = true;
+    this.modalStep = 'game-selection';
+    this.modalTitle = 'Create New Alert';
   }
 
-  // Modal Management
-  openNotificationCreator(): void {
-    this.modalType = 'notification-creator';
-    this.modalTitle = 'Create Notification';
-    this.resetWizard();
-    this.showModal = true;
-  }
-
-  closeModal(event?: Event): void {
-    if (event && (event.target as HTMLElement).classList.contains('modal-overlay')) {
-      this.showModal = false;
-    } else if (!event) {
-      this.showModal = false;
-    }
-  }
-
-  closeLivePanel(): void {
-    this.showLivePanel = false;
-  }
-
-  // Game Interactions
-  toggleAlert(gameId: string, alertName: string): void {
-    const game = this.games.find(g => g.id === gameId);
-    if (game) {
-      const index = game.activeAlerts.indexOf(alertName);
-      if (index > -1) {
-        game.activeAlerts.splice(index, 1);
-      } else {
-        game.activeAlerts.push(alertName);
-      }
-    }
-  }
-
-  // Wizard Functions
-  private resetWizard(): void {
-    this.currentStep = 1;
+  closeModal(): void {
+    this.showModal = false;
+    this.modalStep = 'game-selection';
     this.selectedGame = null;
     this.selectedAlertType = null;
-    this.gameSearchQuery = '';
-    this.filteredGames = [...this.games];
+    this.selectedSubcategory = null;
+    this.preferencesForm.reset({ browser: true, email: false, sound: true, quietHours: { start: '23:00', end: '07:00' } });
   }
 
-  filterGames(): void {
-    const query = this.gameSearchQuery.toLowerCase();
+  nextStep(step: 'alert-type' | 'subcategory' | 'preferences'): void {
+    if (step === 'alert-type' && !this.selectedGame) return;
+    if (step === 'subcategory' && !this.selectedAlertType) return;
+    if (step === 'preferences' && !this.selectedSubcategory) return;
+    this.modalStep = step;
+  }
+
+  backStep(step: 'game-selection' | 'alert-type' | 'subcategory'): void {
+    this.modalStep = step;
+  }
+
+  searchGames(): void {
+    const query = this.searchQuery.toLowerCase();
     this.filteredGames = this.games.filter(game =>
         game.awayTeam.name.toLowerCase().includes(query) ||
         game.homeTeam.name.toLowerCase().includes(query) ||
@@ -373,108 +281,101 @@ export class AlertsHomeComponent {
     );
   }
 
-  selectGame(gameId: string): void {
-    this.selectedGame = gameId;
+  selectGame(game: Game): void {
+    this.selectedGame = game;
   }
 
-  selectAlertType(alertTypeId: string): void {
-    this.selectedAlertType = alertTypeId;
+  selectAlertType(alertType: AlertType): void {
+    this.selectedAlertType = alertType;
+    this.selectedSubcategory = null; // Reset subcategory
   }
 
-  nextStep(): void {
-    if (this.selectedGame && this.currentStep === 1) {
-      this.currentStep = 2;
-    }
+  selectSubcategory(subcategory: string): void {
+    this.selectedSubcategory = subcategory;
   }
 
-  previousStep(): void {
-    if (this.currentStep === 2) {
-      this.currentStep = 1;
-    }
+  getSubcategories(alertTypeId: string | undefined): string[] {
+    if (!alertTypeId) return [];
+    const alertType = this.alertTypes.find(type => type.id === alertTypeId);
+    return alertType?.subcategories || [];
   }
 
-  createNotification(): void {
-    if (this.selectedGame && this.selectedAlertType) {
-      console.log('Creating notification:', {
-        game: this.selectedGame,
-        alertType: this.selectedAlertType
-      });
-
-      // Update notification count
-      this.notificationCount++;
-
-      // Close modal
-      this.showModal = false;
-
-      // Here you would typically call a service to save the notification
-      // this.notificationService.createNotification(...)
-    }
+  toggleStatSetting(label: string): void {
+    console.log(`Toggled setting for stat: ${label}`);
+    // Implement stat-specific settings toggle
   }
 
-  saveSettings(): void {
-    console.log('Saving settings:', this.settings);
-
-    // Here you would typically call a service to save settings
-    // this.settingsService.saveSettings(this.settings)
-
-    this.showModal = false;
+  dismissUpdate(id: string): void {
+    this.liveUpdates = this.liveUpdates.filter(update => update.id !== id);
   }
 
-  // Live Updates
-  private startLiveUpdates(): void {
-    this.liveUpdateTimer = setInterval(() => {
-      this.addLiveUpdate();
-    }, 15000); // Add new update every 15 seconds
+  async saveAlert(): Promise<void> {
+    // const user = getAuth().currentUser;
+    // if (user && this.selectedGame && this.selectedAlertType && this.selectedSubcategory) {
+    //   try {
+    //     // Request FCM permission and token
+    //     const permission = await SportNotification.requestPermission();
+    //     if (permission === 'granted') {
+    //       const token = await getToken(messaging, { vapidKey: 'YOUR_VAPID_KEY' });
+    //       await setDoc(doc(db, `users/${user.uid}/tokens`, token), {
+    //         token,
+    //         deviceType: 'web',
+    //         createdAt: new Date().toISOString()
+    //       });
+    //
+    //       // Save alert to Firestore
+    //       await addDoc(collection(db, `users/${user.uid}/notifications`), {
+    //         gameId: this.selectedGame.id,
+    //         alertType: this.selectedAlertType.title,
+    //         subcategory: this.selectedSubcategory,
+    //         preferences: this.preferencesForm.value,
+    //         created: new Date().toISOString(),
+    //         status: 'Active'
+    //       });
+    //
+    //       this.notificationCount++;
+    //       alert('Alert created successfully!');
+    //       this.closeModal();
+    //     } else {
+    //       alert('SportNotification permission denied.');
+    //     }
+    //   } catch (err) {
+    //     console.error('Error saving alert:', err);
+    //     alert('Failed to create alert.');
+    //   }
+    // }
   }
 
-  private stopLiveUpdates(): void {
-    if (this.liveUpdateTimer) {
-      clearInterval(this.liveUpdateTimer);
-    }
+  private fetchNotificationCount(): void {
+
   }
 
-  private addLiveUpdate(): void {
-    const updates = [
-      'Celtics vs Heat: Line moved to BOS -3.0 (was -2.5)',
-      'Packers vs Bears: Weather alert - Wind gusts up to 25mph',
-      'Yankees vs Red Sox: Pitcher change - Cole out, Schmidt in',
-      'Suns vs Nuggets: Jokic questionable with back injury',
-      'Cowboys vs Giants: Sharp money coming in on DAL +3',
-      'Dodgers vs Padres: Rain delay expected at 7:30 PM',
-      'Rams vs Seahawks: Wilson probable for Sunday\'s game'
-    ];
+  private listenForUpdates(): void {
 
-    const categories = ['Line Change', 'Weather', 'Injury', 'Sharp Money', 'Roster'];
-
-    const newUpdate: LiveUpdate = {
-      id: Date.now().toString(),
-      time: 'Just now',
-      category: categories[Math.floor(Math.random() * categories.length)],
-      text: updates[Math.floor(Math.random() * updates.length)]
-    };
-
-    // Add to beginning of array
-    this.liveUpdates.unshift(newUpdate);
-
-    // Keep only last 20 updates
-    if (this.liveUpdates.length > 20) {
-      this.liveUpdates = this.liveUpdates.slice(0, 20);
-    }
   }
 
-  // Utility method to simulate score updates for live games
-  updateLiveGameScores(): void {
-    this.games.forEach(game => {
+  private handleFcmMessages(): void {
+    // onMessage(messaging, (payload) => {
+    //   const update: LiveUpdate = {
+    //     id: Date.now().toString(),
+    //     time: new Date().toLocaleTimeString(),
+    //     category: payload.data?.['category'] || 'General',
+    //     text: payload.notification?.body || 'New update received'
+    //   };
+    //   this.liveUpdates = [update, ...this.liveUpdates.slice(0, 19)];
+    // });
+  }
+
+  private updateLiveGameScores(): void {
+    this.games = this.games.map(game => {
       if (game.status === 'live' && game.awayTeam.score !== undefined && game.homeTeam.score !== undefined) {
-        // Randomly update scores
-        if (Math.random() > 0.7) {
-          if (Math.random() > 0.5) {
-            game.awayTeam.score!++;
-          } else {
-            game.homeTeam.score!++;
-          }
-        }
+        return {
+          ...game,
+          awayTeam: { ...game.awayTeam, score: Math.random() > 0.7 ? game.awayTeam.score! + 1 : game.awayTeam.score },
+          homeTeam: { ...game.homeTeam, score: Math.random() > 0.7 ? game.homeTeam.score! + 1 : game.homeTeam.score }
+        };
       }
+      return game;
     });
   }
 }

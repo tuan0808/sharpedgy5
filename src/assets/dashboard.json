@@ -147,6 +147,16 @@
     ]
   },
   {
+    "title": "Notifications",
+    "icon": "airplay",
+    "type": "sub",
+    "active": false,
+    "children": [
+      {"path": "notifications/home", "title": "Home", "type": "link"},
+      {"path": "notifications/alertLogs", "title": "Records", "type": "link"}
+    ]
+  },
+  {
     "title": "Admin",
     "icon": "airplay",
     "type": "sub",
