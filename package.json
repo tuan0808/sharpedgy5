@@ -36,6 +36,7 @@
     "angular-ng-autocomplete": "^2.0.12",
     "angularx-flatpickr": "^7.3.0",
     "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.13.1",
     "chess.js": "^1.1.0",
     "date-fns": "^3.6.0",
     "event-source-polyfill": "^1.0.31",
