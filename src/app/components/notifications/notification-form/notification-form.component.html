@@ -1,1 +1,431 @@
-<p>notification-form works!</p>
+<!-- notification-form.component.html -->
+<div class="notification-form-container"
+     [class.light]="!darkMode"
+     [class.dark]="darkMode"
+     [class.mobile]="breakpoint.isMobile"
+     [class.tablet]="breakpoint.isTablet"
+     [class.desktop]="breakpoint.isDesktop">
+
+    <!-- Mobile Header -->
+    <div class="form-header mobile-header"
+         [class.light]="!darkMode"
+         [class.dark]="darkMode"
+         [style.padding-top]="getSafeAreaTop()">
+        <div class="header-container">
+            <div class="header-content">
+                <div class="header-left">
+                    <button class="back-button"
+                            [class.light]="!darkMode"
+                            [class.dark]="darkMode"
+                            (click)="navigateBack()">
+                        <i class="bi bi-arrow-left"></i>
+                    </button>
+                    <div class="header-title-section">
+                        <h1 class="header-title" [class.light]="!darkMode" [class.dark]="darkMode">
+                            {{ isEditMode ? 'Edit Notification' : 'Create Notification' }}
+                        </h1>
+                        @if (selectedGames.length > 0) {
+                            <p class="header-subtitle" [class.light]="!darkMode" [class.dark]="darkMode">
+                                {{ selectedGames.length }} game{{ selectedGames.length > 1 ? 's' : '' }} selected
+                            </p>
+                        }
+                    </div>
+                </div>
+
+                <div class="header-actions">
+                    <button class="dark-mode-toggle"
+                            [class.light]="!darkMode"
+                            [class.dark]="darkMode"
+                            (click)="darkMode = !darkMode">
+                        <i class="bi" [class.bi-sun]="darkMode" [class.bi-moon]="!darkMode"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+        </div>
+        <div class="progress-steps">
+            <div class="step" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">
+                <div class="step-number">1</div>
+                <div class="step-label">Games</div>
+            </div>
+            <div class="step" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2">
+                <div class="step-number">2</div>
+                <div class="step-label">Type</div>
+            </div>
+            <div class="step" [class.active]="currentStep >= 3" [class.completed]="currentStep > 3">
+                <div class="step-number">3</div>
+                <div class="step-label">Settings</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Content -->
+    <div class="form-content">
+        <div class="form-container">
+
+            <!-- Step 1: Game Selection -->
+            @if (currentStep === 1) {
+                <div class="form-step">
+                    <div class="step-header">
+                        <h2 class="step-title" [class.light]="!darkMode" [class.dark]="darkMode">
+                            Select Games
+                        </h2>
+                        <p class="step-description" [class.light]="!darkMode" [class.dark]="darkMode">
+                            Choose the games you want to monitor for notifications
+                        </p>
+                    </div>
+
+                    <!-- Game Filter Tabs -->
+                    <div class="game-filter-tabs" [class.mobile]="breakpoint.isMobile">
+                        <button class="filter-tab"
+                                [class.active]="activeGameTab === 'upcoming'"
+                                [class.light]="!darkMode"
+                                [class.dark]="darkMode"
+                                (click)="activeGameTab = 'upcoming'">
+                            Upcoming Games
+                            <span class="badge">{{ upcomingGames.length }}</span>
+                        </button>
+                        <button class="filter-tab"
+                                [class.active]="activeGameTab === 'live'"
+                                [class.light]="!darkMode"
+                                [class.dark]="darkMode"
+                                (click)="activeGameTab = 'live'">
+                            Live Games
+                            <span class="badge">{{ liveGames.length }}</span>
+                        </button>
+                    </div>
+
+                    <!-- Game Selection Grid -->
+                    <div class="games-grid" [class.mobile]="breakpoint.isMobile">
+                        @if (activeGameTab === 'upcoming') {
+                            @for (game of upcomingGames; track game.id) {
+                                <label class="game-option">
+                                    <input type="checkbox"
+                                           [value]="game.id"
+                                           [checked]="isGameSelected(game.id)"
+                                           (change)="toggleGameSelection(game)">
+                                    <div class="game-card"
+                                         [class.selected]="isGameSelected(game.id)"
+                                         [class.light]="!darkMode"
+                                         [class.dark]="darkMode">
+                                        <div class="game-header">
+                                            <div class="league-badge">{{ game.league }}</div>
+                                            <div class="game-time">{{ game.time }}</div>
+                                        </div>
+                                        <div class="game-matchup">
+                                            <div class="team away">{{ game.away }}</div>
+                                            <div class="vs">@</div>
+                                            <div class="team home">{{ game.home }}</div>
+                                        </div>
+                                        <div class="game-date">{{ game.date | date:'MMM d, y' }}</div>
+                                    </div>
+                                </label>
+                            }
+                        }
+
+                        @if (activeGameTab === 'live') {
+                            @for (game of liveGames; track game.id) {
+                                <label class="game-option">
+                                    <input type="checkbox"
+                                           [value]="game.id"
+                                           [checked]="isGameSelected(game.id)"
+                                           (change)="toggleGameSelection(game)">
+                                    <div class="game-card live"
+                                         [class.selected]="isGameSelected(game.id)"
+                                         [class.light]="!darkMode"
+                                         [class.dark]="darkMode">
+                                        <div class="game-header">
+                                            <div class="league-badge">{{ game.league }}</div>
+                                            <div class="live-indicator">LIVE</div>
+                                        </div>
+                                        <div class="game-matchup">
+                                            <div class="team away">
+                                                {{ game.away }}
+                                                <span class="score">{{ game.awayScore }}</span>
+                                            </div>
+                                            <div class="vs">VS</div>
+                                            <div class="team home">
+                                                {{ game.home }}
+                                                <span class="score">{{ game.homeScore }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="game-status">{{ game.status }}</div>
+                                    </div>
+                                </label>
+                            }
+                        }
+                    </div>
+
+                    <!-- Selected Games Summary -->
+                    @if (selectedGames.length > 0) {
+                        <div class="selection-summary" [class.light]="!darkMode" [class.dark]="darkMode">
+                            <h3>Selected Games ({{ selectedGames.length }})</h3>
+                            <div class="selected-games">
+                                @for (game of selectedGames; track game.id) {
+                                    <div class="selected-game-chip">
+                                        <span>{{ game.away }} @ {{ game.home }}</span>
+                                        <button type="button" (click)="removeGameSelection(game)">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- Step 2: Notification Type -->
+            @if (currentStep === 2) {
+                <div class="form-step">
+                    <div class="step-header">
+                        <h2 class="step-title" [class.light]="!darkMode" [class.dark]="darkMode">
+                            Notification Type
+                        </h2>
+                        <p class="step-description" [class.light]="!darkMode" [class.dark]="darkMode">
+                            Choose what type of notifications you want to receive
+                        </p>
+                    </div>
+
+                    <div class="notification-types" [class.mobile]="breakpoint.isMobile">
+                        @for (type of notificationTypes; track type.id) {
+                            <label class="type-option">
+                                <input type="radio"
+                                       name="notificationType"
+                                       [value]="type.id"
+                                       [(ngModel)]="formData.notificationType"
+                                       (change)="onNotificationTypeChange(type)">
+                                <div class="type-card"
+                                     [class.selected]="formData.notificationType === type.id"
+                                     [class.light]="!darkMode"
+                                     [class.dark]="darkMode">
+                                    <div class="type-icon">
+                                        <i class="bi" [class]="type.icon"></i>
+                                    </div>
+                                    <div class="type-content">
+                                        <h3 class="type-title">{{ type.name }}</h3>
+                                        <p class="type-description">{{ type.description }}</p>
+                                        @if (type.premium) {
+                                            <span class="premium-badge">Premium</span>
+                                        }
+                                    </div>
+                                </div>
+                            </label>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Step 3: Notification Settings -->
+            @if (currentStep === 3) {
+                <div class="form-step">
+                    <div class="step-header">
+                        <h2 class="step-title" [class.light]="!darkMode" [class.dark]="darkMode">
+                            Notification Settings
+                        </h2>
+                        <p class="step-description" [class.light]="!darkMode" [class.dark]="darkMode">
+                            Configure when and how you want to be notified
+                        </p>
+                    </div>
+
+                    <div class="settings-grid" [class.mobile]="breakpoint.isMobile">
+                        <!-- Condition Settings -->
+                        <div class="settings-section" [class.light]="!darkMode" [class.dark]="darkMode">
+                            <h3 class="section-title">Trigger Conditions</h3>
+
+                            @if (formData.notificationType === 'point-spread') {
+                                <div class="setting-group">
+                                    <label class="setting-label">Threshold (points)</label>
+                                    <input type="number"
+                                           class="form-input"
+                                           [(ngModel)]="formData.conditions.threshold"
+                                           min="0.5"
+                                           max="20"
+                                           step="0.5"
+                                           [class.light]="!darkMode"
+                                           [class.dark]="darkMode">
+                                    <small class="setting-help">Notify when spread changes by this amount</small>
+                                </div>
+
+                                <div class="setting-group">
+                                    <label class="setting-label">Direction</label>
+                                    <select class="form-select"
+                                            [(ngModel)]="formData.conditions.direction"
+                                            [class.light]="!darkMode"
+                                            [class.dark]="darkMode">
+                                        <option value="any">Any direction</option>
+                                        <option value="favoring">Favoring home</option>
+                                        <option value="against">Against home</option>
+                                    </select>
+                                </div>
+                            }
+
+                            @if (formData.notificationType === 'betting-volume') {
+                                <div class="setting-group">
+                                    <label class="setting-label">Volume Threshold (%)</label>
+                                    <input type="number"
+                                           class="form-input"
+                                           [(ngModel)]="formData.conditions.volumeThreshold"
+                                           min="50"
+                                           max="500"
+                                           step="25"
+                                           [class.light]="!darkMode"
+                                           [class.dark]="darkMode">
+                                    <small class="setting-help">Notify when betting volume spikes by this percentage</small>
+                                </div>
+
+                                <div class="setting-group">
+                                    <label class="setting-label">Market Type</label>
+                                    <select class="form-select"
+                                            [(ngModel)]="formData.conditions.marketType"
+                                            [class.light]="!darkMode"
+                                            [class.dark]="darkMode">
+                                        <option value="all">All markets</option>
+                                        <option value="spread">Point spread</option>
+                                        <option value="total">Over/under</option>
+                                        <option value="moneyline">Moneyline</option>
+                                    </select>
+                                </div>
+                            }
+
+                            @if (formData.notificationType === 'score-update') {
+                                <div class="setting-group">
+                                    <label class="setting-label">Update Frequency</label>
+                                    <select class="form-select"
+                                            [(ngModel)]="formData.conditions.frequency"
+                                            [class.light]="!darkMode"
+                                            [class.dark]="darkMode">
+                                        <option value="every-score">Every score change</option>
+                                        <option value="quarter-end">End of quarters</option>
+                                        <option value="major-plays">Major plays only</option>
+                                    </select>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Delivery Settings -->
+                        <div class="settings-section" [class.light]="!darkMode" [class.dark]="darkMode">
+                            <h3 class="section-title">Delivery Options</h3>
+
+                            <div class="setting-group">
+                                <label class="setting-label">Priority Level</label>
+                                <select class="form-select"
+                                        [(ngModel)]="formData.priority"
+                                        [class.light]="!darkMode"
+                                        [class.dark]="darkMode">
+                                    <option value="low">Low - No sound</option>
+                                    <option value="normal">Normal - Default sound</option>
+                                    <option value="high">High - Loud notification</option>
+                                    <option value="urgent">Urgent - Bypass Do Not Disturb</option>
+                                </select>
+                            </div>
+
+                            <div class="setting-toggles">
+                                <div class="toggle-item">
+                                    <input type="checkbox"
+                                           id="pushEnabled"
+                                           [(ngModel)]="formData.delivery.pushEnabled">
+                                    <label for="pushEnabled" class="toggle-label">Push notifications</label>
+                                </div>
+
+                                <div class="toggle-item">
+                                    <input type="checkbox"
+                                           id="emailEnabled"
+                                           [(ngModel)]="formData.delivery.emailEnabled">
+                                    <label for="emailEnabled" class="toggle-label">Email notifications</label>
+                                </div>
+
+                                <div class="toggle-item">
+                                    <input type="checkbox"
+                                           id="smsEnabled"
+                                           [(ngModel)]="formData.delivery.smsEnabled">
+                                    <label for="smsEnabled" class="toggle-label">SMS notifications</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Preview -->
+                    <div class="notification-preview" [class.light]="!darkMode" [class.dark]="darkMode">
+                        <h3 class="preview-title">Notification Preview</h3>
+                        <div class="preview-content">
+                            <div class="preview-game">
+                                <strong>Games:</strong> {{ getSelectedGamesText() }}
+                            </div>
+                            <div class="preview-type">
+                                <strong>Type:</strong> {{ getSelectedNotificationTypeText() }}
+                            </div>
+                            <div class="preview-conditions">
+                                <strong>Conditions:</strong> {{ getConditionsText() }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Form Navigation -->
+    <div class="form-footer"
+         [style.padding-bottom]="getSafeAreaBottom()">
+        <div class="footer-content">
+            <div class="footer-info">
+                @if (currentStep < 3) {
+                    <span>Step {{ currentStep }} of 3</span>
+                } @else {
+                    <span>Ready to create notification</span>
+                }
+            </div>
+
+            <div class="footer-actions">
+                @if (currentStep > 1) {
+                    <button type="button"
+                            class="btn btn-outline"
+                            [class.light]="!darkMode"
+                            [class.dark]="darkMode"
+                            (click)="previousStep()">
+                        Previous
+                    </button>
+                }
+
+                @if (currentStep < 3) {
+                    <button type="button"
+                            class="btn btn-primary"
+                            [disabled]="!canProceedToNextStep()"
+                            (click)="nextStep()">
+                        Next
+                    </button>
+                } @else {
+                    <button type="button"
+                            class="btn btn-primary"
+                            [disabled]="!isFormValid()"
+                            (click)="submitForm()">
+                        {{ isEditMode ? 'Update' : 'Create' }} Notification
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    @if (toastMessage) {
+        <div class="toast-notification"
+             [class]="'toast-' + toastType"
+             [class.mobile]="breakpoint.isMobile"
+             [style.top]="breakpoint.isMobile ? getSafeAreaTop() : '1rem'">
+            <div class="toast-content">
+                <i class="bi"
+                   [class.bi-check-circle]="toastType === 'success'"
+                   [class.bi-exclamation-circle]="toastType === 'error'"
+                   [class.bi-info-circle]="toastType === 'info'"></i>
+                {{ toastMessage }}
+            </div>
+        </div>
+    }
+</div>

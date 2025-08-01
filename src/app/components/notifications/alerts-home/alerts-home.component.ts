@@ -75,7 +75,7 @@ export interface Preferences {
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, NgClass, RouterModule],
   templateUrl: './alerts-home.component.html',
-  styleUrls: ['./alerts-home.component.css']
+  styleUrls: ['./alerts-home.component.scss']
 })
 export class AlertsHomeComponent implements OnInit, OnDestroy {
   // Component State

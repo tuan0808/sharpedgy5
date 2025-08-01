@@ -5,6 +5,7 @@ export interface Game {
     homeScore: string;
     awayScore: string;
     time: string;
+    date: string;
     homeRecord: string;
     awayRecord: string;
     status: 'upcoming' | 'live';
