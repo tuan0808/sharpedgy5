@@ -143,8 +143,8 @@ export class AlertsHomeComponent implements OnInit, OnDestroy {
       ],
       weather: 'Clear, 75°F',
       injuries: 'LeBron James (Questionable)',
-      alerts: ['Score Updates', 'Line Changes', 'Game End', 'Overtime Alert'],
-      activeAlerts: ['Score Updates', 'Game End']
+      alerts: ['Score Updates', 'Line Changes', 'ScheduledGame End', 'Overtime Alert'],
+      activeAlerts: ['Score Updates', 'ScheduledGame End']
     },
     {
       id: 'chiefs-bills',
@@ -160,8 +160,8 @@ export class AlertsHomeComponent implements OnInit, OnDestroy {
       ],
       weather: '❄️ 28°F, Snow - High delay risk',
       injuries: 'Mahomes (Questionable)',
-      alerts: ['Game Start', 'Weather Updates', 'Lineup Changes', 'Line Threshold: ±1.5'],
-      activeAlerts: ['Game Start', 'Weather Updates', 'Line Threshold: ±1.5']
+      alerts: ['ScheduledGame Start', 'Weather Updates', 'Lineup Changes', 'Line Threshold: ±1.5'],
+      activeAlerts: ['ScheduledGame Start', 'Weather Updates', 'Line Threshold: ±1.5']
     },
     {
       id: 'heat-sixers',
@@ -175,8 +175,8 @@ export class AlertsHomeComponent implements OnInit, OnDestroy {
         { label: 'Spread', value: 'PHI -3.0' },
         { label: 'Total', value: '212.5' }
       ],
-      alerts: ['Game Start', 'Playoff Implications', 'Line Changes'],
-      activeAlerts: ['Game Start', 'Playoff Implications']
+      alerts: ['ScheduledGame Start', 'Playoff Implications', 'Line Changes'],
+      activeAlerts: ['ScheduledGame Start', 'Playoff Implications']
     }
   ];
 
@@ -199,10 +199,10 @@ export class AlertsHomeComponent implements OnInit, OnDestroy {
     {
       id: 'game-events',
       icon: '🕐',
-      title: 'Game Events',
-      description: 'Game start, score updates, and milestones',
+      title: 'ScheduledGame Events',
+      description: 'ScheduledGame start, score updates, and milestones',
       iconPath: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
-      subcategories: ['Game Start', 'Score Updates', 'Lead Changes', 'Quarter/Half/Period End', 'Overtime Alerts', 'Game Milestones', 'Final Score']
+      subcategories: ['ScheduledGame Start', 'Score Updates', 'Lead Changes', 'Quarter/Half/Period End', 'Overtime Alerts', 'ScheduledGame Milestones', 'Final Score']
     },
     {
       id: 'player-performance',
