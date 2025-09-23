@@ -1,11 +1,11 @@
 // src/app/services/base.service.ts
 import { Injectable, inject, DestroyRef, Injector, signal, Signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, map, retry } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
-import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Injectable({
     providedIn: 'root'
@@ -14,7 +14,7 @@ export class BaseService<T> {
     protected http = inject(HttpClient);
     protected destroyRef = inject(DestroyRef);
     private injector = inject(Injector); // Inject Injector
-    protected apiUrl = environment.apiUrl;
+    protected apiUrl = 'http://localhost:8080';
 
     protected isLoading = signal<boolean>(false);
     protected errorMessage = signal<string | null>(null);
@@ -65,11 +65,24 @@ export class BaseService<T> {
         }
     }
 
-    protected get<R>(url: string, errorMsg: string, options: { withCredentials?: boolean } = {}): Observable<R> {
+    // Updated get method to support HttpParams
+    protected get<R>(
+        url: string,
+        errorMsg: string,
+        options: {
+            withCredentials?: boolean;
+            params?: HttpParams;
+        } = {}
+    ): Observable<R> {
         this.isLoading.set(true);
         this.errorMessage.set(null);
 
-        return this.http.get<R>(url, { withCredentials: options.withCredentials ?? true }).pipe(
+        const httpOptions = {
+            withCredentials: options.withCredentials ?? true,
+            ...(options.params && { params: options.params })
+        };
+
+        return this.http.get<R>(url, httpOptions).pipe(
             takeUntilDestroyed(this.destroyRef),
             retry({ count: 3, delay: 1000, resetOnSuccess: true }),
             map(response => {
