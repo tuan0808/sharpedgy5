@@ -1,7 +1,7 @@
 import {SportType} from "../SportType";
 import {BetTypes} from "../enums/BetTypes";
 import {BetSettlement} from "./BetSettlement";
-import {Status} from "../enums/Status";
+import {EventStatus} from "../enums/EventStatus";
 
 export class BetHistory implements BetSettlement {
     gameId : string
@@ -15,7 +15,7 @@ export class BetHistory implements BetSettlement {
     wagerValue: number;
     wagerAmount: number;
     amount : number = 0 ;
-    status : Status = Status.PENDING
+    status : EventStatus = EventStatus.PENDING
     selectedTeam: string;
     potentialWinnings: number
     comment: string = '';

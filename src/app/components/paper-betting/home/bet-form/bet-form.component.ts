@@ -8,7 +8,21 @@ import {BetSettlementService} from "../../../../shared/services/betSettlement.se
 import {SportType} from "../../../../shared/model/SportType";
 import {Game} from "../../../../shared/model/paper-betting/Game";
 import {PaperBetRecord} from "../../../../shared/model/paper-betting/PaperBetRecord";
-import {Status} from "../../../../shared/model/enums/Status";
+import {EventStatus} from "../../../../shared/model/enums/EventStatus";
+
+interface OptimisticBet {
+    tempId: string;
+    paperBetRecord: PaperBetRecord;
+    timestamp: number;
+    status: 'pending' | 'confirmed' | 'failed';
+}
+
+interface BetPlacedEvent {
+    game: Game;
+    betRecord: PaperBetRecord;
+    optimistic: boolean;
+    success?: boolean;
+}
 
 @Component({
     selector: 'app-bet-form',
@@ -24,7 +38,11 @@ export class BetFormComponent extends BaseBetFormComponent {
 
     @Input() uid: string = '';
     @Input() sportType!: SportType;
-    @Output() betPlaced = new EventEmitter<{ game: Game, balance: number }>();
+
+    // Updated Output to emit bet placement events
+    @Output() betPlaced = new EventEmitter<BetPlacedEvent>();
+
+    private optimisticBets = new Map<string, OptimisticBet>();
 
     constructor() {
         super();
@@ -33,38 +51,137 @@ export class BetFormComponent extends BaseBetFormComponent {
     async onSubmit(): Promise<void> {
         if (this.isFormValid()) {
             const paperBetRecord = new PaperBetRecord();
-            await this.submitBet(paperBetRecord);
+            await this.submitBetOptimistically(paperBetRecord);
         }
     }
 
-    async submitBet(paperBetRecord: PaperBetRecord): Promise<void> {
+    private generateTempId(): string {
+        return `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    async submitBetOptimistically(paperBetRecord: PaperBetRecord): Promise<void> {
         const userId = this.uid || (await this.authService.getUID());
         if (!userId) {
             console.error('No user ID available');
             return;
         }
 
+        // Prepare the bet record
         paperBetRecord.gameId = this.game.id;
-        paperBetRecord.gameStart = new Date(this.game.scheduled);
+        paperBetRecord.userId = this.uid;
         paperBetRecord.sport = this.sportType;
         paperBetRecord.betType = this.selectedBetType;
         paperBetRecord.wagerValue = parseFloat(this.selectedTeam.odds);
         paperBetRecord.wagerAmount = this.bettingForm.value.amount;
         paperBetRecord.amount = this.bettingForm.value.amount;
-        paperBetRecord.status = Status.PENDING;
+        paperBetRecord.betStatus = EventStatus.PENDING;
         paperBetRecord.selectedTeam = this.selectedTeam.name;
         paperBetRecord.potentialWinnings = this.potentialWinnings;
 
-        const updatedGame = {...this.game, betSettlement: paperBetRecord};
+        const tempId = this.generateTempId();
 
-        this.betSettlementService.addRecord(paperBetRecord)
-        //.subscribe({
-        //     next: (newBalance) => {
-        //         console.log('Bet placed, new balance:', newBalance);
-        //         this.betPlaced.emit({ game: updatedGame, balance: newBalance });
-        //         this.activeModal.close();
-        //     },
-        //     error: (err) => console.error('Bet placement failed:', err)
-        // });
+        // Create optimistic bet entry
+        const optimisticBet: OptimisticBet = {
+            tempId,
+            paperBetRecord: { ...paperBetRecord },
+            timestamp: Date.now(),
+            status: 'pending'
+        };
+
+        this.optimisticBets.set(tempId, optimisticBet);
+
+        // Create updated game with optimistic bet
+        const updatedGame = { ...this.game, betSettlement: paperBetRecord };
+
+        // Emit optimistic update immediately
+        this.betPlaced.emit({
+            game: updatedGame,
+            betRecord: paperBetRecord,
+            optimistic: true
+        });
+
+        // Update local state optimistically (if this method exists in your service)
+        this.betSettlementService.addOptimisticBet?.(tempId, paperBetRecord);
+
+        // Close modal immediately for better UX
+        this.activeModal.close();
+
+        // Submit to server in the background
+        try {
+            const result = await this.betSettlementService.addRecordOptimistic(paperBetRecord, this.uid, tempId);
+            this.handleOptimisticSuccess(tempId, result, updatedGame);
+        } catch (error) {
+            this.handleOptimisticFailure(tempId, error, updatedGame);
+        }
+    }
+
+    private handleOptimisticSuccess(tempId: string, serverResult: any, game: Game): void {
+        const optimisticBet = this.optimisticBets.get(tempId);
+        if (optimisticBet) {
+            optimisticBet.status = 'confirmed';
+
+            // Update bet record with server response data if needed
+            const confirmedBetRecord = { ...optimisticBet.paperBetRecord };
+            if (serverResult.betRecord) {
+                Object.assign(confirmedBetRecord, serverResult.betRecord);
+            }
+
+            // Emit confirmed bet event
+            this.betPlaced.emit({
+                game: { ...game, betSettlement: confirmedBetRecord },
+                betRecord: confirmedBetRecord,
+                optimistic: false,
+                success: true
+            });
+
+            // Server confirmation - update service state if method exists
+            this.betSettlementService.confirmOptimisticBet?.(tempId, serverResult);
+
+            console.log('Bet confirmed on server:', serverResult);
+
+            // Clean up after a delay
+            setTimeout(() => {
+                this.optimisticBets.delete(tempId);
+            }, 5000);
+        }
+    }
+
+    private handleOptimisticFailure(tempId: string, error: any, game: Game): void {
+        const optimisticBet = this.optimisticBets.get(tempId);
+        if (optimisticBet) {
+            optimisticBet.status = 'failed';
+
+            // Create failed bet record
+            const failedBetRecord = {
+                ...optimisticBet.paperBetRecord,
+                betStatus: EventStatus.FAILED
+            };
+
+            // Emit failure event
+            this.betPlaced.emit({
+                game: { ...game, betSettlement: null }, // Remove bet from game
+                betRecord: failedBetRecord,
+                optimistic: false,
+                success: false
+            });
+
+            // Rollback the optimistic update in service if method exists
+            this.betSettlementService.rollbackOptimisticBet?.(tempId);
+
+            // Show error to user
+            console.error('Bet placement failed:', error);
+            this.showBetFailureNotification(error);
+
+            // Clean up
+            setTimeout(() => {
+                this.optimisticBets.delete(tempId);
+            }, 1000);
+        }
+    }
+
+    private showBetFailureNotification(error: any): void {
+        // Implement your notification system here
+        // Could be a toast, snackbar, or modal
+        console.warn('Bet could not be placed:', error);
     }
 }
