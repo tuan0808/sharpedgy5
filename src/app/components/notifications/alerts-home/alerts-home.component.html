@@ -80,7 +80,7 @@
                 @for (game of games; track game.id) {
                     <div class="card mb-3 shadow-sm">
                         <div class="card-body p-4">
-                            <!-- Game Header -->
+                            <!-- ScheduledGame Header -->
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div class="d-flex align-items-center gap-2">
                                     <span>{{ game.leagueIcon }}</span>
@@ -195,9 +195,9 @@
                     </div>
                     <div class="modal-body p-4">
                         @if (modalStep === 'game-selection') {
-                            <!-- Step 1: Select Game or Team -->
+                            <!-- Step 1: Select ScheduledGame or Team -->
                             <div>
-                                <h3 class="h6 text-dark mb-3">Select Game or Team</h3>
+                                <h3 class="h6 text-dark mb-3">Select ScheduledGame or Team</h3>
                                 <p class="text-muted small mb-3">Choose a specific game or follow a team for ongoing alerts</p>
                                 <div class="input-group mb-3">
                   <span class="input-group-text">
@@ -237,7 +237,7 @@
                                                 <div class="d-flex align-items-center mb-2">
                                                     <div class="p-2 rounded me-3" [ngClass]="{
                             'bg-primary': alertType.title === 'Smart Line Monitoring',
-                            'bg-success': alertType.title === 'Game Events',
+                            'bg-success': alertType.title === 'ScheduledGame Events',
                             'bg-purple': alertType.title === 'Player Performance',
                             'bg-warning': alertType.title === 'Market Intelligence'
                           }">
