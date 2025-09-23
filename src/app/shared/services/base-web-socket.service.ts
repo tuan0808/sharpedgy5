@@ -168,7 +168,7 @@ export class PredictionsService extends BaseApiService<Prediction> {
   //   });
   //
   //   this.stompClient.subscribe('/topic/gameUpdate', (message) => {
-  //     const game: Game = JSON.parse(message.body);
+  //     const game: ScheduledGame = JSON.parse(message.body);
   //     console.log('Received game update:', game);
   //     this.allGames.update(games => {
   //       const index = games.findIndex(g => g.id === game.id);
