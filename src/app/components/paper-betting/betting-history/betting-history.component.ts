@@ -1,6 +1,6 @@
 import {Component, computed, inject, Signal, signal} from '@angular/core';
 import {FormsModule} from "@angular/forms";
-import {Status} from "../../../shared/model/enums/Status"
+import {EventStatus} from "../../../shared/model/enums/EventStatus"
 import {Account} from "../../../shared/model/paper-betting/Account";
 import {BetTypes} from "../../../shared/model/enums/BetTypes";
 import {SportType} from "../../../shared/model/SportType";
@@ -46,7 +46,7 @@ export class BettingHistoryComponent {
       this.accounts().find(acc => acc.id === this.selectedAccountIdSignal())
   );
 
-  protected readonly Status = Status;
+  protected readonly Status = EventStatus;
   protected readonly BetTypes = BetTypes;
   protected readonly SportType = SportType;
 
@@ -77,8 +77,8 @@ export class BettingHistoryComponent {
   }
 
   calculateWinRate(account: Account): string {
-    const wins = account.betHistory.filter(bet => bet.status === Status.WIN).length;
-    const total = account.betHistory.filter(bet => bet.status !== Status.PENDING).length;
+    const wins = account.betHistory.filter(bet => bet.betStatus === EventStatus.WIN).length;
+    const total = account.betHistory.filter(bet => bet.betStatus !== EventStatus.PENDING).length;
     return total > 0 ? ((wins / total) * 100).toFixed(1) : '0.0';
   }
 
@@ -88,14 +88,14 @@ export class BettingHistoryComponent {
   }
 
   getPendingBets(account: Account): number {
-    return account.betHistory.filter(bet => bet.status === Status.PENDING).length;
+    return account.betHistory.filter(bet => bet.betStatus === EventStatus.PENDING).length;
   }
 
-  getStatusClass(status: Status): string {
+  getStatusClass(status: EventStatus): string {
     switch(status) {
-      case Status.WIN: return 'win';
-      case Status.LOSS: return 'loss';
-      case Status.PENDING: return 'pending';
+      case EventStatus.WIN: return 'win';
+      case EventStatus.LOSS: return 'loss';
+      case EventStatus.PENDING: return 'pending';
       default: return '';
     }
   }

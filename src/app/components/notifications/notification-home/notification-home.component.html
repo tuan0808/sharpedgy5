@@ -1,30 +1,26 @@
 <!-- notification-home.component.html -->
 <div class="dashboard"
-     [class.light]="!darkMode"
-     [class.dark]="darkMode"
-     [class.mobile]="breakpoint.isMobile"
-     [class.tablet]="breakpoint.isTablet"
-     [class.desktop]="breakpoint.isDesktop">
+     [class.mobile]="breakpoint().isMobile"
+     [class.tablet]="breakpoint().isTablet"
+     [class.desktop]="breakpoint().isDesktop">
 
     <!-- Mobile Header -->
     <div class="header mobile-header"
-         [class.light]="!darkMode"
-         [class.dark]="darkMode"
          [style.padding-top]="getSafeAreaTop()">
         <div class="header-container">
             <div class="header-content">
                 <div class="d-flex align-items-center">
-                    <h1 class="header-title" [class.light]="!darkMode" [class.dark]="darkMode">
+                    <h1 class="header-title">
                         NOTIFICATIONS
                     </h1>
-                    @if (breakpoint.isMobile) {
-                        <span class="badge bg-primary ms-2">{{ filteredNotifications.length }}</span>
+                    @if (breakpoint().isMobile) {
+                        <span class="badge bg-primary ms-2">{{ filteredNotifications().length }}</span>
                     }
                 </div>
 
                 <div class="header-actions">
                     <!-- Mobile Search Toggle -->
-                    @if (breakpoint.isMobile) {
+                    @if (breakpoint().isMobile) {
                         <button class="btn btn-outline-secondary btn-sm" (click)="toggleMobileSearch()">
                             <i class="bi bi-search"></i>
                         </button>
@@ -34,42 +30,33 @@
                     }
 
                     <!-- Desktop Search -->
-                    @if (!breakpoint.isMobile) {
+                    @if (!breakpoint().isMobile) {
                         <div class="search-container">
                             <i class="bi bi-search search-icon"></i>
                             <input type="text"
-                                   [(ngModel)]="searchTerm"
+                                   [ngModel]="searchTerm()"
+                                   (ngModelChange)="searchTerm.set($event)"
                                    placeholder="Search..."
-                                   class="search-input"
-                                   [class.light]="!darkMode"
-                                   [class.dark]="darkMode" />
+                                   class="search-input" />
                         </div>
                     }
-
-                    <button class="dark-mode-toggle"
-                            [class.light]="!darkMode"
-                            [class.dark]="darkMode"
-                            (click)="darkMode = !darkMode">
-                        <i class="bi" [class.bi-sun]="darkMode" [class.bi-moon]="!darkMode"></i>
-                    </button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Mobile Expandable Search -->
-    @if (breakpoint.isMobile && mobileSearchExpanded) {
-        <div class="mobile-search-overlay"
-             [class.light]="!darkMode"
-             [class.dark]="darkMode">
+    @if (breakpoint().isMobile && mobileSearchExpanded()) {
+        <div class="mobile-search-overlay">
             <div class="container-fluid p-3">
                 <div class="position-relative">
                     <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3"></i>
                     <input type="text"
-                           [(ngModel)]="searchTerm"
+                           [ngModel]="searchTerm()"
+                           (ngModelChange)="searchTerm.set($event)"
                            placeholder="Search notifications..."
                            class="form-control ps-5 mobile-search-input"
-                           (blur)="mobileSearchExpanded = false">
+                           (blur)="mobileSearchExpanded.set(false)">
                     <button class="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y me-2"
                             (click)="toggleMobileSearch()">
                         <i class="bi bi-x"></i>
@@ -80,39 +67,35 @@
     }
 
     <!-- Games Bar -->
-    <div class="games-bar" [class.light]="!darkMode" [class.dark]="darkMode">
+    <div class="games-bar">
         <div class="games-container">
             <!-- Mobile Tabs -->
-            @if (breakpoint.isMobile) {
+            @if (breakpoint().isMobile) {
                 <div class="mobile-games-tabs">
                     <button class="mobile-tab-btn"
-                            [class.active]="activeTab === 'upcoming'"
-                            (click)="activeTab = 'upcoming'">
+                            [class.active]="activeTab() === 'upcoming'"
+                            (click)="activeTab.set('upcoming')">
                         Upcoming
                         <span class="badge bg-secondary ms-2">{{ upcomingGames.length }}</span>
                     </button>
                     <button class="mobile-tab-btn"
-                            [class.active]="activeTab === 'live'"
-                            (click)="activeTab = 'live'">
+                            [class.active]="activeTab() === 'live'"
+                            (click)="activeTab.set('live')">
                         Live
                         <span class="badge bg-danger ms-2">{{ activeGames.length }}</span>
                     </button>
                 </div>
             } @else {
                 <!-- Desktop Tabs -->
-                <div class="games-tabs" [class.light]="!darkMode" [class.dark]="darkMode">
+                <div class="games-tabs">
                     <button class="tab-button"
-                            [class.active]="activeTab === 'upcoming'"
-                            [class.light]="!darkMode"
-                            [class.dark]="darkMode"
-                            (click)="activeTab = 'upcoming'">
+                            [class.active]="activeTab() === 'upcoming'"
+                            (click)="activeTab.set('upcoming')">
                         Upcoming Games
                     </button>
                     <button class="tab-button"
-                            [class.active]="activeTab === 'live'"
-                            [class.light]="!darkMode"
-                            [class.dark]="darkMode"
-                            (click)="activeTab = 'live'">
+                            [class.active]="activeTab() === 'live'"
+                            (click)="activeTab.set('live')">
                         Live Games ({{ activeGames.length }})
                     </button>
                 </div>
@@ -121,7 +104,7 @@
             <!-- Games Scroll -->
             <div class="games-scroll">
                 <div class="games-list" [style.grid-template-columns]="getGridColumns()">
-                    @if (activeTab === 'upcoming') {
+                    @if (activeTab() === 'upcoming') {
                         @for (game of upcomingGames; track game.id) {
                             <div class="game-card"
                                  (click)="handleMobileGameSelection(game, $event)">
@@ -137,7 +120,7 @@
                             </div>
                         }
                     }
-                    @if (activeTab === 'live') {
+                    @if (activeTab() === 'live') {
                         @for (game of activeGames; track game.id) {
                             <div class="game-card live-game"
                                  (click)="handleMobileGameSelection(game, $event)">
@@ -166,28 +149,26 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <div class="content-layout" [class.mobile-layout]="breakpoint.isMobile">
+        <div class="content-layout" [class.mobile-layout]="breakpoint().isMobile">
 
-            <!-- Desktop Sidebar -->
-            @if (!breakpoint.isMobile) {
+            <!-- Desktop Sidebar - Fixed Height Layout -->
+            @if (!breakpoint().isMobile) {
                 <div class="sidebar">
-                    <div class="sidebar-content" [class.light]="!darkMode" [class.dark]="darkMode">
-                        <h2 class="sidebar-title" [class.light]="!darkMode" [class.dark]="darkMode">Filter</h2>
+                    <div class="sidebar-content sidebar-sticky">
+                        <h2 class="sidebar-title">Filter</h2>
 
                         <!-- Sports Filter -->
                         <div class="filter-section">
-                            <h3 class="filter-title" [class.light]="!darkMode" [class.dark]="darkMode">Sports</h3>
+                            <h3 class="filter-title">Sports</h3>
                             <div class="filter-options">
                                 <div class="filter-option">
                                     <input type="radio"
                                            id="sport-all"
                                            name="sport"
                                            value="all"
-                                           [(ngModel)]="filters.sport">
-                                    <label for="sport-all"
-                                           class="filter-label"
-                                           [class.light]="!darkMode"
-                                           [class.dark]="darkMode">
+                                           [checked]="filters().sport === 'all'"
+                                           (change)="updateFilters({sport: 'all'})">
+                                    <label for="sport-all" class="filter-label">
                                         All Sports
                                     </label>
                                 </div>
@@ -197,11 +178,9 @@
                                                [id]="'sport-' + sport"
                                                name="sport"
                                                [value]="sport"
-                                               [(ngModel)]="filters.sport">
-                                        <label [for]="'sport-' + sport"
-                                               class="filter-label"
-                                               [class.light]="!darkMode"
-                                               [class.dark]="darkMode">
+                                               [checked]="filters().sport === sport"
+                                               (change)="updateFilters({sport: sport})">
+                                        <label [for]="'sport-' + sport" class="filter-label">
                                             {{ sport }}
                                         </label>
                                     </div>
@@ -211,18 +190,16 @@
 
                         <!-- Type Filter -->
                         <div class="filter-section">
-                            <h3 class="filter-title" [class.light]="!darkMode" [class.dark]="darkMode">Type</h3>
+                            <h3 class="filter-title">Type</h3>
                             <div class="filter-options">
                                 <div class="filter-option">
                                     <input type="radio"
                                            id="type-all"
                                            name="type"
                                            value="all"
-                                           [(ngModel)]="filters.type">
-                                    <label for="type-all"
-                                           class="filter-label"
-                                           [class.light]="!darkMode"
-                                           [class.dark]="darkMode">
+                                           [checked]="filters().type === 'all'"
+                                           (change)="updateFilters({type: 'all'})">
+                                    <label for="type-all" class="filter-label">
                                         All Types
                                     </label>
                                 </div>
@@ -232,11 +209,9 @@
                                                [id]="'type-' + type"
                                                name="type"
                                                [value]="type"
-                                               [(ngModel)]="filters.type">
-                                        <label [for]="'type-' + type"
-                                               class="filter-label"
-                                               [class.light]="!darkMode"
-                                               [class.dark]="darkMode">
+                                               [checked]="filters().type === type"
+                                               (change)="updateFilters({type: type})">
+                                        <label [for]="'type-' + type" class="filter-label">
                                             {{ type }}
                                         </label>
                                     </div>
@@ -244,21 +219,19 @@
                             </div>
                         </div>
 
-                        <!-- Status Filter -->
+                        <!-- EventStatus Filter -->
                         <div class="filter-section">
-                            <h3 class="filter-title" [class.light]="!darkMode" [class.dark]="darkMode">Status</h3>
+                            <h3 class="filter-title">EventStatus</h3>
                             <div class="filter-options">
                                 <div class="filter-option">
                                     <input type="radio"
                                            id="status-all"
                                            name="status"
                                            value="all"
-                                           [(ngModel)]="filters.enabled">
-                                    <label for="status-all"
-                                           class="filter-label"
-                                           [class.light]="!darkMode"
-                                           [class.dark]="darkMode">
-                                        All Status
+                                           [checked]="filters().enabled === 'all'"
+                                           (change)="updateFilters({enabled: 'all'})">
+                                    <label for="status-all" class="filter-label">
+                                        All EventStatus
                                     </label>
                                 </div>
                                 <div class="filter-option">
@@ -266,11 +239,9 @@
                                            id="status-enabled"
                                            name="status"
                                            value="enabled"
-                                           [(ngModel)]="filters.enabled">
-                                    <label for="status-enabled"
-                                           class="filter-label"
-                                           [class.light]="!darkMode"
-                                           [class.dark]="darkMode">
+                                           [checked]="filters().enabled === 'enabled'"
+                                           (change)="updateFilters({enabled: 'enabled'})">
+                                    <label for="status-enabled" class="filter-label">
                                         Enabled
                                     </label>
                                 </div>
@@ -279,11 +250,9 @@
                                            id="status-disabled"
                                            name="status"
                                            value="disabled"
-                                           [(ngModel)]="filters.enabled">
-                                    <label for="status-disabled"
-                                           class="filter-label"
-                                           [class.light]="!darkMode"
-                                           [class.dark]="darkMode">
+                                           [checked]="filters().enabled === 'disabled'"
+                                           (change)="updateFilters({enabled: 'disabled'})">
+                                    <label for="status-disabled" class="filter-label">
                                         Disabled
                                     </label>
                                 </div>
@@ -298,21 +267,22 @@
                 <!-- Content Header -->
                 <div class="content-header">
                     <div>
-                        <h1 class="content-title" [class.light]="!darkMode" [class.dark]="darkMode">
-                            {{ filters.sport === 'all' ? 'All Sports' : filters.sport }} Notifications
+                        <h1 class="content-title">
+                            {{ filters().sport === 'all' ? 'All Sports' : filters().sport }} Notifications
                         </h1>
-                        <p class="content-subtitle" [class.light]="!darkMode" [class.dark]="darkMode">
-                            {{ filteredNotifications.length }} notifications found
+                        <p class="content-subtitle">
+                            {{ totalElements() }} notifications found
+                            @if (totalPages() > 1) {
+                                <span> • Page {{ currentPage() }} of {{ totalPages() }}</span>
+                            }
                         </p>
                     </div>
 
-                    @if (!breakpoint.isMobile) {
+                    @if (!breakpoint().isMobile) {
                         <div class="content-actions">
                             <button class="select-button"
-                                    [class.light]="!darkMode"
-                                    [class.dark]="darkMode"
-                                    (click)="selectionMode = !selectionMode; selectedNotifications = []">
-                                <input type="checkbox" [checked]="selectionMode" readonly>
+                                    (click)="toggleSelectionMode()">
+                                <input type="checkbox" [checked]="selectionMode()" readonly>
                                 Select
                             </button>
                             <button class="create-button" (click)="navigateToCreateNotification()">
@@ -325,9 +295,9 @@
 
                 <!-- Notifications Grid -->
                 <div class="notifications-grid" [style.grid-template-columns]="getGridColumns()">
-                    @for (notification of filteredNotifications; track notification.id) {
+                    @for (notification of filteredNotifications(); track notification.id) {
                         <div class="notification-item">
-                            @if (selectionMode && !breakpoint.isMobile) {
+                            @if (selectionMode() && !breakpoint().isMobile) {
                                 <input type="checkbox"
                                        class="selection-checkbox"
                                        [checked]="isNotificationSelected(notification.id)"
@@ -335,27 +305,25 @@
                             }
 
                             <div class="notification-card"
-                                 [class.mobile]="breakpoint.isMobile"
-                                 [class.light]="!darkMode"
-                                 [class.dark]="darkMode">
+                                 [class.mobile]="breakpoint().isMobile">
                                 <div class="notification-header">
                                     <div class="notification-badges">
                                         <span class="badge notification-type-badge">
-                                            {{ notification.type }}
+                                            {{ notification.eventType }}
                                         </span>
                                         <span class="badge league-badge">{{ notification.league }}</span>
                                     </div>
                                     <div class="notification-status"
-                                         [class.enabled]="notification.enabled"
-                                         [class.disabled]="!notification.enabled"></div>
+                                         [class.enabled]="notification.isEnabled"
+                                         [class.disabled]="!notification.isEnabled"></div>
                                 </div>
 
                                 <div class="notification-content">
                                     <h3 class="notification-title">
-                                        {{ notification.awayTeam }} &#64; {{ notification.homeTeam }}
+                                        {{ notification.game?.awayTeam || notification.awayTeam }} &#64; {{ notification.game?.homeTeam || notification.homeTeam }}
                                     </h3>
                                     <div class="notification-meta">
-                                        {{ notification.gameDate | date:'shortDate' }} • {{ notification.gameTime }}
+                                        {{ (notification.game?.scheduledTime || notification.game.scheduledTime) | date:'shortDate' }} • {{ notification.game?.scheduledTime || notification.game.scheduledTime }}
                                     </div>
                                     <div class="notification-stats">
                                         <div class="stat">
@@ -369,21 +337,21 @@
                                     </div>
                                 </div>
 
-                                <div class="notification-actions" [class.mobile]="breakpoint.isMobile">
+                                <div class="notification-actions" [class.mobile]="breakpoint().isMobile">
                                     <button class="action-btn toggle-btn"
-                                            [class.enabled]="notification.enabled"
-                                            [class.disabled]="!notification.enabled"
+                                            [class.enabled]="notification.isEnabled"
+                                            [class.disabled]="!notification.isEnabled"
                                             (click)="toggleNotificationMobile(notification.id, $event)">
                                         <i class="bi"
-                                           [class.bi-volume-up]="notification.enabled"
-                                           [class.bi-volume-mute]="!notification.enabled"></i>
+                                           [class.bi-volume-up]="notification.isEnabled"
+                                           [class.bi-volume-mute]="!notification.isEnabled"></i>
                                     </button>
                                     <button class="action-btn edit-btn"
                                             (click)="navigateToEditNotification(notification.id)">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     <button class="action-btn delete-btn"
-                                            (click)="showToast('Notification deleted for ' + notification.awayTeam + ' vs ' + notification.homeTeam, 'error')">
+                                            (click)="deleteNotification(notification.id)">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -392,21 +360,47 @@
                     }
                 </div>
 
+                <!-- Pagination Section -->
+                <div class="pagination-container">
+                    <app-pagination [totalPages]="totalPages()"
+                                    [currentPage]="currentPage()"
+                                    (pageChange)="changePage($event)">
+                    </app-pagination>
+                </div>
+
                 <!-- Empty State -->
-                @if (filteredNotifications.length === 0) {
-                    <div class="empty-state" [class.mobile]="breakpoint.isMobile">
-                        <div class="empty-icon" [class.light]="!darkMode" [class.dark]="darkMode">
+                @if (filteredNotifications().length === 0 && !loading()) {
+                    <div class="empty-state" [class.mobile]="breakpoint().isMobile">
+                        <div class="empty-icon">
                             <i class="bi bi-bell"></i>
                         </div>
-                        <h3 class="empty-title" [class.light]="!darkMode" [class.dark]="darkMode">
+                        <h3 class="empty-title">
                             No notifications found
                         </h3>
-                        <p class="empty-description" [class.light]="!darkMode" [class.dark]="darkMode">
-                            Get started by creating your first notification to stay updated on your favorite sports events.
+                        <p class="empty-description">
+                            @if (hasFiltersApplied()) {
+                                Try adjusting your filters or search terms to find more notifications.
+                            } @else {
+                                Get started by creating your first notification to stay updated on your favorite sports events.
+                            }
                         </p>
-                        <button class="empty-action" (click)="navigateToCreateNotification()">
-                            Create Your First Notification
-                        </button>
+                        @if (!hasFiltersApplied()) {
+                            <button class="empty-action" (click)="navigateToCreateNotification()">
+                                Create Your First Notification
+                            </button>
+                        } @else {
+                            <button class="empty-action" (click)="clearFilters()">
+                                Clear Filters
+                            </button>
+                        }
+                    </div>
+                }
+
+                <!-- Loading Overlay -->
+                @if (loading()) {
+                    <div class="loading-overlay">
+                        <div class="loading-spinner"></div>
+                        <p class="loading-text">Loading notifications...</p>
                     </div>
                 }
             </div>
@@ -414,7 +408,7 @@
     </div>
 
     <!-- Mobile Floating Action Button -->
-    @if (breakpoint.isMobile) {
+    @if (breakpoint().isMobile) {
         <button class="mobile-fab"
                 [style.bottom]="getSafeAreaBottom()"
                 (click)="navigateToCreateNotification()">
@@ -423,22 +417,20 @@
     }
 
     <!-- Mobile Filters Bottom Sheet -->
-    @if (breakpoint.isMobile) {
+    @if (breakpoint().isMobile) {
         <div class="mobile-filters-overlay"
-             [class.show]="mobileFiltersOpen"
+             [class.show]="mobileFiltersOpen()"
              (click)="toggleMobileFilters()"></div>
 
         <div class="mobile-filters"
-             [class.show]="mobileFiltersOpen"
-             [class.light]="!darkMode"
-             [class.dark]="darkMode"
+             [class.show]="mobileFiltersOpen()"
              [style.bottom]="getSafeAreaBottom()">
             <div class="filter-handle"></div>
             <div class="mobile-filters-content">
                 <div class="mobile-filters-header">
                     <h3>Filters</h3>
                     <button class="btn btn-sm btn-outline-secondary"
-                            (click)="filters = {enabled: 'all', sport: 'all', type: 'all', league: 'all'}">
+                            (click)="clearFilters()">
                         Clear All
                     </button>
                 </div>
@@ -448,14 +440,14 @@
                     <h4>Sports</h4>
                     <div class="mobile-filter-chips">
                         <button class="filter-chip"
-                                [class.active]="filters.sport === 'all'"
-                                (click)="filters.sport = 'all'">
+                                [class.active]="filters().sport === 'all'"
+                                (click)="updateFilters({sport: 'all'})">
                             All
                         </button>
                         @for (sport of sports; track sport) {
                             <button class="filter-chip"
-                                    [class.active]="filters.sport === sport"
-                                    (click)="filters.sport = sport">
+                                    [class.active]="filters().sport === sport"
+                                    (click)="updateFilters({sport: sport})">
                                 {{ sport }}
                             </button>
                         }
@@ -466,14 +458,14 @@
                     <h4>Type</h4>
                     <div class="mobile-filter-chips">
                         <button class="filter-chip"
-                                [class.active]="filters.type === 'all'"
-                                (click)="filters.type = 'all'">
+                                [class.active]="filters().type === 'all'"
+                                (click)="updateFilters({type: 'all'})">
                             All
                         </button>
-                        @for (type of ['Point Spread Diff', 'Score Update', 'Betting Volume Spike']; track type) {
+                        @for (type of notificationTypes; track type) {
                             <button class="filter-chip"
-                                    [class.active]="filters.type === type"
-                                    (click)="filters.type = type">
+                                    [class.active]="filters().type === type"
+                                    (click)="updateFilters({type: type})">
                                 {{ type }}
                             </button>
                         }
@@ -481,12 +473,12 @@
                 </div>
 
                 <div class="mobile-filter-section">
-                    <h4>Status</h4>
+                    <h4>EventStatus</h4>
                     <div class="mobile-filter-chips">
                         @for (status of [{value: 'all', label: 'All'}, {value: 'enabled', label: 'Enabled'}, {value: 'disabled', label: 'Disabled'}]; track status.value) {
                             <button class="filter-chip"
-                                    [class.active]="filters.enabled === status.value"
-                                    (click)="filters.enabled = status.value">
+                                    [class.active]="filters().enabled === status.value"
+                                    (click)="updateFilters({enabled: status.value})">
                                 {{ status.label }}
                             </button>
                         }
@@ -497,23 +489,23 @@
     }
 
     <!-- Toast Notification -->
-    @if (toastMessage) {
+    @if (toastMessage()) {
         <div class="toast-notification"
-             [class]="'toast-' + toastType"
-             [class.mobile]="breakpoint.isMobile"
-             [style.top]="breakpoint.isMobile ? getSafeAreaTop() : '1rem'">
+             [class]="'toast-' + toastType()"
+             [class.mobile]="breakpoint().isMobile"
+             [style.top]="breakpoint().isMobile ? getSafeAreaTop() : '1rem'">
             <div class="toast-content">
                 <i class="bi"
-                   [class.bi-check-circle]="toastType === 'success'"
-                   [class.bi-exclamation-circle]="toastType === 'error'"
-                   [class.bi-info-circle]="toastType === 'info'"></i>
-                {{ toastMessage }}
+                   [class.bi-check-circle]="toastType() === 'success'"
+                   [class.bi-exclamation-circle]="toastType() === 'error'"
+                   [class.bi-info-circle]="toastType() === 'info'"></i>
+                {{ toastMessage() }}
             </div>
         </div>
     }
 
     <!-- Mobile Overlay -->
-    @if (breakpoint.isMobile && (mobileFiltersOpen || mobileSearchExpanded)) {
+    @if (breakpoint().isMobile && (mobileFiltersOpen() || mobileSearchExpanded())) {
         <div class="mobile-overlay" (click)="closeMobileOverlays()"></div>
     }
 </div>

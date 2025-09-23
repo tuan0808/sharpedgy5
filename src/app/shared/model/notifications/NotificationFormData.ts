@@ -1,8 +1,8 @@
 import { NotificationSettings } from "./NotificationSettings";
-import {Game} from "./Game";
+import {ScheduledGame} from "./ScheduledGame";
 
 export interface NotificationFormData {
-    selectedGames: Game[];
+    selectedGames: ScheduledGame[];
     notificationType: string;
     settings: NotificationSettings;
     threshold?: number;

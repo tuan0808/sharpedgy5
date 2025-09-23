@@ -71,20 +71,9 @@
                     </div>
                 </div>
 
-                <!-- Confidence Slider -->
-                <div class="form-section">
-                    <label for="confidenceSlider">Confidence Level</label>
-                    <div class="slider-container">
-                        <mdb-range
-                                formControlName="confidence"
-                                [min]="0"
-                                [max]="100"
-                                [id]="'confidenceSlider'"
-                        ></mdb-range>
-                        <div class="confidence-display">
-                            Confidence Level: {{ bettingForm.get('confidence')?.value }}%
-                        </div>
-                    </div>
+                <div class="form-section notes-section">
+                    <label for="notes">#</label>
+                    <input type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="#">
                 </div>
 
                 <!-- Notes Text Area -->
@@ -158,7 +147,7 @@
                     <span class="value">{{ JSON.parse(submittedBetData?.gameDetails?.comment)?.notes || 'None' }}</span>
                 </div>
                 <div class="detail-item">
-                    <span class="label">Status:</span>
+                    <span class="label">EventStatus:</span>
                     <span class="value status-pending">{{ submittedBetData?.gameDetails?.controlNote || 'N/A' }}</span>
                 </div>
             </div>

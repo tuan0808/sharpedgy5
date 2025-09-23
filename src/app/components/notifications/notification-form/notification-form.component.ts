@@ -1,548 +1,741 @@
-import {Component, EventEmitter, HostListener, Inject, Input, Output, PLATFORM_ID} from '@angular/core';
-import {NotificationFormData} from "../../../shared/model/notifications/NotificationFormData";
-import {NotificationSettings} from "../../../shared/model/notifications/NotificationSettings";
-import {Game} from "../../../shared/model/notifications/Game";
-import {isPlatformBrowser} from "@angular/common";
-import {ActivatedRoute, Router} from "@angular/router";
+import {Component, computed, signal} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
-export interface BreakpointState {
-  isMobile: boolean;
-  isTablet: boolean;
-  isDesktop: boolean;
-  screenWidth: number;
-  orientation: 'portrait' | 'landscape';
+interface NotificationType {
+  readonly id: string;
+  readonly label: string;
+  readonly icon: string;
+  readonly description: string;
+  readonly color: string;
+  readonly accent: string;
 }
 
-
-export interface NotificationType {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  premium: boolean;
+interface FormField {
+  readonly key: string;
+  readonly type: 'text' | 'number' | 'checkbox' | 'select';
+  readonly label: string;
+  readonly placeholder?: string;
+  readonly helpText?: string;
+  readonly defaultValue?: unknown;
+  readonly options?: ReadonlyArray<{ readonly value: string; readonly label: string }>;
+  readonly step?: string;
+  readonly required?: boolean;
 }
 
-export interface NotificationForm {
-  games: string[];
-  notificationType: string;
-  conditions: {
-    threshold?: number;
-    direction?: string;
-    volumeThreshold?: number;
-    marketType?: string;
-    frequency?: string;
-  };
-  delivery: {
-    pushEnabled: boolean;
-    emailEnabled: boolean;
-    smsEnabled: boolean;
-  };
-  priority: string;
-  enabled: boolean;
+interface NotificationConfig {
+  readonly id: string;
+  readonly fields: ReadonlyArray<FormField>;
 }
 
+interface FormData {
+  [key: string]: unknown;
+}
+
+type Step = 'selection' | 'configuration' | 'confirmation';
 @Component({
-  selector: 'app-notification-form',
+  selector: 'app-notification-preferences',
   standalone: true,
-  imports: [],
-  templateUrl: './notification-form.component.html',
-  styleUrl: './notification-form.component.scss'
+  imports: [CommonModule, FormsModule],
+  templateUrl: './notification-preferences.component.html',
+  styleUrls: ['./notification-preferences.component.css']
 })
-export class NotificationFormComponent {
-  breakpoint: BreakpointState = {
-    isMobile: false,
-    isTablet: false,
-    isDesktop: true,
-    screenWidth: 1920,
-    orientation: 'landscape'
-  };
-
-  // Form state
-  currentStep = 1;
-  isEditMode = false;
-  editingNotificationId: number | null = null;
-  darkMode = false;
-
-  // UI state
-  activeGameTab = 'upcoming';
-  toastMessage = '';
-  toastType: 'success' | 'error' | 'info' = 'success';
-
-  // Selected data
-  selectedGames: Game[] = [];
-
-  // Form data
-  formData: NotificationForm = {
-    games: [],
-    notificationType: '',
-    conditions: {},
-    delivery: {
-      pushEnabled: true,
-      emailEnabled: false,
-      smsEnabled: false
-    },
-    priority: 'normal',
-    enabled: true
-  };
+export class NotificationPreferencesComponent {
+  // State signals
+  readonly currentStep = signal<Step>('selection');
+  readonly selectedType = signal<string>('');
+  readonly formData = signal<FormData>({});
+  readonly isConfirmed = signal<boolean>(false);
 
   // Static data
-  upcomingGames: Game[] = [
+  readonly notificationTypes: ReadonlyArray<NotificationType> = [
     {
-      id: 'bal-cle-upcoming',
-      home: 'CLE',
-      away: 'BAL',
-      time: '6:40 PM ET',
-      date: '2024-11-25',
-      homeRecord: '40-50',
-      awayRecord: '44-55',
-      status: 'upcoming',
-      league: 'MLB'
+      id: 'SCORE_UPDATE',
+      label: 'Score Updates',
+      icon: 'target',
+      description: 'Real-time score change notifications',
+      color: 'bg-gradient-to-br from-blue-500 to-blue-600',
+      accent: 'border-blue-200 hover:border-blue-400'
     },
     {
-      id: 'det-pit-upcoming',
-      home: 'PIT',
-      away: 'DET',
-      time: '6:40 PM ET',
-      date: '2024-11-25',
-      homeRecord: '40-61',
-      awayRecord: '50-41',
-      status: 'upcoming',
-      league: 'MLB'
+      id: 'GAME_START',
+      fields: [
+        {
+          key: 'preGameReminder',
+          type: 'select',
+          label: 'Pre-Game Reminder',
+          defaultValue: '',
+          options: [
+            { value: '', label: 'No reminder' },
+            { value: '5_MINUTES', label: '5 Minutes Before' },
+            { value: '15_MINUTES', label: '15 Minutes Before' },
+            { value: '30_MINUTES', label: '30 Minutes Before' },
+            { value: '1_HOUR', label: '1 Hour Before' }
+          ]
+        },
+        {
+          key: 'includeLineup',
+          type: 'checkbox',
+          label: 'Include starting lineup',
+          defaultValue: false
+        }
+      ]
     },
     {
-      id: 'sd-mia-upcoming',
-      home: 'MIA',
-      away: 'SD',
-      time: '6:40 PM ET',
-      date: '2024-11-25',
-      homeRecord: '45-53',
-      awayRecord: '55-45',
-      status: 'upcoming',
-      league: 'MLB'
+      id: 'GAME_END',
+      fields: [
+        {
+          key: 'postGameDelay',
+          type: 'select',
+          label: 'Post-Game Delay',
+          defaultValue: 'IMMEDIATE',
+          options: [
+            { value: 'IMMEDIATE', label: 'Immediate' },
+            { value: '2_MINUTES', label: '2 Minutes' },
+            { value: '5_MINUTES', label: '5 Minutes' },
+            { value: '10_MINUTES', label: '10 Minutes' }
+          ]
+        },
+        {
+          key: 'includeStats',
+          type: 'checkbox',
+          label: 'Include final statistics',
+          defaultValue: false
+        }
+      ]
     },
     {
-      id: 'bos-phi-upcoming',
-      home: 'PHI',
-      away: 'BOS',
-      time: '6:45 PM ET',
-      date: '2024-11-25',
-      homeRecord: '57-43',
-      awayRecord: '54-48',
-      status: 'upcoming',
-      league: 'MLB'
+      id: 'OVERTIME',
+      fields: [
+        {
+          key: 'enableOvertimeAlerts',
+          type: 'checkbox',
+          label: 'Enable overtime alerts',
+          defaultValue: true
+        },
+        {
+          key: 'multipleOvertimeAlerts',
+          type: 'checkbox',
+          label: 'Alert for multiple overtime periods',
+          defaultValue: false
+        }
+      ]
     },
     {
-      id: 'kc-buf-upcoming',
-      home: 'BUF',
-      away: 'KC',
-      time: '4:25 PM EST',
-      date: '2024-11-27',
-      homeRecord: '8-3',
-      awayRecord: '9-2',
-      status: 'upcoming',
-      league: 'NFL'
+      id: 'TIMEOUT',
+      fields: [
+        {
+          key: 'teamTimeouts',
+          type: 'checkbox',
+          label: 'Team timeouts',
+          defaultValue: true
+        },
+        {
+          key: 'officialTimeouts',
+          type: 'checkbox',
+          label: 'Official timeouts',
+          defaultValue: false
+        },
+        {
+          key: 'mediaTimeouts',
+          type: 'checkbox',
+          label: 'Media timeouts',
+          defaultValue: false
+        },
+        {
+          key: 'minimumTimeoutDuration',
+          type: 'select',
+          label: 'Minimum Timeout Duration',
+          helpText: 'Only notify for timeouts longer than this duration',
+          defaultValue: '1_MINUTE',
+          options: [
+            { value: '30_SECONDS', label: '30 Seconds' },
+            { value: '1_MINUTE', label: '1 Minute' },
+            { value: '2_MINUTES', label: '2 Minutes' },
+            { value: 'ANY', label: 'Any Duration' }
+          ]
+        }
+      ]
     },
     {
-      id: 'lal-gsw-upcoming',
-      home: 'GSW',
-      away: 'LAL',
-      time: '7:30 PM PST',
-      date: '2024-11-25',
-      homeRecord: '35-47',
-      awayRecord: '42-40',
-      status: 'upcoming',
-      league: 'NBA'
+      id: 'INJURY',
+      fields: [
+        {
+          key: 'majorInjuries',
+          type: 'checkbox',
+          label: 'Major injuries only',
+          defaultValue: true
+        },
+        {
+          key: 'keyPlayerInjuries',
+          type: 'checkbox',
+          label: 'Key player injuries',
+          defaultValue: true
+        },
+        {
+          key: 'injuryUpdates',
+          type: 'checkbox',
+          label: 'Injury status updates',
+          defaultValue: false
+        },
+        {
+          key: 'injurySeverityThreshold',
+          type: 'select',
+          label: 'Injury Severity Threshold',
+          defaultValue: 'MODERATE',
+          options: [
+            { value: 'ANY', label: 'Any Injury' },
+            { value: 'MINOR', label: 'Minor & Above' },
+            { value: 'MODERATE', label: 'Moderate & Above' },
+            { value: 'MAJOR', label: 'Major Only' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'WEATHER',
+      fields: [
+        {
+          key: 'gameDelayWeather',
+          type: 'checkbox',
+          label: 'Game delays due to weather',
+          defaultValue: true
+        },
+        {
+          key: 'severeWeatherAlerts',
+          type: 'checkbox',
+          label: 'Severe weather alerts',
+          defaultValue: true
+        },
+        {
+          key: 'temperatureAlerts',
+          type: 'checkbox',
+          label: 'Extreme temperature alerts',
+          defaultValue: false
+        },
+        {
+          key: 'weatherUpdateFrequency',
+          type: 'select',
+          label: 'Weather Update Frequency',
+          defaultValue: 'SIGNIFICANT_CHANGES',
+          options: [
+            { value: 'SIGNIFICANT_CHANGES', label: 'Significant Changes Only' },
+            { value: 'HOURLY', label: 'Hourly Updates' },
+            { value: 'PRE_GAME', label: 'Pre-Game Only' },
+            { value: 'REAL_TIME', label: 'Real-Time Updates' }
+          ]
+        },
+        {
+          key: 'temperatureThreshold',
+          type: 'number',
+          label: 'Temperature Threshold (°F)',
+          placeholder: '32',
+          helpText: 'Alert when temperature goes below/above this value',
+          defaultValue: 32
+        }
+      ]
+    },
+    {
+      id: 'GAME_START',
+      label: 'Game Start',
+      icon: 'clock',
+      description: 'Alerts when games begin',
+      color: 'bg-gradient-to-br from-green-500 to-green-600',
+      accent: 'border-green-200 hover:border-green-400'
+    },
+    {
+      id: 'GAME_END',
+      label: 'Game End',
+      icon: 'clock',
+      description: 'Notifications when games conclude',
+      color: 'bg-gradient-to-br from-red-500 to-red-600',
+      accent: 'border-red-200 hover:border-red-400'
+    },
+    {
+      id: 'MONEY_LINE',
+      label: 'Money Line Changes',
+      icon: 'trending-up',
+      description: 'Track betting line movements',
+      color: 'bg-gradient-to-br from-purple-500 to-purple-600',
+      accent: 'border-purple-200 hover:border-purple-400'
+    },
+    {
+      id: 'POINT_DIFF',
+      label: 'Point Spread Changes',
+      icon: 'trending-up',
+      description: 'Monitor point spread fluctuations',
+      color: 'bg-gradient-to-br from-indigo-500 to-indigo-600',
+      accent: 'border-indigo-200 hover:border-indigo-400'
+    },
+    {
+      id: 'OVER_UNDER',
+      label: 'Over/Under Changes',
+      icon: 'trending-up',
+      description: 'Total points line adjustments',
+      color: 'bg-gradient-to-br from-pink-500 to-pink-600',
+      accent: 'border-pink-200 hover:border-pink-400'
+    },
+    {
+      id: 'BETTING_VOLUME',
+      label: 'Betting Volume Spikes',
+      icon: 'zap',
+      description: 'Unusual betting activity alerts',
+      color: 'bg-gradient-to-br from-orange-500 to-orange-600',
+      accent: 'border-orange-200 hover:border-orange-400'
+    },
+    {
+      id: 'START_END',
+      label: 'Game Start & End',
+      icon: 'clock',
+      description: 'Combined game lifecycle alerts',
+      color: 'bg-gradient-to-br from-teal-500 to-teal-600',
+      accent: 'border-teal-200 hover:border-teal-400'
+    },
+    {
+      id: 'GAME_MILESTONE',
+      label: 'Game Milestones',
+      icon: 'target',
+      description: 'Quarter ends, halftime events',
+      color: 'bg-gradient-to-br from-cyan-500 to-cyan-600',
+      accent: 'border-cyan-200 hover:border-cyan-400'
+    },
+    {
+      id: 'FINAL_SCORE',
+      label: 'Final Score',
+      icon: 'check',
+      description: 'Game result notifications',
+      color: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
+      accent: 'border-emerald-200 hover:border-emerald-400'
+    },
+    {
+      id: 'OVERTIME',
+      label: 'Overtime',
+      icon: 'clock',
+      description: 'Extended play period alerts',
+      color: 'bg-gradient-to-br from-amber-500 to-amber-600',
+      accent: 'border-amber-200 hover:border-amber-400'
+    },
+    {
+      id: 'TIMEOUT',
+      label: 'Timeouts',
+      icon: 'clock',
+      description: 'Game pause notifications',
+      color: 'bg-gradient-to-br from-slate-500 to-slate-600',
+      accent: 'border-slate-200 hover:border-slate-400'
+    },
+    {
+      id: 'INJURY',
+      label: 'Injury Reports',
+      icon: 'alert-triangle',
+      description: 'Player injury updates',
+      color: 'bg-gradient-to-br from-rose-500 to-rose-600',
+      accent: 'border-rose-200 hover:border-rose-400'
+    },
+    {
+      id: 'WEATHER',
+      label: 'Weather Updates',
+      icon: 'cloud-rain',
+      description: 'Game weather conditions',
+      color: 'bg-gradient-to-br from-sky-500 to-sky-600',
+      accent: 'border-sky-200 hover:border-sky-400'
     }
   ];
 
-  liveGames: Game[] = [
+  readonly notificationConfigs: ReadonlyArray<NotificationConfig> = [
     {
-      id: 'lal-gsw-live',
-      home: 'GSW',
-      away: 'LAL',
-      homeScore: '89',
-      awayScore: '92',
-      time: 'Q3 8:24',
-      date: '2024-11-25',
-      homeRecord: '35-47',
-      awayRecord: '42-40',
-      status: 'live',
-      league: 'NBA'
+      id: 'SCORE_UPDATE',
+      fields: [
+        {
+          key: 'incrementThreshold',
+          type: 'number',
+          label: 'Increment Threshold',
+          placeholder: 'Enter threshold value',
+          helpText: 'Minimum score change to trigger notification',
+          defaultValue: 7,
+          required: true
+        },
+        {
+          key: 'realTimeUpdates',
+          type: 'checkbox',
+          label: 'Enable real-time updates',
+          defaultValue: true
+        },
+        {
+          key: 'onlySignificantScores',
+          type: 'checkbox',
+          label: 'Only significant score changes',
+          defaultValue: false
+        }
+      ]
     },
     {
-      id: 'bos-mia-live',
-      home: 'MIA',
-      away: 'BOS',
-      homeScore: '76',
-      awayScore: '81',
-      time: 'Q3 5:12',
-      date: '2024-11-25',
-      homeRecord: '44-38',
-      awayRecord: '57-25',
-      status: 'live',
-      league: 'NBA'
+      id: 'MONEY_LINE',
+      fields: [
+        {
+          key: 'threshold',
+          type: 'number',
+          label: 'Movement Threshold',
+          placeholder: '15.0',
+          helpText: 'Minimum line movement to trigger alert',
+          defaultValue: 15.0,
+          step: '0.1'
+        },
+        {
+          key: 'minimumOddsValue',
+          type: 'number',
+          label: 'Minimum Odds Value',
+          placeholder: '100.0',
+          helpText: 'Only track lines above this value',
+          defaultValue: 100.0
+        },
+        {
+          key: 'trackFavoriteShift',
+          type: 'checkbox',
+          label: 'Track favorite shifts',
+          defaultValue: true
+        },
+        {
+          key: 'trackUnderdogShift',
+          type: 'checkbox',
+          label: 'Track underdog shifts',
+          defaultValue: true
+        }
+      ]
+    },
+    {
+      id: 'POINT_DIFF',
+      fields: [
+        {
+          key: 'threshold',
+          type: 'number',
+          label: 'Movement Threshold',
+          placeholder: '2.5',
+          helpText: 'Points threshold for spread movement alerts',
+          defaultValue: 2.5,
+          step: '0.1'
+        },
+        {
+          key: 'minimumGameTime',
+          type: 'select',
+          label: 'Minimum Game Time',
+          helpText: 'Only track changes within this timeframe',
+          defaultValue: '30_MINUTES_BEFORE',
+          options: [
+            { value: '30_MINUTES_BEFORE', label: '30 Minutes Before' },
+            { value: '1_HOUR_BEFORE', label: '1 Hour Before' },
+            { value: '2_HOURS_BEFORE', label: '2 Hours Before' }
+          ]
+        },
+        {
+          key: 'alertOnIncrease',
+          type: 'checkbox',
+          label: 'Alert on spread increase',
+          defaultValue: true
+        },
+        {
+          key: 'alertOnDecrease',
+          type: 'checkbox',
+          label: 'Alert on spread decrease',
+          defaultValue: true
+        }
+      ]
+    },
+    {
+      id: 'OVER_UNDER',
+      fields: [
+        {
+          key: 'threshold',
+          type: 'number',
+          label: 'Movement Threshold',
+          placeholder: '1.5',
+          helpText: 'Points threshold for total line movement',
+          defaultValue: 1.5,
+          step: '0.1'
+        },
+        {
+          key: 'alertOnIncrease',
+          type: 'checkbox',
+          label: 'Alert on total increase',
+          defaultValue: true
+        },
+        {
+          key: 'alertOnDecrease',
+          type: 'checkbox',
+          label: 'Alert on total decrease',
+          defaultValue: true
+        }
+      ]
+    },
+    {
+      id: 'BETTING_VOLUME',
+      fields: [
+        {
+          key: 'volumeThreshold',
+          type: 'number',
+          label: 'Volume Threshold',
+          placeholder: '200.0',
+          helpText: 'Percentage increase to trigger volume spike alert',
+          defaultValue: 200.0
+        },
+        {
+          key: 'timeWindow',
+          type: 'select',
+          label: 'Time Window',
+          helpText: 'Time period for volume analysis',
+          defaultValue: '15_MINUTES',
+          options: [
+            { value: '5_MINUTES', label: '5 Minutes' },
+            { value: '15_MINUTES', label: '15 Minutes' },
+            { value: '30_MINUTES', label: '30 Minutes' },
+            { value: '1_HOUR', label: '1 Hour' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'START_END',
+      fields: [
+        {
+          key: 'gameStart',
+          type: 'checkbox',
+          label: 'Notify on game start',
+          defaultValue: true
+        },
+        {
+          key: 'gameEnd',
+          type: 'checkbox',
+          label: 'Notify on game end',
+          defaultValue: true
+        },
+        {
+          key: 'preGameReminder',
+          type: 'select',
+          label: 'Pre-Game Reminder',
+          defaultValue: '',
+          options: [
+            { value: '', label: 'No reminder' },
+            { value: '15_MINUTES', label: '15 Minutes Before' },
+            { value: '30_MINUTES', label: '30 Minutes Before' },
+            { value: '1_HOUR', label: '1 Hour Before' }
+          ]
+        },
+        {
+          key: 'finalScoreDelay',
+          type: 'select',
+          label: 'Final Score Delay',
+          defaultValue: '',
+          options: [
+            { value: '', label: 'No delay' },
+            { value: '2_MINUTES', label: '2 Minutes' },
+            { value: '5_MINUTES', label: '5 Minutes' },
+            { value: '10_MINUTES', label: '10 Minutes' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'GAME_MILESTONE',
+      fields: [
+        {
+          key: 'quarterEnd',
+          type: 'checkbox',
+          label: 'Quarter end notifications',
+          defaultValue: false
+        },
+        {
+          key: 'halfTime',
+          type: 'checkbox',
+          label: 'Halftime notifications',
+          defaultValue: false
+        },
+        {
+          key: 'periodEnd',
+          type: 'checkbox',
+          label: 'Period end notifications',
+          defaultValue: false
+        },
+        {
+          key: 'overtime',
+          type: 'checkbox',
+          label: 'Overtime notifications',
+          defaultValue: true
+        },
+        {
+          key: 'twoMinuteWarning',
+          type: 'checkbox',
+          label: 'Two-minute warning',
+          defaultValue: false
+        }
+      ]
+    },
+    {
+      id: 'FINAL_SCORE',
+      fields: [
+        {
+          key: 'includeStats',
+          type: 'checkbox',
+          label: 'Include game statistics',
+          defaultValue: false
+        },
+        {
+          key: 'delayAfterGameEnd',
+          type: 'select',
+          label: 'Delay After Game End',
+          helpText: 'Wait time before sending final score',
+          defaultValue: '2_MINUTES',
+          options: [
+            { value: 'IMMEDIATE', label: 'Immediate' },
+            { value: '2_MINUTES', label: '2 Minutes' },
+            { value: '5_MINUTES', label: '5 Minutes' },
+            { value: '10_MINUTES', label: '10 Minutes' }
+          ]
+        }
+      ]
     }
   ];
 
-  notificationTypes: NotificationType[] = [
-    {
-      id: 'point-spread',
-      name: 'Point Spread Changes',
-      description: 'Get notified when point spreads move significantly',
-      icon: 'bi-graph-up-arrow',
-      premium: false
-    },
-    {
-      id: 'betting-volume',
-      name: 'Betting Volume Spike',
-      description: 'Alert when unusual betting activity is detected',
-      icon: 'bi-lightning-charge',
-      premium: true
-    },
-    {
-      id: 'score-update',
-      name: 'Score Updates',
-      description: 'Real-time score changes and game progress',
-      icon: 'bi-trophy',
-      premium: false
-    },
-    {
-      id: 'moneyline-odds',
-      name: 'Moneyline Odds',
-      description: 'Track significant moneyline movement',
-      icon: 'bi-currency-dollar',
-      premium: false
-    },
-    {
-      id: 'over-under',
-      name: 'Over/Under Changes',
-      description: 'Monitor total points line movements',
-      icon: 'bi-bar-chart-line',
-      premium: true
-    },
-    {
-      id: 'game-events',
-      name: 'Game Start/End',
-      description: 'Notifications for game beginning and final scores',
-      icon: 'bi-clock',
-      premium: false
-    }
-  ];
+  // Computed values
+  readonly selectedTypeConfig = computed(() =>
+      this.notificationConfigs.find(config => config.id === this.selectedType())
+  );
 
-  constructor(
-      @Inject(PLATFORM_ID) private platformId: Object,
-      private router: Router,
-      private route: ActivatedRoute
-  ) {}
+  readonly selectedTypeData = computed(() =>
+      this.notificationTypes.find(type => type.id === this.selectedType())
+  );
 
-  ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      this.detectDevice();
-      this.checkQueryParams();
-      this.loadDarkModePreference();
-    }
+  readonly formDataEntries = computed(() =>
+      Object.entries(this.formData())
+          .filter(([_, value]) => value !== null && value !== undefined && value !== '')
+          .map(([key, value]) => ({ key, value }))
+  );
+
+  /**
+   * Handles notification type selection and initializes form data
+   */
+  handleTypeSelection(typeId: string): void {
+    this.selectedType.set(typeId);
+    this.setCurrentStep('configuration');
+    this.initializeFormDataForType(typeId);
   }
 
-  ngOnDestroy(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      document.body.style.overflow = '';
-    }
+  /**
+   * Sets the current step of the wizard
+   */
+  setCurrentStep(step: Step): void {
+    this.currentStep.set(step);
   }
 
-  // Initialization methods
-  private checkQueryParams(): void {
-    this.route.queryParams.subscribe(params => {
-      if (params['edit'] && params['id']) {
-        this.isEditMode = true;
-        this.editingNotificationId = parseInt(params['id']);
-        this.loadNotificationForEdit();
-      }
+  /**
+   * Initializes form data with default values for the selected type
+   */
+  private initializeFormDataForType(typeId: string): void {
+    const config = this.notificationConfigs.find(c => c.id === typeId);
+    if (!config) return;
 
-      if (params['gameId']) {
-        this.preselectGame(params['gameId']);
-      }
+    const initialData: FormData = {};
+    config.fields.forEach(field => {
+      initialData[field.key] = field.defaultValue;
+    });
+
+    this.formData.set(initialData);
+  }
+
+  /**
+   * Proceeds to confirmation step
+   */
+  handleSubmit(): void {
+    this.setCurrentStep('confirmation');
+  }
+
+  /**
+   * Confirms and saves the configuration
+   */
+  handleConfirm(): void {
+    this.isConfirmed.set(true);
+    console.log('Submitted preferences:', {
+      type: this.selectedType(),
+      preferences: this.formData()
     });
   }
 
-  private loadNotificationForEdit(): void {
-    // In a real app, this would load from a service
-    // For now, we'll simulate loading an existing notification
-    this.formData = {
-      games: ['lal-gsw-upcoming'],
-      notificationType: 'point-spread',
-      conditions: {
-        threshold: 1.5,
-        direction: 'any'
-      },
-      delivery: {
-        pushEnabled: true,
-        emailEnabled: false,
-        smsEnabled: false
-      },
-      priority: 'high',
-      enabled: true
+  /**
+   * Resets the form to initial state
+   */
+  resetForm(): void {
+    this.setCurrentStep('selection');
+    this.selectedType.set('');
+    this.formData.set({});
+    this.isConfirmed.set(false);
+  }
+
+  /**
+   * Gets the label of the selected notification type
+   */
+  getSelectedTypeLabel(): string {
+    return this.selectedTypeData()?.label ?? '';
+  }
+
+  /**
+   * Gets the description of the selected notification type
+   */
+  getSelectedTypeDescription(): string {
+    return this.selectedTypeData()?.description ?? '';
+  }
+
+  /**
+   * Gets the icon name of the selected notification type
+   */
+  getSelectedTypeIcon(): string {
+    return this.selectedTypeData()?.icon ?? 'bell';
+  }
+
+  /**
+   * Gets the current notification configuration
+   */
+  getCurrentNotificationConfig(): NotificationConfig | undefined {
+    return this.selectedTypeConfig();
+  }
+
+  /**
+   * Formats field names for display
+   */
+  formatFieldName(fieldName: string): string {
+    return fieldName
+        .replace(/([A-Z])/g, ' $1')
+        .trim()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+  }
+
+  /**
+   * Gets form data entries for review
+   */
+  getFormDataEntries(): ReadonlyArray<{ readonly key: string; readonly value: unknown }> {
+    return this.formDataEntries();
+  }
+
+  /**
+   * Checks if a value is boolean
+   */
+  isBoolean(value: unknown): value is boolean {
+    return typeof value === 'boolean';
+  }
+
+  /**
+   * Gets SVG path for the given icon name
+   */
+  getIconPath(iconName: string): string {
+    const iconPaths: Record<string, string> = {
+      'target': 'M12 2L2 7v10c0 5.55 3.84 10 9 11 1.08.06 2.05.06 3 0 5.16-1 9-5.45 9-11V7l-10-5z',
+      'clock': 'M12 6v6l4 2m6-6a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
+      'trending-up': 'm3 17 6-6 4 4 8-8',
+      'zap': 'M13 2 3 14h9l-1 8 10-12h-9l1-8z',
+      'check': 'm5 13 4 4L19 7',
+      'alert-triangle': 'm12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.232 16c-.77.833.192 2.5 1.732 2.5z',
+      'cloud-rain': 'M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242M16 14v6m-4-2v4m-4-6v6',
+      'bell': 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M13.73 21a2 2 0 0 1-3.46 0'
     };
-
-    // Pre-select the games
-    this.selectedGames = this.upcomingGames.filter(game =>
-        this.formData.games.includes(game.id)
-    );
-
-    // Move to the appropriate step based on what's already filled
-    if (this.formData.games.length > 0) {
-      this.currentStep = 2;
-    }
-    if (this.formData.notificationType) {
-      this.currentStep = 3;
-    }
-  }
-
-  private preselectGame(gameId: string): void {
-    const game = [...this.upcomingGames, ...this.liveGames].find(g => g.id === gameId);
-    if (game && !this.isGameSelected(gameId)) {
-      this.selectedGames.push(game);
-      this.formData.games.push(gameId);
-    }
-  }
-
-  private loadDarkModePreference(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      const saved = localStorage.getItem('darkMode');
-      this.darkMode = saved ? JSON.parse(saved) : false;
-    }
-  }
-
-  // Device detection
-  private detectDevice(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-
-    const userAgent = navigator.userAgent.toLowerCase();
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-
-    const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
-    const isTouchDevice = 'ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
-    const isSmallScreen = screenWidth <= 768;
-
-    this.breakpoint = {
-      isMobile: isMobileDevice || (isTouchDevice && isSmallScreen),
-      isTablet: screenWidth > 768 && screenWidth <= 1024 && isTouchDevice,
-      isDesktop: screenWidth > 1024 && !isTouchDevice,
-      screenWidth,
-      orientation: screenWidth > screenHeight ? 'landscape' : 'portrait'
-    };
-
-    if (this.breakpoint.isMobile) {
-      document.body.classList.add('mobile-device');
-      if (/ipad|iphone|ipod/.test(userAgent)) {
-        document.body.classList.add('ios-device');
-      }
-    }
-  }
-
-  @HostListener('window:resize', ['$event'])
-  onResize(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      this.detectDevice();
-    }
-  }
-
-  // Navigation methods
-  navigateBack(): void {
-    this.router.navigate(['/notifications']);
-  }
-
-  // Step navigation
-  nextStep(): void {
-    if (this.canProceedToNextStep()) {
-      this.currentStep++;
-      if (isPlatformBrowser(this.platformId)) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
-  }
-
-  previousStep(): void {
-    if (this.currentStep > 1) {
-      this.currentStep--;
-      if (isPlatformBrowser(this.platformId)) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
-  }
-
-  canProceedToNextStep(): boolean {
-    switch (this.currentStep) {
-      case 1:
-        return this.selectedGames.length > 0;
-      case 2:
-        return this.formData.notificationType !== '';
-      case 3:
-        return this.isFormValid();
-      default:
-        return false;
-    }
-  }
-
-  getProgressPercentage(): number {
-    return (this.currentStep / 3) * 100;
-  }
-
-  // Game selection methods
-  isGameSelected(gameId: string): boolean {
-    return this.selectedGames.some(game => game.id === gameId);
-  }
-
-  toggleGameSelection(game: Game): void {
-    if (this.isGameSelected(game.id)) {
-      this.removeGameSelection(game);
-    } else {
-      this.selectedGames.push(game);
-      this.formData.games.push(game.id);
-    }
-
-    // Haptic feedback for mobile
-    if (isPlatformBrowser(this.platformId) && 'vibrate' in navigator && this.breakpoint.isMobile) {
-      navigator.vibrate(50);
-    }
-  }
-
-  removeGameSelection(game: Game): void {
-    this.selectedGames = this.selectedGames.filter(g => g.id !== game.id);
-    this.formData.games = this.formData.games.filter(id => id !== game.id);
-  }
-
-  // Notification type methods
-  onNotificationTypeChange(type: NotificationType): void {
-    this.formData.notificationType = type.id;
-
-    // Reset conditions when type changes
-    this.formData.conditions = {};
-
-    // Set default conditions based on type
-    switch (type.id) {
-      case 'point-spread':
-        this.formData.conditions = {
-          threshold: 1.5,
-          direction: 'any'
-        };
-        break;
-      case 'betting-volume':
-        this.formData.conditions = {
-          volumeThreshold: 200,
-          marketType: 'all'
-        };
-        break;
-      case 'score-update':
-        this.formData.conditions = {
-          frequency: 'every-score'
-        };
-        break;
-      default:
-        break;
-    }
-  }
-
-  // Form validation
-  isFormValid(): boolean {
-    if (this.selectedGames.length === 0) return false;
-    if (!this.formData.notificationType) return false;
-
-    // Validate conditions based on notification type
-    switch (this.formData.notificationType) {
-      case 'point-spread':
-        return !!(this.formData.conditions.threshold && this.formData.conditions.direction);
-      case 'betting-volume':
-        return !!(this.formData.conditions.volumeThreshold && this.formData.conditions.marketType);
-      case 'score-update':
-        return !!this.formData.conditions.frequency;
-      default:
-        return true;
-    }
-  }
-
-  // Form submission
-  submitForm(): void {
-    if (!this.isFormValid()) {
-      this.showToast('Please complete all required fields', 'error');
-      return;
-    }
-
-    // Simulate API call
-    const notification = {
-      id: this.isEditMode ? this.editingNotificationId : Date.now(),
-      ...this.formData,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    console.log('Submitting notification:', notification);
-
-    // Show success message and navigate back
-    const message = this.isEditMode ? 'Notification updated successfully!' : 'Notification created successfully!';
-
-    this.router.navigate(['/notifications'], {
-      queryParams: { message }
-    });
-  }
-
-  // Utility methods
-  getSelectedGamesText(): string {
-    if (this.selectedGames.length === 0) return 'No games selected';
-    if (this.selectedGames.length === 1) {
-      const game = this.selectedGames[0];
-      return `${game.away} @ ${game.home}`;
-    }
-    return `${this.selectedGames.length} games selected`;
-  }
-
-  getSelectedNotificationTypeText(): string {
-    const type = this.notificationTypes.find(t => t.id === this.formData.notificationType);
-    return type ? type.name : 'No type selected';
-  }
-
-  getConditionsText(): string {
-    if (!this.formData.notificationType) return 'No conditions set';
-
-    switch (this.formData.notificationType) {
-      case 'point-spread':
-        return `Alert when spread moves ${this.formData.conditions.threshold || 0} points ${this.formData.conditions.direction || 'any direction'}`;
-      case 'betting-volume':
-        return `Alert when ${this.formData.conditions.marketType || 'any'} market volume increases ${this.formData.conditions.volumeThreshold || 0}%`;
-      case 'score-update':
-        return `Send updates ${this.formData.conditions.frequency || 'every score change'}`;
-      default:
-        return 'Standard conditions';
-    }
-  }
-
-  // Safe area utilities for iOS
-  getSafeAreaTop(): string {
-    if (isPlatformBrowser(this.platformId) && document.body.classList.contains('ios-device')) {
-      return 'env(safe-area-inset-top, 0px)';
-    }
-    return '0px';
-  }
-
-  getSafeAreaBottom(): string {
-    if (isPlatformBrowser(this.platformId) && document.body.classList.contains('ios-device')) {
-      return 'env(safe-area-inset-bottom, 0px)';
-    }
-    return '0px';
-  }
-
-  // Toast notification
-  showToast(message: string, type: 'success' | 'error' | 'info' = 'success'): void {
-    this.toastMessage = message;
-    this.toastType = type;
-    setTimeout(() => this.toastMessage = '', 3000);
-  }
-
-  // Dark mode toggle
-  toggleDarkMode(): void {
-    this.darkMode = !this.darkMode;
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('darkMode', JSON.stringify(this.darkMode));
-    }
+    return iconPaths[iconName] ?? iconPaths['bell'];
   }
 }

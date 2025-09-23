@@ -53,7 +53,7 @@ export const content: Routes = [
         pathMatch: 'full',
         component: StatusComponent, // Changed from redirectTo to load StatusPageComponent
         data: {
-            breadcrumb: "Status"
+            breadcrumb: "EventStatus"
         }
     },
 

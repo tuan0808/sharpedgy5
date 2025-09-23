@@ -60,7 +60,7 @@
                         </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Account Status</div>
+                        <div class="stat-label">Account EventStatus</div>
                         <div class="stat-value">
                             {{ selectedAccount()?.activeAccount ? 'Active' : 'Inactive' }}
                         </div>
@@ -102,7 +102,7 @@
                             <td><input type="checkbox"></td>
                             <td>
 <!--                                <div>{{ bet.homeTeam }} VS {{bet.awayTeam}}</div>-->
-                                @switch (bet.status) {
+                                @switch (bet.betStatus) {
                                     @case (Status.WIN) {
                                         <div class="win-status">WIN</div>
                                     }

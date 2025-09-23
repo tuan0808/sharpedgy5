@@ -1,5 +1,6 @@
+
 export interface NotificationFilters {
-    enabled: 'all' | 'enabled' | 'disabled';
+    enabled: string;
     sport: string;
     type: string;
     league: string;

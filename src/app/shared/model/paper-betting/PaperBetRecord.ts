@@ -1,13 +1,16 @@
 import {BetSettlement} from "./BetSettlement";
 import {SportType} from "../SportType";
-import {Status} from "../enums/Status";
+import {EventStatus} from "../enums/EventStatus";
+import {BetTypes} from "../enums/BetTypes";
 
 export class PaperBetRecord extends BetSettlement {
-    gameId : string
-    gameStart : Date
+    gameId : number
+    userId : string
     sport: SportType = SportType.NFL
     amount : number = 0 ;
-    status : Status = Status.PENDING
+    betStatus : EventStatus = EventStatus.PENDING
     selectedTeam: string;
+    gameStart : Date;
     potentialWinnings: number
+    tempId: string;
 }

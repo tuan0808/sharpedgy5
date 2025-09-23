@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {Game} from "../../../shared/model/notifications/Game";
+import {ScheduledGame} from "../../../shared/model/notifications/ScheduledGame";
 
 @Component({
   selector: 'app-game-card',
@@ -8,11 +8,11 @@ import {Game} from "../../../shared/model/notifications/Game";
   templateUrl: './game-card.component.html',
   styleUrl: './game-card.component.scss'
 })
-export class GameCardComponent {  @Input() game!: Game;
-  @Input() gameData!: Game;
+export class GameCardComponent {  @Input() game!: ScheduledGame;
+  @Input() gameData!: ScheduledGame;
   @Input() isActive = false;
   @Input() darkMode = false;
-  @Output() gameClick = new EventEmitter<Game>();
+  @Output() gameClick = new EventEmitter<ScheduledGame>();
 
   getCardClass(): string {
     return `game-card ${this.darkMode ? 'dark' : 'light'}`;

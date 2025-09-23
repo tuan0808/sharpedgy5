@@ -12,10 +12,7 @@ import {BetFormComponent} from "../bet-form/bet-form.component";
   selector: 'app-game-card',
   standalone: true,
   imports: [
-    RouterLink,
     DatePipe,
-    BetFormComponent,
-    NgIf,
     NgClass
   ],
   templateUrl: './game-card.component.html',

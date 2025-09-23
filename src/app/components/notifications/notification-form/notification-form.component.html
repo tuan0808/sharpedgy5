@@ -1,431 +1,482 @@
-<!-- notification-form.component.html -->
-<div class="notification-form-container"
-     [class.light]="!darkMode"
-     [class.dark]="darkMode"
-     [class.mobile]="breakpoint.isMobile"
-     [class.tablet]="breakpoint.isTablet"
-     [class.desktop]="breakpoint.isDesktop">
-
-    <!-- Mobile Header -->
-    <div class="form-header mobile-header"
-         [class.light]="!darkMode"
-         [class.dark]="darkMode"
-         [style.padding-top]="getSafeAreaTop()">
-        <div class="header-container">
-            <div class="header-content">
-                <div class="header-left">
-                    <button class="back-button"
-                            [class.light]="!darkMode"
-                            [class.dark]="darkMode"
-                            (click)="navigateBack()">
-                        <i class="bi bi-arrow-left"></i>
-                    </button>
-                    <div class="header-title-section">
-                        <h1 class="header-title" [class.light]="!darkMode" [class.dark]="darkMode">
-                            {{ isEditMode ? 'Edit Notification' : 'Create Notification' }}
-                        </h1>
-                        @if (selectedGames.length > 0) {
-                            <p class="header-subtitle" [class.light]="!darkMode" [class.dark]="darkMode">
-                                {{ selectedGames.length }} game{{ selectedGames.length > 1 ? 's' : '' }} selected
+<div class="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-100">
+    <div class="max-w-6xl mx-auto px-6 py-12">
+        <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+            <div class="p-8 md:p-12">
+                @if (currentStep() === 'selection') {
+                    <div class="space-y-8">
+                        <div class="text-center">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl mb-6 shadow-lg">
+                                <i class="w-8 h-8 text-white">⚙️</i>
+                            </div>
+                            <h1 class="text-3xl font-bold text-slate-900 mb-3">Notification Preferences</h1>
+                            <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+                                Configure your personalized alerts and stay informed about the events that matter most to you
                             </p>
-                        }
-                    </div>
-                </div>
+                        </div>
 
-                <div class="header-actions">
-                    <button class="dark-mode-toggle"
-                            [class.light]="!darkMode"
-                            [class.dark]="darkMode"
-                            (click)="darkMode = !darkMode">
-                        <i class="bi" [class.bi-sun]="darkMode" [class.bi-moon]="!darkMode"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Progress Bar -->
-    <div class="progress-container">
-        <div class="progress-bar">
-            <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
-        </div>
-        <div class="progress-steps">
-            <div class="step" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">
-                <div class="step-number">1</div>
-                <div class="step-label">Games</div>
-            </div>
-            <div class="step" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2">
-                <div class="step-number">2</div>
-                <div class="step-label">Type</div>
-            </div>
-            <div class="step" [class.active]="currentStep >= 3" [class.completed]="currentStep > 3">
-                <div class="step-number">3</div>
-                <div class="step-label">Settings</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Form Content -->
-    <div class="form-content">
-        <div class="form-container">
-
-            <!-- Step 1: Game Selection -->
-            @if (currentStep === 1) {
-                <div class="form-step">
-                    <div class="step-header">
-                        <h2 class="step-title" [class.light]="!darkMode" [class.dark]="darkMode">
-                            Select Games
-                        </h2>
-                        <p class="step-description" [class.light]="!darkMode" [class.dark]="darkMode">
-                            Choose the games you want to monitor for notifications
-                        </p>
-                    </div>
-
-                    <!-- Game Filter Tabs -->
-                    <div class="game-filter-tabs" [class.mobile]="breakpoint.isMobile">
-                        <button class="filter-tab"
-                                [class.active]="activeGameTab === 'upcoming'"
-                                [class.light]="!darkMode"
-                                [class.dark]="darkMode"
-                                (click)="activeGameTab = 'upcoming'">
-                            Upcoming Games
-                            <span class="badge">{{ upcomingGames.length }}</span>
-                        </button>
-                        <button class="filter-tab"
-                                [class.active]="activeGameTab === 'live'"
-                                [class.light]="!darkMode"
-                                [class.dark]="darkMode"
-                                (click)="activeGameTab = 'live'">
-                            Live Games
-                            <span class="badge">{{ liveGames.length }}</span>
-                        </button>
-                    </div>
-
-                    <!-- Game Selection Grid -->
-                    <div class="games-grid" [class.mobile]="breakpoint.isMobile">
-                        @if (activeGameTab === 'upcoming') {
-                            @for (game of upcomingGames; track game.id) {
-                                <label class="game-option">
-                                    <input type="checkbox"
-                                           [value]="game.id"
-                                           [checked]="isGameSelected(game.id)"
-                                           (change)="toggleGameSelection(game)">
-                                    <div class="game-card"
-                                         [class.selected]="isGameSelected(game.id)"
-                                         [class.light]="!darkMode"
-                                         [class.dark]="darkMode">
-                                        <div class="game-header">
-                                            <div class="league-badge">{{ game.league }}</div>
-                                            <div class="game-time">{{ game.time }}</div>
-                                        </div>
-                                        <div class="game-matchup">
-                                            <div class="team away">{{ game.away }}</div>
-                                            <div class="vs">@</div>
-                                            <div class="team home">{{ game.home }}</div>
-                                        </div>
-                                        <div class="game-date">{{ game.date | date:'MMM d, y' }}</div>
-                                    </div>
-                                </label>
-                            }
-                        }
-
-                        @if (activeGameTab === 'live') {
-                            @for (game of liveGames; track game.id) {
-                                <label class="game-option">
-                                    <input type="checkbox"
-                                           [value]="game.id"
-                                           [checked]="isGameSelected(game.id)"
-                                           (change)="toggleGameSelection(game)">
-                                    <div class="game-card live"
-                                         [class.selected]="isGameSelected(game.id)"
-                                         [class.light]="!darkMode"
-                                         [class.dark]="darkMode">
-                                        <div class="game-header">
-                                            <div class="league-badge">{{ game.league }}</div>
-                                            <div class="live-indicator">LIVE</div>
-                                        </div>
-                                        <div class="game-matchup">
-                                            <div class="team away">
-                                                {{ game.away }}
-                                                <span class="score">{{ game.awayScore }}</span>
+                        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                            @for (type of notificationTypes(); track type.id) {
+                                <div
+                                        (click)="handleTypeSelection(type.id)"
+                                        [class]="'group relative overflow-hidden bg-white rounded-xl border-2 ' + type.accent + ' cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.01] active:scale-[0.99]'"
+                                >
+                                    <div class="p-4">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center space-x-3">
+                                                <div [class]="'inline-flex items-center justify-center w-10 h-10 ' + type.color + ' rounded-lg shadow-sm'">
+                                                    <span class="w-5 h-5 text-white">{{ type.icon }}</span>
+                                                </div>
+                                                <div>
+                                                    <h3 class="text-base font-semibold text-slate-900 group-hover:text-slate-700 transition-colors">
+                                                        {{ type.label }}
+                                                    </h3>
+                                                    <p class="text-xs text-slate-600">{{ type.description }}</p>
+                                                </div>
                                             </div>
-                                            <div class="vs">VS</div>
-                                            <div class="team home">
-                                                {{ game.home }}
-                                                <span class="score">{{ game.homeScore }}</span>
+                                            <div class="flex items-center text-xs font-medium text-indigo-600 group-hover:text-indigo-700">
+                                                Configure
+                                                <span class="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform duration-200">→</span>
                                             </div>
                                         </div>
-                                        <div class="game-status">{{ game.status }}</div>
                                     </div>
-                                </label>
+                                </div>
                             }
-                        }
+                        </div>
                     </div>
+                }
 
-                    <!-- Selected Games Summary -->
-                    @if (selectedGames.length > 0) {
-                        <div class="selection-summary" [class.light]="!darkMode" [class.dark]="darkMode">
-                            <h3>Selected Games ({{ selectedGames.length }})</h3>
-                            <div class="selected-games">
-                                @for (game of selectedGames; track game.id) {
-                                    <div class="selected-game-chip">
-                                        <span>{{ game.away }} @ {{ game.home }}</span>
-                                        <button type="button" (click)="removeGameSelection(game)">
-                                            <i class="bi bi-x"></i>
-                                        </button>
-                                    </div>
-                                }
+                @if (currentStep() === 'configuration') {
+                    <div class="space-y-8">
+                        <div class="flex items-center">
+                            <button
+                                    (click)="setCurrentStep('selection')"
+                                    class="mr-6 p-3 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all duration-200"
+                            >
+                                ←
+                            </button>
+                            <div>
+                                <h1 class="text-3xl font-bold text-slate-900 mb-2">
+                                    Configure {{ selectedTypeObj()?.label }}
+                                </h1>
+                                <p class="text-lg text-slate-600">{{ selectedTypeObj()?.description }}</p>
                             </div>
                         </div>
-                    }
-                </div>
-            }
 
-            <!-- Step 2: Notification Type -->
-            @if (currentStep === 2) {
-                <div class="form-step">
-                    <div class="step-header">
-                        <h2 class="step-title" [class.light]="!darkMode" [class.dark]="darkMode">
-                            Notification Type
-                        </h2>
-                        <p class="step-description" [class.light]="!darkMode" [class.dark]="darkMode">
-                            Choose what type of notifications you want to receive
-                        </p>
-                    </div>
-
-                    <div class="notification-types" [class.mobile]="breakpoint.isMobile">
-                        @for (type of notificationTypes; track type.id) {
-                            <label class="type-option">
-                                <input type="radio"
-                                       name="notificationType"
-                                       [value]="type.id"
-                                       [(ngModel)]="formData.notificationType"
-                                       (change)="onNotificationTypeChange(type)">
-                                <div class="type-card"
-                                     [class.selected]="formData.notificationType === type.id"
-                                     [class.light]="!darkMode"
-                                     [class.dark]="darkMode">
-                                    <div class="type-icon">
-                                        <i class="bi" [class]="type.icon"></i>
+                        <div class="bg-gradient-to-br from-slate-50 to-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                            @if (selectedType() === 'SCORE_UPDATE') {
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="text-sm font-medium text-slate-700 mb-2 block">Increment Threshold</label>
+                                        <input
+                                                type="number"
+                                                [(ngModel)]="formData().incrementThreshold"
+                                                (ngModelChange)="updateFormData('incrementThreshold', $event)"
+                                                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-slate-900 placeholder-slate-400"
+                                                placeholder="Enter threshold value"
+                                        />
+                                        <p class="mt-2 text-xs text-slate-500">Minimum score change to trigger notification</p>
                                     </div>
-                                    <div class="type-content">
-                                        <h3 class="type-title">{{ type.name }}</h3>
-                                        <p class="type-description">{{ type.description }}</p>
-                                        @if (type.premium) {
-                                            <span class="premium-badge">Premium</span>
+                                    <div class="flex items-center">
+                                        <input
+                                                type="checkbox"
+                                                id="realTimeUpdates"
+                                                [(ngModel)]="formData().realTimeUpdates"
+                                                (ngModelChange)="updateFormData('realTimeUpdates', $event)"
+                                                class="w-5 h-5 text-indigo-600 border-2 border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-colors duration-200"
+                                        />
+                                        <label for="realTimeUpdates" class="ml-3 text-sm font-medium text-slate-700">
+                                            Enable real-time updates
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input
+                                                type="checkbox"
+                                                id="onlySignificantScores"
+                                                [(ngModel)]="formData().onlySignificantScores"
+                                                (ngModelChange)="updateFormData('onlySignificantScores', $event)"
+                                                class="w-5 h-5 text-indigo-600 border-2 border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-colors duration-200"
+                                        />
+                                        <label for="onlySignificantScores" class="ml-3 text-sm font-medium text-slate-700">
+                                            Only significant score changes
+                                        </label>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (selectedType() === 'MONEY_LINE') {
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="text-sm font-medium text-slate-700 mb-2 block">Movement Threshold</label>
+                                        <input
+                                                type="number"
+                                                step="0.1"
+                                                [(ngModel)]="formData().threshold"
+                                                (ngModelChange)="updateFormData('threshold', $event)"
+                                                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-slate-900 placeholder-slate-400"
+                                                placeholder="15.0"
+                                        />
+                                        <p class="mt-2 text-xs text-slate-500">Minimum line movement to trigger alert</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-slate-700 mb-2 block">Minimum Odds Value</label>
+                                        <input
+                                                type="number"
+                                                [(ngModel)]="formData().minimumOddsValue"
+                                                (ngModelChange)="updateFormData('minimumOddsValue', $event)"
+                                                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-slate-900 placeholder-slate-400"
+                                                placeholder="100.0"
+                                        />
+                                        <p class="mt-2 text-xs text-slate-500">Only track lines above this value</p>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <div class="flex items-center">
+                                            <input
+                                                    type="checkbox"
+                                                    id="trackFavoriteShift"
+                                                    [(ngModel)]="formData().trackFavoriteShift"
+                                                    (ngModelChange)="updateFormData('trackFavoriteShift', $event)"
+                                                    class="w-5 h-5 text-indigo-600 border-2 border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-colors duration-200"
+                                            />
+                                            <label for="trackFavoriteShift" class="ml-3 text-sm font-medium text-slate-700">
+                                                Track favorite shifts
+                                            </label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input
+                                                    type="checkbox"
+                                                    id="trackUnderdogShift"
+                                                    [(ngModel)]="formData().trackUnderdogShift"
+                                                    (ngModelChange)="updateFormData('trackUnderdogShift', $event)"
+                                                    class="w-5 h-5 text-indigo-600 border-2 border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-colors duration-200"
+                                            />
+                                            <label for="trackUnderdogShift" class="ml-3 text-sm font-medium text-slate-700">
+                                                Track underdog shifts
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (selectedType() === 'POINT_DIFF') {
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="text-sm font-medium text-slate-700 mb-2 block">Movement Threshold</label>
+                                        <input
+                                                type="number"
+                                                step="0.1"
+                                                [(ngModel)]="formData().threshold"
+                                                (ngModelChange)="updateFormData('threshold', $event)"
+                                                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-slate-900 placeholder-slate-400"
+                                                placeholder="2.5"
+                                        />
+                                        <p class="mt-2 text-xs text-slate-500">Points threshold for spread movement alerts</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-slate-700 mb-2 block">Minimum Game Time</label>
+                                        <select
+                                                [(ngModel)]="formData().minimumGameTime"
+                                                (ngModelChange)="updateFormData('minimumGameTime', $event)"
+                                                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-slate-900 placeholder-slate-400"
+                                        >
+                                            <option value="30_MINUTES_BEFORE">30 Minutes Before</option>
+                                            <option value="1_HOUR_BEFORE">1 Hour Before</option>
+                                            <option value="2_HOURS_BEFORE">2 Hours Before</option>
+                                        </select>
+                                        <p class="mt-2 text-xs text-slate-500">Only track changes within this timeframe</p>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <div class="flex items-center">
+                                            <input
+                                                    type="checkbox"
+                                                    id="alertOnIncrease"
+                                                    [(ngModel)]="formData().alertOnIncrease"
+                                                    (ngModelChange)="updateFormData('alertOnIncrease', $event)"
+                                                    class="w-5 h-5 text-indigo-600 border-2 border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-colors duration-200"
+                                            />
+                                            <label for="alertOnIncrease" class="ml-3 text-sm font-medium text-slate-700">
+                                                Alert on spread increase
+                                            </label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input
+                                                    type="checkbox"
+                                                    id="alertOnDecrease"
+                                                    [(ngModel)]="formData().alertOnDecrease"
+                                                    (ngModelChange)="updateFormData('alertOnDecrease', $event)"
+                                                    class="w-5 h-5 text-indigo-600 border-2 border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-colors duration-200"
+                                            />
+                                            <label for="alertOnDecrease" class="ml-3 text-sm font-medium text-slate-700">
+                                                Alert on spread decrease
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (selectedType() === 'OVER_UNDER') {
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="text-sm font-medium text-slate-700 mb-2 block">Movement Threshold</label>
+                                        <input
+                                                type="number"
+                                                step="0.1"
+                                                [(ngModel)]="formData().threshold"
+                                                (ngModelChange)="updateFormData('threshold', $event)"
+                                                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-slate-900 placeholder-slate-400"
+                                                placeholder="1.5"
+                                        />
+                                        <p class="mt-2 text-xs text-slate-500">Points threshold for total line movement</p>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <div class="flex items-center">
+                                            <input
+                                                    type="checkbox"
+                                                    id="alertOnIncrease"
+                                                    [(ngModel)]="formData().alertOnIncrease"
+                                                    (ngModelChange)="updateFormData('alertOnIncrease', $event)"
+                                                    class="w-5 h-5 text-indigo-600 border-2 border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-colors duration-200"
+                                            />
+                                            <label for="alertOnIncrease" class="ml-3 text-sm font-medium text-slate-700">
+                                                Alert on total increase
+                                            </label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input
+                                                    type="checkbox"
+                                                    id="alertOnDecrease"
+                                                    [(ngModel)]="formData().alertOnDecrease"
+                                                    (ngModelChange)="updateFormData('alertOnDecrease', $event)"
+                                                    class="w-5 h-5 text-indigo-600 border-2 border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-colors duration-200"
+                                            />
+                                            <label for="alertOnDecrease" class="ml-3 text-sm font-medium text-slate-700">
+                                                Alert on total decrease
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (selectedType() === 'BETTING_VOLUME') {
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="text-sm font-medium text-slate-700 mb-2 block">Volume Threshold</label>
+                                        <input
+                                                type="number"
+                                                [(ngModel)]="formData().volumeThreshold"
+                                                (ngModelChange)="updateFormData('volumeThreshold', $event)"
+                                                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-slate-900 placeholder-slate-400"
+                                                placeholder="200.0"
+                                        />
+                                        <p class="mt-2 text-xs text-slate-500">Percentage increase to trigger volume spike alert</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-slate-700 mb-2 block">Time Window</label>
+                                        <select
+                                                [(ngModel)]="formData().timeWindow"
+                                                (ngModelChange)="updateFormData('timeWindow', $event)"
+                                                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-slate-900 placeholder-slate-400"
+                                        >
+                                            <option value="5_MINUTES">5 Minutes</option>
+                                            <option value="15_MINUTES">15 Minutes</option>
+                                            <option value="30_MINUTES">30 Minutes</option>
+                                            <option value="1_HOUR">1 Hour</option>
+                                        </select>
+                                        <p class="mt-2 text-xs text-slate-500">Time period for volume analysis</p>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (['GAME_START', 'GAME_END', 'START_END'].includes(selectedType())) {
+                                <div class="space-y-6">
+                                    <div class="space-y-4">
+                                        <div class="flex items-center">
+                                            <input
+                                                    type="checkbox"
+                                                    id="gameStart"
+                                                    [(ngModel)]="formData().gameStart"
+                                                    (ngModelChange)="updateFormData('gameStart', $event)"
+                                                    class="w-5 h-5 text-indigo-600 border-2 border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-colors duration-200"
+                                            />
+                                            <label for="gameStart" class="ml-3 text-sm font-medium text-slate-700">
+                                                Notify on game start
+                                            </label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input
+                                                    type="checkbox"
+                                                    id="gameEnd"
+                                                    [(ngModel)]="formData().gameEnd"
+                                                    (ngModelChange)="updateFormData('gameEnd', $event)"
+                                                    class="w-5 h-5 text-indigo-600 border-2 border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-colors duration-200"
+                                            />
+                                            <label for="gameEnd" class="ml-3 text-sm font-medium text-slate-700">
+                                                Notify on game end
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-slate-700 mb-2 block">Pre-Game Reminder</label>
+                                        <select
+                                                [(ngModel)]="formData().preGameReminder"
+                                                (ngModelChange)="updateFormData('preGameReminder', $event)"
+                                                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-slate-900 placeholder-slate-400"
+                                        >
+                                            <option value="">No reminder</option>
+                                            <option value="15_MINUTES">15 Minutes Before</option>
+                                            <option value="30_MINUTES">30 Minutes Before</option>
+                                            <option value="1_HOUR">1 Hour Before</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (selectedType() === 'FINAL_SCORE') {
+                                <div class="space-y-6">
+                                    <div class="flex items-center">
+                                        <input
+                                                type="checkbox"
+                                                id="includeStats"
+                                                [(ngModel)]="formData().includeStats"
+                                                (ngModelChange)="updateFormData('includeStats', $event)"
+                                                class="w-5 h-5 text-indigo-600 border-2 border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-colors duration-200"
+                                        />
+                                        <label for="includeStats" class="ml-3 text-sm font-medium text-slate-700">
+                                            Include game statistics
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-slate-700 mb-2 block">Delay After Game End</label>
+                                        <select
+                                                [(ngModel)]="formData().delayAfterGameEnd"
+                                                (ngModelChange)="updateFormData('delayAfterGameEnd', $event)"
+                                                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-slate-900 placeholder-slate-400"
+                                        >
+                                            <option value="IMMEDIATE">Immediate</option>
+                                            <option value="2_MINUTES">2 Minutes</option>
+                                            <option value="5_MINUTES">5 Minutes</option>
+                                            <option value="10_MINUTES">10 Minutes</option>
+                                        </select>
+                                        <p class="mt-2 text-xs text-slate-500">Wait time before sending final score</p>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (!['SCORE_UPDATE', 'MONEY_LINE', 'POINT_DIFF', 'OVER_UNDER', 'BETTING_VOLUME', 'GAME_START', 'GAME_END', 'START_END', 'FINAL_SCORE'].includes(selectedType())) {
+                                <div class="text-center py-12">
+                                    <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-2xl mb-4">
+                                        <span class="w-8 h-8 text-slate-400">🔔</span>
+                                    </div>
+                                    <h3 class="text-lg font-medium text-slate-900 mb-2">Coming Soon</h3>
+                                    <p class="text-slate-600">Configuration options for this notification type are being developed.</p>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="flex justify-between items-center pt-4">
+                            <button
+                                    (click)="setCurrentStep('selection')"
+                                    class="px-6 py-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all duration-200 font-medium"
+                            >
+                                Back to Selection
+                            </button>
+                            <button
+                                    (click)="handleSubmit()"
+                                    class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center"
+                            >
+                                Review Configuration
+                                <span class="w-5 h-5 ml-2">→</span>
+                            </button>
+                        </div>
+                    </div>
+                }
+
+                @if (currentStep() === 'confirmation') {
+                    @if (isConfirmed()) {
+                        <div class="text-center space-y-8">
+                            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl shadow-lg">
+                                <span class="w-10 h-10 text-white">✓</span>
+                            </div>
+                            <div>
+                                <h1 class="text-3xl font-bold text-slate-900 mb-3">Configuration Saved!</h1>
+                                <p class="text-lg text-slate-600 max-w-md mx-auto">
+                                    Your notification preferences have been successfully configured and are now active.
+                                </p>
+                            </div>
+                            <button
+                                    (click)="resetForm()"
+                                    class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
+                            >
+                                Configure Another Notification
+                            </button>
+                        </div>
+                    } @else {
+                        <div class="space-y-8">
+                            <div class="flex items-center">
+                                <button
+                                        (click)="setCurrentStep('configuration')"
+                                        class="mr-6 p-3 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all duration-200"
+                                >
+                                    ←
+                                </button>
+                                <div>
+                                    <h1 class="text-3xl font-bold text-slate-900 mb-2">Review & Confirm</h1>
+                                    <p class="text-lg text-slate-600">Please review your configuration before saving</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-gradient-to-br from-slate-50 to-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                                <div class="flex items-center mb-6">
+                                    <div [class]="'inline-flex items-center justify-center w-12 h-12 ' + (selectedTypeObj()?.color || '') + ' rounded-xl mr-4 shadow-md'">
+                                        <span class="w-6 h-6 text-white">{{ selectedTypeObj()?.icon }}</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xl font-semibold text-slate-900">{{ selectedTypeObj()?.label }}</h3>
+                                        <p class="text-slate-600">{{ selectedTypeObj()?.description }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="border-t border-slate-200 pt-6">
+                                    <h4 class="text-lg font-semibold text-slate-900 mb-4">Configuration Details</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        @for (entry of formDataEntries(); track entry.key) {
+                                            <div class="flex justify-between items-center py-3 px-4 bg-white rounded-xl border border-slate-100">
+                            <span class="text-slate-600 font-medium capitalize">
+                              {{ formatKey(entry.key) }}
+                            </span>
+                                                <span class="font-semibold text-slate-900">
+                              @if (typeof entry.value === 'boolean') {
+                                  <span [class]="'px-2 py-1 rounded-lg text-xs font-medium ' + (entry.value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')">
+                                  {{ entry.value ? 'Enabled' : 'Disabled' }}
+                                </span>
+                              } @else {
+                                  {{ entry.value?.toString() || 'Not set' }}
+                              }
+                            </span>
+                                            </div>
                                         }
                                     </div>
                                 </div>
-                            </label>
-                        }
-                    </div>
-                </div>
-            }
-
-            <!-- Step 3: Notification Settings -->
-            @if (currentStep === 3) {
-                <div class="form-step">
-                    <div class="step-header">
-                        <h2 class="step-title" [class.light]="!darkMode" [class.dark]="darkMode">
-                            Notification Settings
-                        </h2>
-                        <p class="step-description" [class.light]="!darkMode" [class.dark]="darkMode">
-                            Configure when and how you want to be notified
-                        </p>
-                    </div>
-
-                    <div class="settings-grid" [class.mobile]="breakpoint.isMobile">
-                        <!-- Condition Settings -->
-                        <div class="settings-section" [class.light]="!darkMode" [class.dark]="darkMode">
-                            <h3 class="section-title">Trigger Conditions</h3>
-
-                            @if (formData.notificationType === 'point-spread') {
-                                <div class="setting-group">
-                                    <label class="setting-label">Threshold (points)</label>
-                                    <input type="number"
-                                           class="form-input"
-                                           [(ngModel)]="formData.conditions.threshold"
-                                           min="0.5"
-                                           max="20"
-                                           step="0.5"
-                                           [class.light]="!darkMode"
-                                           [class.dark]="darkMode">
-                                    <small class="setting-help">Notify when spread changes by this amount</small>
-                                </div>
-
-                                <div class="setting-group">
-                                    <label class="setting-label">Direction</label>
-                                    <select class="form-select"
-                                            [(ngModel)]="formData.conditions.direction"
-                                            [class.light]="!darkMode"
-                                            [class.dark]="darkMode">
-                                        <option value="any">Any direction</option>
-                                        <option value="favoring">Favoring home</option>
-                                        <option value="against">Against home</option>
-                                    </select>
-                                </div>
-                            }
-
-                            @if (formData.notificationType === 'betting-volume') {
-                                <div class="setting-group">
-                                    <label class="setting-label">Volume Threshold (%)</label>
-                                    <input type="number"
-                                           class="form-input"
-                                           [(ngModel)]="formData.conditions.volumeThreshold"
-                                           min="50"
-                                           max="500"
-                                           step="25"
-                                           [class.light]="!darkMode"
-                                           [class.dark]="darkMode">
-                                    <small class="setting-help">Notify when betting volume spikes by this percentage</small>
-                                </div>
-
-                                <div class="setting-group">
-                                    <label class="setting-label">Market Type</label>
-                                    <select class="form-select"
-                                            [(ngModel)]="formData.conditions.marketType"
-                                            [class.light]="!darkMode"
-                                            [class.dark]="darkMode">
-                                        <option value="all">All markets</option>
-                                        <option value="spread">Point spread</option>
-                                        <option value="total">Over/under</option>
-                                        <option value="moneyline">Moneyline</option>
-                                    </select>
-                                </div>
-                            }
-
-                            @if (formData.notificationType === 'score-update') {
-                                <div class="setting-group">
-                                    <label class="setting-label">Update Frequency</label>
-                                    <select class="form-select"
-                                            [(ngModel)]="formData.conditions.frequency"
-                                            [class.light]="!darkMode"
-                                            [class.dark]="darkMode">
-                                        <option value="every-score">Every score change</option>
-                                        <option value="quarter-end">End of quarters</option>
-                                        <option value="major-plays">Major plays only</option>
-                                    </select>
-                                </div>
-                            }
-                        </div>
-
-                        <!-- Delivery Settings -->
-                        <div class="settings-section" [class.light]="!darkMode" [class.dark]="darkMode">
-                            <h3 class="section-title">Delivery Options</h3>
-
-                            <div class="setting-group">
-                                <label class="setting-label">Priority Level</label>
-                                <select class="form-select"
-                                        [(ngModel)]="formData.priority"
-                                        [class.light]="!darkMode"
-                                        [class.dark]="darkMode">
-                                    <option value="low">Low - No sound</option>
-                                    <option value="normal">Normal - Default sound</option>
-                                    <option value="high">High - Loud notification</option>
-                                    <option value="urgent">Urgent - Bypass Do Not Disturb</option>
-                                </select>
                             </div>
 
-                            <div class="setting-toggles">
-                                <div class="toggle-item">
-                                    <input type="checkbox"
-                                           id="pushEnabled"
-                                           [(ngModel)]="formData.delivery.pushEnabled">
-                                    <label for="pushEnabled" class="toggle-label">Push notifications</label>
-                                </div>
-
-                                <div class="toggle-item">
-                                    <input type="checkbox"
-                                           id="emailEnabled"
-                                           [(ngModel)]="formData.delivery.emailEnabled">
-                                    <label for="emailEnabled" class="toggle-label">Email notifications</label>
-                                </div>
-
-                                <div class="toggle-item">
-                                    <input type="checkbox"
-                                           id="smsEnabled"
-                                           [(ngModel)]="formData.delivery.smsEnabled">
-                                    <label for="smsEnabled" class="toggle-label">SMS notifications</label>
-                                </div>
+                            <div class="flex justify-between items-center pt-4">
+                                <button
+                                        (click)="setCurrentStep('configuration')"
+                                        class="px-6 py-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all duration-200 font-medium"
+                                >
+                                    Back to Edit
+                                </button>
+                                <button
+                                        (click)="handleConfirm()"
+                                        class="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center"
+                                >
+                                    <span class="w-5 h-5 mr-2">✓</span>
+                                    Save Configuration
+                                </button>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Summary Preview -->
-                    <div class="notification-preview" [class.light]="!darkMode" [class.dark]="darkMode">
-                        <h3 class="preview-title">Notification Preview</h3>
-                        <div class="preview-content">
-                            <div class="preview-game">
-                                <strong>Games:</strong> {{ getSelectedGamesText() }}
-                            </div>
-                            <div class="preview-type">
-                                <strong>Type:</strong> {{ getSelectedNotificationTypeText() }}
-                            </div>
-                            <div class="preview-conditions">
-                                <strong>Conditions:</strong> {{ getConditionsText() }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
-    </div>
-
-    <!-- Form Navigation -->
-    <div class="form-footer"
-         [style.padding-bottom]="getSafeAreaBottom()">
-        <div class="footer-content">
-            <div class="footer-info">
-                @if (currentStep < 3) {
-                    <span>Step {{ currentStep }} of 3</span>
-                } @else {
-                    <span>Ready to create notification</span>
-                }
-            </div>
-
-            <div class="footer-actions">
-                @if (currentStep > 1) {
-                    <button type="button"
-                            class="btn btn-outline"
-                            [class.light]="!darkMode"
-                            [class.dark]="darkMode"
-                            (click)="previousStep()">
-                        Previous
-                    </button>
-                }
-
-                @if (currentStep < 3) {
-                    <button type="button"
-                            class="btn btn-primary"
-                            [disabled]="!canProceedToNextStep()"
-                            (click)="nextStep()">
-                        Next
-                    </button>
-                } @else {
-                    <button type="button"
-                            class="btn btn-primary"
-                            [disabled]="!isFormValid()"
-                            (click)="submitForm()">
-                        {{ isEditMode ? 'Update' : 'Create' }} Notification
-                    </button>
+                    }
                 }
             </div>
         </div>
     </div>
-
-    <!-- Toast Notification -->
-    @if (toastMessage) {
-        <div class="toast-notification"
-             [class]="'toast-' + toastType"
-             [class.mobile]="breakpoint.isMobile"
-             [style.top]="breakpoint.isMobile ? getSafeAreaTop() : '1rem'">
-            <div class="toast-content">
-                <i class="bi"
-                   [class.bi-check-circle]="toastType === 'success'"
-                   [class.bi-exclamation-circle]="toastType === 'error'"
-                   [class.bi-info-circle]="toastType === 'info'"></i>
-                {{ toastMessage }}
-            </div>
-        </div>
-    }
 </div>

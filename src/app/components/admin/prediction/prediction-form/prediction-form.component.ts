@@ -9,7 +9,7 @@ import { PredictionsService } from '../../../../shared/services/predictions.serv
 import { BetTypes } from '../../../../shared/model/enums/BetTypes';
 import { SportType } from '../../../../shared/model/SportType';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import {Status} from "../../../../shared/model/enums/Status";
+import {EventStatus} from "../../../../shared/model/enums/EventStatus";
 
 interface SubmittedBetData {
   prediction: Prediction;
@@ -82,7 +82,7 @@ export class PredictionFormComponent extends BaseBetFormComponent {
       prediction.note = this.bettingForm.value.notes || '';
       prediction.sport = SportType.NFL; // TODO: Fix and implement fully
       prediction.gameStart = new Date(this.game.scheduled);
-      prediction.status = Status.PENDING; // Assuming 0 is PENDING; adjust based on your enum
+      prediction.status = EventStatus.PENDING; // Assuming 0 is PENDING; adjust based on your enum
       prediction.wagerValue = parseFloat(this.bettingForm.value.amount) || 100;
      // prediction.userId = this.uid || '';
       prediction.creationDate = new Date();

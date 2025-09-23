@@ -21,8 +21,8 @@ export class NflDataService {
   }
 
   /**
-   * GET Are Games In Progress * Returns true if there is at least one game being played at the time of the request or false if there are none. * Tags: Schedules & Game Day Info Feeds * Recommended Call Interval: 5 Seconds * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/AreAnyGamesInProgress
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Are Games In Progress * Returns true if there is at least one game being played at the time of the request or false if there are none. * Tags: Schedules & ScheduledGame Day Info Feeds * Recommended Call Interval: 5 Seconds * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/AreAnyGamesInProgress
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 SECONDS
    !!removeMe
    */
@@ -34,8 +34,8 @@ export class NflDataService {
 
 
   /**
-   * GET Bye Weeks * Get bye weeks for the teams during a specified NFL season. * Tags: Schedules & Game Day Info Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/Byes/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Bye Weeks * Get bye weeks for the teams during a specified NFL season. * Tags: Schedules & ScheduledGame Day Info Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/Byes/{season}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param season
 
@@ -48,8 +48,8 @@ export class NflDataService {
 
 
   /**
-   * GET Week Current * Year of the current NFL season. This value changes at the start of the new NFL league year. The earliest season for Fantasy data is 2001. The earliest season for Team data is 1985. The earliest season for Fantasy data is 2001. The earliest season for Team data is 1985. * Tags: Schedules & Game Day Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/CurrentSeason
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Week Current * Year of the current NFL season. This value changes at the start of the new NFL league year. The earliest season for Fantasy data is 2001. The earliest season for Team data is 1985. The earliest season for Fantasy data is 2001. The earliest season for Team data is 1985. * Tags: Schedules & ScheduledGame Day Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/CurrentSeason
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    !!removeMe
    */
@@ -61,8 +61,8 @@ export class NflDataService {
 
 
   /**
-   * GET Week Last Completed * Year of the most recently completed season. this value changes immediately after the Super Bowl. The earliest season for Fantasy data is 2001. The earliest season for Team data is 1985. * Tags: Schedules & Game Day Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/LastCompletedSeason
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Week Last Completed * Year of the most recently completed season. this value changes immediately after the Super Bowl. The earliest season for Fantasy data is 2001. The earliest season for Team data is 1985. * Tags: Schedules & ScheduledGame Day Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/LastCompletedSeason
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    !!removeMe
    */
@@ -74,8 +74,8 @@ export class NflDataService {
 
 
   /**
-   * GET Week Upcoming * Year of the current NFL season, if we are in the mid-season. If we are in the off-season, then year of the next upcoming season. This value changes immediately after the Super Bowl. The earliest season for Fantasy data is 2001. The earliest season for Team data is 1985. * Tags: Schedules & Game Day Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/UpcomingSeason
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Week Upcoming * Year of the current NFL season, if we are in the mid-season. If we are in the off-season, then year of the next upcoming season. This value changes immediately after the Super Bowl. The earliest season for Fantasy data is 2001. The earliest season for Team data is 1985. * Tags: Schedules & ScheduledGame Day Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/UpcomingSeason
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    !!removeMe
    */
@@ -87,8 +87,8 @@ export class NflDataService {
 
 
   /**
-   * GET Week Current * Number of the current week of the NFL season. This value usually changes on Tuesday nights or Wednesday mornings at midnight ET. * Tags: Schedules & Game Day Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/CurrentWeek
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Week Current * Number of the current week of the NFL season. This value usually changes on Tuesday nights or Wednesday mornings at midnight ET. * Tags: Schedules & ScheduledGame Day Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/CurrentWeek
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    !!removeMe
    */
@@ -99,8 +99,8 @@ export class NflDataService {
   }
 
   /**
-   * GET Week Last Completed * Number of the last completed week of the NFL season. This value usually changes on Tuesday nights or Wednesday mornings at midnight ET. * Tags: Schedules & Game Day Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/LastCompletedWeek
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Week Last Completed * Number of the last completed week of the NFL season. This value usually changes on Tuesday nights or Wednesday mornings at midnight ET. * Tags: Schedules & ScheduledGame Day Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/LastCompletedWeek
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    !!removeMe
    */
@@ -112,8 +112,8 @@ export class NflDataService {
 
 
   /**
-   * GET Week Upcoming * Number of the upcoming week of the NFL season. This value usually changes on Tuesday nights or Wednesday mornings at midnight ET. * Tags: Schedules & Game Day Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/UpcomingWeek
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Week Upcoming * Number of the upcoming week of the NFL season. This value usually changes on Tuesday nights or Wednesday mornings at midnight ET. * Tags: Schedules & ScheduledGame Day Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/UpcomingWeek
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    !!removeMe
    */
@@ -126,7 +126,7 @@ export class NflDataService {
 
   /**
    * GET News * Recommended Call Interval: 3 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/News
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 3 MINUTES
    !!removeMe
    */
@@ -139,7 +139,7 @@ export class NflDataService {
 
   /**
    * GET News by FunctionExtensions * Recommended Call Interval: 3 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/NewsByDate/{date}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 3 MINUTES
    * @param date
 
@@ -153,7 +153,7 @@ export class NflDataService {
 
   /**
    * GET News by Player * Recommended Call Interval: 3 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/NewsByPlayerID/{playerid}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 3 MINUTES
    * @param playerid
 
@@ -167,7 +167,7 @@ export class NflDataService {
 
   /**
    * GET News by Team * Recommended Call Interval: 3 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/NewsByTeam/{team}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 3 MINUTES
    * @param team
 
@@ -193,7 +193,7 @@ export class NflDataService {
 
   /**
    * GET Players by Available * Tags: Rosters & Profiles Feeds * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/PlayersByAvailable
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    !!removeMe
    */
@@ -227,7 +227,7 @@ export class NflDataService {
 
   /**
    * GET Players by Free Agent * Tags: Rosters & Profiles Feeds * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/PlayersByFreeAgents
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    !!removeMe
    */
@@ -240,7 +240,7 @@ export class NflDataService {
 
   /**
    * GET Players by Rookie Draft Year * Tags: Rosters & Profiles Feeds * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/PlayersByRookieDraftYear/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    * @param season
 
@@ -254,7 +254,7 @@ export class NflDataService {
 
   /**
    * GET Players by Team * Tags: Rosters & Profiles Feeds * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/PlayersBasic/{team}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    * @param team
 
@@ -268,7 +268,7 @@ export class NflDataService {
 
   /**
    * GET Player Details by Team * Tags: Depth Charts Feeds, Injuries Feeds, Rosters & Profiles Feeds * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/Players/{team}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    * @param team
 
@@ -282,7 +282,7 @@ export class NflDataService {
 
   /**
    * GET Referees * Returns full list of NFL Referees * Tags: Referee Feeds * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/Referees
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    !!removeMe
    */
@@ -294,8 +294,8 @@ export class NflDataService {
 
 
   /**
-   * GET Schedules * Game schedule for a specified season. * Tags: Schedules & Game Day Info Feeds * Recommended Call Interval: 3 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/SchedulesBasic/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Schedules * ScheduledGame schedule for a specified season. * Tags: Schedules & ScheduledGame Day Info Feeds * Recommended Call Interval: 3 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/SchedulesBasic/{season}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 3 MINUTES
    * @param season
 
@@ -318,8 +318,8 @@ export class NflDataService {
 
 
   /**
-   * GET Scores by Week * Get game scores for a specified week of a season. * Tags: Game State Feeds, Scores Feeds * Recommended Call Interval: 5 Seconds * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/ScoresBasic/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Scores by Week * Get game scores for a specified week of a season. * Tags: ScheduledGame State Feeds, Scores Feeds * Recommended Call Interval: 5 Seconds * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/ScoresBasic/{season}/{week}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 SECONDS
    * @param season
    , * @param week
@@ -341,7 +341,7 @@ export class NflDataService {
 
   /**
    * GET Stadiums * This method returns all stadiums. * Tags: Teams, Stadiums & Coaches Feeds * Recommended Call Interval: 4 Hours * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/Stadiums
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 4 HOURS
    !!removeMe
    */
@@ -354,7 +354,7 @@ export class NflDataService {
 
   /**
    * GET Standings * Tags: Standings Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/Standings/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
 
@@ -372,7 +372,7 @@ export class NflDataService {
 
   /**
    * GET Teams (Active) * Gets all active teams. * Tags: Teams, Stadiums & Coaches Feeds * Recommended Call Interval: 4 Hours * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/Teams
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 4 HOURS
    !!removeMe
    */
@@ -385,7 +385,7 @@ export class NflDataService {
 
   /**
    * GET Teams (All) * Gets all teams, including pro bowl teams. * Tags: Teams, Stadiums & Coaches Feeds * Recommended Call Interval: 4 Hours * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/AllTeams
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 4 HOURS
    !!removeMe
    */
@@ -398,7 +398,7 @@ export class NflDataService {
 
   /**
    * GET Teams * Gets all teams, including pro bowl teams. * Tags: Teams, Stadiums & Coaches Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/TeamsBasic
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    !!removeMe
    */
@@ -416,7 +416,7 @@ export class NflDataService {
 
   /**
    * GET Depth Charts * Depth charts for all NFL teams split by offensive, defensive, and special teams position groupings. * Tags: Depth Charts Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/DepthCharts
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    !!removeMe
    */
@@ -428,8 +428,8 @@ export class NflDataService {
 
 
   /**
-   * GET Team Game Logs By Week * Game by game log of total team statistics. * Tags: Box Scores Feeds * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/TeamGameStatsBySeason/{season}/{teamid}/{numberofgames}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Team ScheduledGame Logs By Week * ScheduledGame by game log of total team statistics. * Tags: Box Scores Feeds * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/TeamGameStatsBySeason/{season}/{teamid}/{numberofgames}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    * @param season
    , * @param teamid
@@ -444,8 +444,8 @@ export class NflDataService {
 
 
   /**
-   * GET Team Game Stats * Tags: Box Scores Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/TeamGameStats/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Team ScheduledGame Stats * Tags: Box Scores Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/TeamGameStats/{season}/{week}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
    , * @param week
@@ -460,7 +460,7 @@ export class NflDataService {
 
   /**
    * GET Team Week Stats * Tags: Box Scores Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/TeamSeasonStats/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
 
@@ -473,8 +473,8 @@ export class NflDataService {
 
 
   /**
-   * GET Timeframes * Get detailed information about past, present, and future timeframes. * Tags: Schedules & Game Day Info Feeds * Recommended Call Interval: 3 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/Timeframes/{type}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Timeframes * Get detailed information about past, present, and future timeframes. * Tags: Schedules & ScheduledGame Day Info Feeds * Recommended Call Interval: 3 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/Timeframes/{type}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 3 MINUTES
    * @param type
 
@@ -488,7 +488,7 @@ export class NflDataService {
 
   /**
    * GET Transactions By FunctionExtensions * Tags: Transactions Feeds * Recommended Call Interval: 1 Minute * Endpoint: * https://api.sportsdata.io//v3/nfl/scores/json/TransactionsByDate/{date}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 MINUTES
    * @param date
 
@@ -502,7 +502,7 @@ export class NflDataService {
 
   /**
    * GET Betting Metadata * Returns the list of MarketTypes, BetTypes, PeriodTypes, OutcomeTypes, and ResultTypes to map the IDs to descriptive names. Also includes a list of the MarketType, BetType & PeriodType combinations which we will have resulting for. * Tags: Active Books & Metadata Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/BettingMetadata
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    !!removeMe
    */
@@ -515,7 +515,7 @@ export class NflDataService {
 
   /**
    * GET Betting Events by FunctionExtensions * The list of current BettingEvents for the given date. Events in this include market information but no outcomes will be included here. Intended to allow both visibility to Events in order to match up Events -> Scores via the included ScoreID (where applicable) as well as provide a list of MarketIDs which are included in the given event. * Tags: Futures Feeds, Props Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/BettingEventsByDate/{date}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param date
 
@@ -529,7 +529,7 @@ export class NflDataService {
 
   /**
    * GET Betting Events by Week * Returns the full list of BetttingEvents for the given season. This does not take season-type (PRE/POST etc) into account. Intended for those who need to tie BettingEventIDs to ScoreIDs. * Tags: Futures Feeds, Props Feeds * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/BettingEvents/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    * @param season
 
@@ -543,7 +543,7 @@ export class NflDataService {
 
   /**
    * GET Betting Futures by Week * Returns available Futures outcomes for the given season. Does not include line movement. * Tags: Futures Feeds * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/BettingFuturesBySeason/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    * @param season
 
@@ -557,7 +557,7 @@ export class NflDataService {
 
   /**
    * GET Betting Market * Returns full line movement for a given BettingMarket. Is intended for historical data purposes and not for the most up to the second lines. * Tags: Futures Feeds, Props Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/BettingMarket/{marketId}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param marketId
 
@@ -571,7 +571,7 @@ export class NflDataService {
 
   /**
    * GET Betting Markets by Event * Returns the markets and available outcomes for a given BettingEventID. * Tags: Futures Feeds, Props Feeds * Recommended Call Interval: 10 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/BettingMarkets/{eventId}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 10 MINUTES
    * @param eventId
 
@@ -585,7 +585,7 @@ export class NflDataService {
 
   /**
    * GET Betting Markets by GameID (formerly Betting Markets by ScoreID) * Returns the markets and available outcomes for a given ScoreID. Works the same as by BettingEventID but requires less ID mapping. * Tags: Futures Feeds, Props Feeds * Recommended Call Interval: 10 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/BettingMarketsByScoreID/{scoreid}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 10 MINUTES
    * @param scoreid
 
@@ -599,7 +599,7 @@ export class NflDataService {
 
   /**
    * GET Betting Markets by Market Type * Returns Markets and available outcomes for a given event and market type requested. A lighter call than by BettingEventID as it only includes markets tagged with the specific MarketType (1 - GameLines, 2 - Player Props, etc -- full list available in the BettingMetaData endpoint). * Tags: Futures Feeds, Props Feeds * Recommended Call Interval: 1 Minute * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/BettingMarketsByMarketType/{eventId}/{marketTypeID}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 MINUTES
    * @param eventId
    , * @param marketTypeID
@@ -614,7 +614,7 @@ export class NflDataService {
 
   /**
    * GET Betting Player Props by GameID (formerly Betting Player Props by ScoreID) * Gets the available player props Markets & Outcomes for a given ScoreID. * Tags: Props Feeds * Recommended Call Interval: 10 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/BettingPlayerPropsByScoreID/{scoreid}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 10 MINUTES
    * @param scoreid
 
@@ -628,7 +628,7 @@ export class NflDataService {
 
   /**
    * GET Betting Results By Market * Returns all outcomes under this market which have a result type associated. Will return empty list if resulting has not yet processed for the given game. Resulting processes shortly after game closing. * Tags: Aggregated Odds Resulting Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/BettingMarketResults/{marketId}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param marketId
 
@@ -642,7 +642,7 @@ export class NflDataService {
 
   /**
    * GET Betting Splits By BettingMarketId * List of Money and Bet Percentage splits for each outcome type available in this market. This specific endpoint will return the movement from this market as well as the most recent. * Tags: Betting Splits Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/BettingSplitsByMarketId/{marketId}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param marketId
 
@@ -656,7 +656,7 @@ export class NflDataService {
 
   /**
    * GET DFS Slates by FunctionExtensions * Tags: Salaries & Slates Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/DfsSlatesByDate/{date}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param date
 
@@ -670,7 +670,7 @@ export class NflDataService {
 
   /**
    * GET DFS Slates by Week * Tags: Salaries & Slates Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/DfsSlatesByWeek/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param season
    , * @param week
@@ -685,7 +685,7 @@ export class NflDataService {
 
   /**
    * GET DFS Slate Ownership Projections by SlateID * Slate Ownership Projections for a specific slate. Projections are for GPP format ownership. Will return an empty list if the slate is not yet projected or not a slate we have projections for. * Tags: Salaries & Slates Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/DfsSlateOwnershipProjectionsBySlateID/{slateId}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param slateId
 
@@ -699,7 +699,7 @@ export class NflDataService {
 
   /**
    * GET Upcoming DFS Slate Ownership Projections * Grabs DFS Slates which have not yet started for which we have DFS Ownership projections. * Tags: Salaries & Slates Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/UpcomingDfsSlateOwnershipProjections
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    !!removeMe
    */
@@ -711,8 +711,8 @@ export class NflDataService {
 
 
   /**
-   * GET Projected Fantasy Defense Game Stats (w/ DFS Salaries) * Tags: Projections & Points Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/FantasyDefenseProjectionsByGame/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Projected Fantasy Defense ScheduledGame Stats (w/ DFS Salaries) * Tags: Projections & Points Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/FantasyDefenseProjectionsByGame/{season}/{week}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
    , * @param week
@@ -727,7 +727,7 @@ export class NflDataService {
 
   /**
    * GET Projected Fantasy Defense Week Stats (w/ ADP) * Tags: Projections & Points Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/FantasyDefenseProjectionsBySeason/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
 
@@ -741,7 +741,7 @@ export class NflDataService {
 
   /**
    * GET Betting Splits By GameID (formerly Betting Splits By ScoreID) * List of Money and Bet Percentage splits for each market and their respective outcome types available in this game. This specific endpoint will return current splits for each available market and no line movement. * Tags: Betting Splits Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/BettingSplitsByScoreId/{scoreId}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param scoreId
 
@@ -754,8 +754,8 @@ export class NflDataService {
 
 
   /**
-   * GET In-Game Odds by Week * Provides in-play odds data for a given week. This means odds for games which are in-progress. Only serves the most recently seen data & does not include line movement. * Tags: In-Play Game Lines Feeds * Recommended Call Interval: 5 Seconds * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/LiveGameOddsByWeek/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET In-ScheduledGame Odds by Week * Provides in-play odds data for a given week. This means odds for games which are in-progress. Only serves the most recently seen data & does not include line movement. * Tags: In-Play ScheduledGame Lines Feeds * Recommended Call Interval: 5 Seconds * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/LiveGameOddsByWeek/{season}/{week}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 SECONDS
    * @param season
    , * @param week
@@ -769,8 +769,8 @@ export class NflDataService {
 
 
   /**
-   * GET In-Game Odds Line Movement * Provides in-play odds line movement data for a given game. This means odds for games which are in-progress. Serves full line movement and is intended for showing the trend over a game rather than the most up-to-the second lines. * Tags: In-Play Game Lines Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/LiveGameOddsLineMovement/{scoreid}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET In-ScheduledGame Odds Line Movement * Provides in-play odds line movement data for a given game. This means odds for games which are in-progress. Serves full line movement and is intended for showing the trend over a game rather than the most up-to-the second lines. * Tags: In-Play ScheduledGame Lines Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/LiveGameOddsLineMovement/{scoreid}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param scoreid
 
@@ -783,8 +783,8 @@ export class NflDataService {
 
 
   /**
-   * GET Period Game Odds by Week * Returns the non-full-game odds for games in a given week & season. This means odds such as 1st-half or 1st-quarter, rather than full game. Only returns the most recently seen odds, not-including line movement. * Tags: Pre-Match Game Lines Feeds * Recommended Call Interval: 1 Minute * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/AlternateMarketGameOddsByWeek/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Period ScheduledGame Odds by Week * Returns the non-full-game odds for games in a given week & season. This means odds such as 1st-half or 1st-quarter, rather than full game. Only returns the most recently seen odds, not-including line movement. * Tags: Pre-Match ScheduledGame Lines Feeds * Recommended Call Interval: 1 Minute * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/AlternateMarketGameOddsByWeek/{season}/{week}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 MINUTES
    * @param season : number
    * @param week : number
@@ -797,8 +797,8 @@ export class NflDataService {
 
 
   /**
-   * GET Period Game Odds Line Movement * Returns the non-full-game odds for games in a given ScoreID. This means odds such as 1st-half or 1st-quarter, rather than full game. Returns the full line movement for the given game. This endpoint has a longer cache as it is meant for historical data/line movement rather than the most up to the second line. * Tags: Pre-Match Game Lines Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/AlternateMarketGameOddsLineMovement/{scoreid}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Period ScheduledGame Odds Line Movement * Returns the non-full-game odds for games in a given ScoreID. This means odds such as 1st-half or 1st-quarter, rather than full game. Returns the full line movement for the given game. This endpoint has a longer cache as it is meant for historical data/line movement rather than the most up to the second line. * Tags: Pre-Match ScheduledGame Lines Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/AlternateMarketGameOddsLineMovement/{scoreid}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param scoreid
 
@@ -811,8 +811,8 @@ export class NflDataService {
 
 
   /**
-   * GET Pre-Game Odds by Week * Returns the full-game core odds for games in a given week & season. This means moneyline, spread, and total. Only returns the most recently seen odds, not-including line movement. * Tags: Pre-Match Game Lines Feeds * Recommended Call Interval: 30 Seconds * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/GameOddsByWeek/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Pre-ScheduledGame Odds by Week * Returns the full-game core odds for games in a given week & season. This means moneyline, spread, and total. Only returns the most recently seen odds, not-including line movement. * Tags: Pre-Match ScheduledGame Lines Feeds * Recommended Call Interval: 30 Seconds * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/GameOddsByWeek/{season}/{week}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 30 SECONDS
    * @param season
    , * @param week
@@ -826,8 +826,8 @@ export class NflDataService {
 
 
   /**
-   * GET Pre-Game Odds Line Movement * Returns the full-game core odds for a given ScoreID. This means moneyline, spread, and total. Only returns the most recently seen odds, not-including line movement. This endpoint has a longer cache as it is meant for historical data/line movement rather than the most up to the second line. * Tags: Pre-Match Game Lines Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/GameOddsLineMovement/{scoreid}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Pre-ScheduledGame Odds Line Movement * Returns the full-game core odds for a given ScoreID. This means moneyline, spread, and total. Only returns the most recently seen odds, not-including line movement. This endpoint has a longer cache as it is meant for historical data/line movement rather than the most up to the second line. * Tags: Pre-Match ScheduledGame Lines Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/GameOddsLineMovement/{scoreid}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param scoreid
 
@@ -841,7 +841,7 @@ export class NflDataService {
 
   /**
    * GET Betting Trends by Matchup * Returns trends data for a given pairing of teams. Will return data even if the teams are not set to play this season. Intended for use on a specific game though it will work for other comparisons if applicable. * Tags: Matchups & Trends Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/MatchupTrends/{team}/{opponent}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param team
    , * @param opponent
@@ -856,7 +856,7 @@ export class NflDataService {
 
   /**
    * GET Premium News * Tags: Player News & Notes Feeds * Recommended Call Interval: 3 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/news-rotoballer/json/RotoBallerPremiumNews
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 3 MINUTES
    !!removeMe
    */
@@ -869,7 +869,7 @@ export class NflDataService {
 
   /**
    * GET Premium News by FunctionExtensions * Tags: Player News & Notes Feeds * Recommended Call Interval: 3 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/news-rotoballer/json/RotoBallerPremiumNewsByDate/{date}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 3 MINUTES
    * @param date
 
@@ -883,7 +883,7 @@ export class NflDataService {
 
   /**
    * GET Premium News by Player * Tags: Player News & Notes Feeds * Recommended Call Interval: 3 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/news-rotoballer/json/RotoBallerPremiumNewsByPlayerID/{playerid}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 3 MINUTES
    * @param playerid
 
@@ -897,7 +897,7 @@ export class NflDataService {
 
   /**
    * GET Premium News by Team * Tags: Player News & Notes Feeds * Recommended Call Interval: 3 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/news-rotoballer/json/RotoBallerPremiumNewsByTeam/{team}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 3 MINUTES
    * @param team
 
@@ -911,7 +911,7 @@ export class NflDataService {
 
   /**
    * GET Injured Players * This endpoint provides all currently injured NFL players, along with injury details. * Tags: Injuries Feeds * Recommended Call Interval: 1 Minute * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/InjuredPlayers
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 MINUTES
    !!removeMe
    */
@@ -923,8 +923,8 @@ export class NflDataService {
 
 
   /**
-   * GET IDP Projected Player Game Stats by Team (w/ Injuries, Lineups, DFS Salaries) * Tags: Projections & Points Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/IdpPlayerGameProjectionStatsByTeam/{season}/{week}/{team}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET IDP Projected Player ScheduledGame Stats by Team (w/ Injuries, Lineups, DFS Salaries) * Tags: Projections & Points Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/IdpPlayerGameProjectionStatsByTeam/{season}/{week}/{team}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
    , * @param week
@@ -939,8 +939,8 @@ export class NflDataService {
 
 
   /**
-   * GET IDP Projected Player Game Stats by Week (w/ Injuries, Lineups, DFS Salaries) * Tags: Projections & Points Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/IdpPlayerGameProjectionStatsByWeek/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET IDP Projected Player ScheduledGame Stats by Week (w/ Injuries, Lineups, DFS Salaries) * Tags: Projections & Points Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/IdpPlayerGameProjectionStatsByWeek/{season}/{week}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
    , * @param week
@@ -954,8 +954,8 @@ export class NflDataService {
 
 
   /**
-   * GET Projected Player Game Stats by Team (w/ Injuries, Lineups, DFS Salaries) * Tags: Projections & Points Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/PlayerGameProjectionStatsByTeam/{season}/{week}/{team}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Projected Player ScheduledGame Stats by Team (w/ Injuries, Lineups, DFS Salaries) * Tags: Projections & Points Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/PlayerGameProjectionStatsByTeam/{season}/{week}/{team}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
    , * @param week
@@ -970,8 +970,8 @@ export class NflDataService {
 
 
   /**
-   * GET Projected Player Game Stats by Week (w/ Injuries, Lineups, DFS Salaries) * Tags: Projections & Points Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/PlayerGameProjectionStatsByWeek/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Projected Player ScheduledGame Stats by Week (w/ Injuries, Lineups, DFS Salaries) * Tags: Projections & Points Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/PlayerGameProjectionStatsByWeek/{season}/{week}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
    , * @param week
@@ -986,7 +986,7 @@ export class NflDataService {
 
   /**
    * GET Projected Player Week Stats (w/ ADP) * Tags: Projections & Points Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/PlayerSeasonProjectionStats/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
 
@@ -1000,7 +1000,7 @@ export class NflDataService {
 
   /**
    * GET Projected Player Week Stats by Team (w/ ADP) * Tags: Projections & Points Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/projections/json/PlayerSeasonProjectionStatsByTeam/{season}/{team}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
    , * @param team
@@ -1015,7 +1015,7 @@ export class NflDataService {
 
   /**
    * GET Sportsbooks (Active) * Returns a list for mapping SportsbookID to the Sportsbook name. * Tags: Active Books & Metadata Feeds * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/ActiveSportsbooks
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    !!removeMe
    */
@@ -1028,7 +1028,7 @@ export class NflDataService {
 
   /**
    * GET Betting Trends by Team * Describes recent team trends and performance against betting data in recent sets of games * Tags: Matchups & Trends Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/odds/json/TeamTrends/{team}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param team
 
@@ -1042,7 +1042,7 @@ export class NflDataService {
 
   /**
    * GET Box Score * Tags: Box Scores Feeds * Recommended Call Interval: 1 Minute * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/BoxScoreByScoreID/v3/{scoreid}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 MINUTES
    * @param scoreid
 
@@ -1056,7 +1056,7 @@ export class NflDataService {
 
   /**
    * GET Box Score by Team * Tags: Box Scores Feeds * Recommended Call Interval: 1 Minute * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/BoxScore/v3/{season}/{week}/{hometeam}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 MINUTES
    * @param season
    , * @param week
@@ -1082,7 +1082,7 @@ export class NflDataService {
 
   /**
    * GET Box Scores by Week Delta * This method returns all box scores for a given season and week, but only returns player stats that have changed in the last X minutes. You can also filter by type of player stats to include, such as traditional fantasy players, IDP players or all players. * Tags: Box Scores Feeds * Recommended Call Interval: 3 Seconds * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/BoxScoresDelta/v3/{season}/{week}/{playerstoinclude}/{minutes}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 3 SECONDS
    * @param season
    , * @param week
@@ -1098,8 +1098,8 @@ export class NflDataService {
 
 
   /**
-   * GET Fantasy Defense Game Stats * Tags: Fantasy Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/FantasyDefenseByGame/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Fantasy Defense ScheduledGame Stats * Tags: Fantasy Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/FantasyDefenseByGame/{season}/{week}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
    , * @param week
@@ -1113,8 +1113,8 @@ export class NflDataService {
 
 
   /**
-   * GET Fantasy Defense Game Stats by Team * Tags: Fantasy Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/FantasyDefenseByGameByTeam/{season}/{week}/{team}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Fantasy Defense ScheduledGame Stats by Team * Tags: Fantasy Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/FantasyDefenseByGameByTeam/{season}/{week}/{team}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
    , * @param week
@@ -1130,7 +1130,7 @@ export class NflDataService {
 
   /**
    * GET Fantasy Defense Week Stats * Tags: Fantasy Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/FantasyDefenseBySeason/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
 
@@ -1144,7 +1144,7 @@ export class NflDataService {
 
   /**
    * GET Fantasy Defense Week Stats by Team * Tags: Fantasy Info Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/FantasyDefenseBySeasonByTeam/{season}/{team}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
    , * @param team
@@ -1159,7 +1159,7 @@ export class NflDataService {
 
   /**
    * GET Injuries * Tags: Injuries Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/Injuries/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
    , * @param week
@@ -1174,7 +1174,7 @@ export class NflDataService {
 
   /**
    * GET Injuries by Team * Tags: Injuries Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/Injuries/{season}/{week}/{team}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
    , * @param week
@@ -1189,8 +1189,8 @@ export class NflDataService {
 
 
   /**
-   * GET Player Game Logs By Week * Tags: Box Scores Feeds * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerGameStatsBySeason/{season}/{playerid}/{numberofgames}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Player ScheduledGame Logs By Week * Tags: Box Scores Feeds * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerGameStatsBySeason/{season}/{playerid}/{numberofgames}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    * @param season
    , * @param playerid
@@ -1212,8 +1212,8 @@ export class NflDataService {
 
 
   /**
-   * GET Player Game Stats by Team * Tags: Box Scores Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerGameStatsByTeam/{season}/{week}/{team}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Player ScheduledGame Stats by Team * Tags: Box Scores Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerGameStatsByTeam/{season}/{week}/{team}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
    , * @param week
@@ -1228,8 +1228,8 @@ export class NflDataService {
 
 
   /**
-   * GET Player Game Stats by Week * Tags: Box Scores Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerGameStatsByWeek/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Player ScheduledGame Stats by Week * Tags: Box Scores Feeds * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerGameStatsByWeek/{season}/{week}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
    , * @param week
@@ -1243,8 +1243,8 @@ export class NflDataService {
 
 
   /**
-   * GET Player Game Stats by Week Delta * Tags: Box Scores Feeds * Recommended Call Interval: 5 Seconds * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerGameStatsByWeekDelta/{season}/{week}/{minutes}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Player ScheduledGame Stats by Week Delta * Tags: Box Scores Feeds * Recommended Call Interval: 5 Seconds * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerGameStatsByWeekDelta/{season}/{week}/{minutes}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 SECONDS
    * @param season
    , * @param week
@@ -1259,8 +1259,8 @@ export class NflDataService {
 
 
   /**
-   * GET Player Game Stats Delta * Tags: Box Scores Feeds * Recommended Call Interval: 5 Seconds * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerGameStatsDelta/{minutes}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Player ScheduledGame Stats Delta * Tags: Box Scores Feeds * Recommended Call Interval: 5 Seconds * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerGameStatsDelta/{minutes}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 SECONDS
    * @param minutes
 
@@ -1273,8 +1273,8 @@ export class NflDataService {
 
 
   /**
-   * GET Player Game Red Zone Stats * Tags: Split Stats Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerGameRedZoneStats/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Player ScheduledGame Red Zone Stats * Tags: Split Stats Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerGameRedZoneStats/{season}/{week}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param season
    , * @param week
@@ -1288,8 +1288,8 @@ export class NflDataService {
 
 
   /**
-   * GET Player Game Red Zone Stats Inside Five * Tags: Split Stats Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerGameRedZoneInsideFiveStats/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Player ScheduledGame Red Zone Stats Inside Five * Tags: Split Stats Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerGameRedZoneInsideFiveStats/{season}/{week}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param season
    , * @param week
@@ -1303,8 +1303,8 @@ export class NflDataService {
 
 
   /**
-   * GET Player Game Red Zone Stats Inside Ten * Tags: Split Stats Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerGameRedZoneInsideTenStats/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Player ScheduledGame Red Zone Stats Inside Ten * Tags: Split Stats Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerGameRedZoneInsideTenStats/{season}/{week}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param season
    , * @param week
@@ -1319,7 +1319,7 @@ export class NflDataService {
 
   /**
    * GET Pro Bowlers * Tags: Rosters & Profiles Feeds * Recommended Call Interval: 4 Hours * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/ProBowlers/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 4 HOURS
    * @param season
 
@@ -1333,7 +1333,7 @@ export class NflDataService {
 
   /**
    * GET Fantasy Player Ownership Percentages (Week-Long) * Tags: Projections & Points Feeds * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerOwnership/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    * @param season
    , * @param week
@@ -1348,7 +1348,7 @@ export class NflDataService {
 
   /**
    * GET Player Week Stats * Tags: Box Scores Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerSeasonStats/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param season
 
@@ -1362,7 +1362,7 @@ export class NflDataService {
 
   /**
    * GET Player Week Stats by Team * Tags: Box Scores Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerSeasonStatsByTeam/{season}/{team}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param season
    , * @param team
@@ -1377,7 +1377,7 @@ export class NflDataService {
 
   /**
    * GET Player Week Red Zone Stats * Tags: Split Stats Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerSeasonRedZoneStats/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param season
 
@@ -1391,7 +1391,7 @@ export class NflDataService {
 
   /**
    * GET Player Week Red Zone Stats Inside Five * Tags: Split Stats Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerSeasonRedZoneInsideFiveStats/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param season
 
@@ -1405,7 +1405,7 @@ export class NflDataService {
 
   /**
    * GET Player Week Red Zone Stats Inside Ten * Tags: Split Stats Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerSeasonRedZoneInsideTenStats/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param season
 
@@ -1419,7 +1419,7 @@ export class NflDataService {
 
   /**
    * GET Player Week Third Down Stats * Tags: Split Stats Feeds * Recommended Call Interval: 15 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/stats/json/PlayerSeasonThirdDownStats/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 15 MINUTES
    * @param season
 
@@ -1433,7 +1433,7 @@ export class NflDataService {
 
   /**
    * GET Play By Play * Tags: Play by Play Feeds * Recommended Call Interval: 1 Minute * Endpoint: * https://api.sportsdata.io//v3/nfl/pbp/json/PlayByPlay/{gameid}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 MINUTES
    * @param gameid
 
@@ -1447,7 +1447,7 @@ export class NflDataService {
 
   /**
    * GET Play By Play By Team * Tags: Play by Play Feeds * Recommended Call Interval: 1 Minute * Endpoint: * https://api.sportsdata.io//v3/nfl/pbp/json/PlayByPlay/{season}/{week}/{hometeam}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 MINUTES
    * @param season
    , * @param week
@@ -1463,7 +1463,7 @@ export class NflDataService {
 
   /**
    * GET Play By Play Delta * Tags: Play by Play Feeds * Recommended Call Interval: 3 Seconds * Endpoint: * https://api.sportsdata.io//v3/nfl/pbp/json/PlayByPlayDelta/{season}/{week}/{minutes}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 3 SECONDS
    * @param season
    , * @param week
@@ -1479,7 +1479,7 @@ export class NflDataService {
 
   /**
    * GET BAKER Betting Trends by Player * Recommended Call Interval: 10 Minutes * Endpoint: * https://baker-api.sportsdata.io/baker/v2/nfl/trends/{date}/players/{playerid}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 10 MINUTES
    * @param date
    , * @param playerid
@@ -1493,8 +1493,8 @@ export class NflDataService {
 
 
   /**
-   * GET Advanced Player Game Stats * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/advanced-metrics/json/AdvancedPlayerGameStats/{season}/{week}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Advanced Player ScheduledGame Stats * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/advanced-metrics/json/AdvancedPlayerGameStats/{season}/{week}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    * @param season
    , * @param week
@@ -1508,8 +1508,8 @@ export class NflDataService {
 
 
   /**
-   * GET Advanced Player Game Stats by Player * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/advanced-metrics/json/AdvancedPlayerGameStatsByPlayerID/{season}/{playerid}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Advanced Player ScheduledGame Stats by Player * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/advanced-metrics/json/AdvancedPlayerGameStatsByPlayerID/{season}/{playerid}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    * @param season
    , * @param playerid
@@ -1524,7 +1524,7 @@ export class NflDataService {
 
   /**
    * GET Advanced Player Week Stats by Player * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/advanced-metrics/json/AdvancedPlayerSeasonStatsByPlayerID/{season}/{playerid}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    * @param season
    , * @param playerid
@@ -1539,7 +1539,7 @@ export class NflDataService {
 
   /**
    * GET Advanced Player Week Stats by Team * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/advanced-metrics/json/AdvancedPlayerSeasonStats/{season}/{team}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    * @param season
    , * @param team
@@ -1554,7 +1554,7 @@ export class NflDataService {
 
   /**
    * GET Headshots * Tags: Player Headshots Feeds * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io//v3/nfl/headshots/json/Headshots
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    !!removeMe
    */
@@ -1567,7 +1567,7 @@ export class NflDataService {
 
   /**
    * GET Player Details by Available * Player Details by Available * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io/api/nfl/fantasy/json/Players
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    !!removeMe
    */
@@ -1580,7 +1580,7 @@ export class NflDataService {
 
   /**
    * GET Player Details by Free Agents * Player Details by Free Agents * Recommended Call Interval: 1 Hour * Endpoint: * https://api.sportsdata.io/api/nfl/fantasy/json/FreeAgents
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 1 HOURS
    !!removeMe
    */
@@ -1593,7 +1593,7 @@ export class NflDataService {
 
   /**
    * GET Advanced Players * Recommended Call Interval: 4 Hours * Endpoint: * https://api.sportsdata.io//v3/nfl/advanced-metrics/json/AdvancedPlayers
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 4 HOURS
    !!removeMe
    */
@@ -1606,7 +1606,7 @@ export class NflDataService {
 
   /**
    * GET Rotoworld Player News (Recent) * Tags: Player News & Notes Feeds * Recommended Call Interval: 3 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/rotoworld/json/RotoworldPlayerNews
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 3 MINUTES
    !!removeMe
    */
@@ -1619,7 +1619,7 @@ export class NflDataService {
 
   /**
    * GET Rotoworld Player News by FunctionExtensions * Tags: Player News & Notes Feeds * Recommended Call Interval: 3 Minutes * Endpoint: * https://api.sportsdata.io//v3/nfl/rotoworld/json/RotoworldPlayerNewsByDate/{date}
-   * Tags: Schedules & Game Day Info Feeds
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 3 MINUTES
    * @param date
 
@@ -1632,8 +1632,8 @@ export class NflDataService {
 
 
   /**
-   * GET Scores by Week * Game scores for a specified season. * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io/api/nfl/odds/json/Scores/{season}
-   * Tags: Schedules & Game Day Info Feeds
+   * GET Scores by Week * ScheduledGame scores for a specified season. * Recommended Call Interval: 5 Minutes * Endpoint: * https://api.sportsdata.io/api/nfl/odds/json/Scores/{season}
+   * Tags: Schedules & ScheduledGame Day Info Feeds
    * Recommended Call Interval: 5 MINUTES
    * @param season
 

@@ -1,16 +1,16 @@
 import {BetTypes} from "./enums/BetTypes";
 import {SportType} from "./SportType";
-import {Status} from "./enums/Status";
+import {EventStatus} from "./enums/EventStatus";
 
 export class Prediction {
-    gameId : string
+    gameId : number
     betType : BetTypes
     selectedTeam : string
     confidence : number
     note : string
     sport : SportType
     gameStart : Date
-    status : Status
+    status : EventStatus
     wagerValue : number
     creationDate: Date;
 

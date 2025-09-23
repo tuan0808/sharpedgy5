@@ -1,10 +1,13 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {SportNotification} from "../../../shared/model/notifications/SportNotification";
+import {DatePipe} from "@angular/common";
 
 @Component({
   selector: 'app-notification-card',
   standalone: true,
-  imports: [],
+  imports: [
+    DatePipe
+  ],
   templateUrl: './notification-card.component.html',
   styleUrl: './notification-card.component.scss'
 })
@@ -43,7 +46,7 @@ export class NotificationCardComponent {
     return `league-badge ${this.darkMode ? 'dark' : 'light'}`;
   }
 
-  // Status dot (enabled/disabled indicator)
+  // EventStatus dot (enabled/disabled indicator)
   getStatusDotClass(): string {
     return `status-dot ${this.notification.enabled ? 'enabled' : 'disabled'}`;
   }

@@ -1,6 +1,7 @@
 import {signal} from "@angular/core";
 
 export enum SportType {
+    ALL = "",
     NFL = "NFL",
     NBA = "NBA",
     MLB = "MLB",

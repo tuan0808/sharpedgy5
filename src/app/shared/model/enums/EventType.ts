@@ -1,0 +1,17 @@
+export enum EventType {
+    ALL,
+    SCORE_UPDATE,
+    GAME_START,
+    GAME_END,
+    MONEY_LINE,
+    POINT_DIFF,
+    OVER_UNDER,
+    BETTING_VOLUME,
+    START_END,
+    GAME_MILESTONE,
+    FINAL_SCORE,
+    OVERTIME,
+    TIMEOUT,
+    INJURY,
+    WEATHER
+}

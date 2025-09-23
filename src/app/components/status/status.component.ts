@@ -97,6 +97,6 @@ export class StatusComponent {
   }
 
   refresh(): void {
-    console.log('Status refreshed');
+    console.log('EventStatus refreshed');
   }
 }

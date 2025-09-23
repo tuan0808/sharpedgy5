@@ -19,14 +19,14 @@
                     <!-- Teams -->
                     <div class="col-md-4">
                         <div class="mb-3 d-flex align-items-center">
-                            <img src="./assets/images/NFL/{{game.homeTeam.logo}}" [alt]="game.homeTeam.logo + ' logo'"
+                            <img src="./assets/images/{{game.homeTeam.logo}}" [alt]="game.homeTeam.logo + ' logo'"
                                  class="me-2 rounded-circle" style="width: 40px; height: 40px;">
                             <div>
                                 <div class="fw-bold">{{ game.homeTeam.name }}</div>
                             </div>
                         </div>
                         <div class="d-flex align-items-center">
-                            <img src="./assets/images/NFL/{{game.awayTeam.logo}}" [alt]="game.awayTeam.name + ' logo'"
+                            <img src="./assets/images/{{game.awayTeam.logo}}" [alt]="game.awayTeam.name + ' logo'"
                                  class="me-2 rounded-circle" style="width: 40px; height: 40px;">
                             <div>
                                 <div class="fw-bold">{{ game.awayTeam.name }}</div>
@@ -40,21 +40,33 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Spread:</span>
+                                    @if (game.spread > 0) {
                                     <span>{{ game.spread }}</span>
+                                    } @else {
+                                    <span>-</span>
+                                    }
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Money Line:</span>
-                                    <span>{{game.homeTeam.abbreviation}} {{game.moneylineHome}} | {{game.awayTeam.abbreviation}} {{game.moneylineAway}}</span>
-                                </div>
+                                    @if (game.spread != 0) {
+                                        <span>{{game.homeTeam.abbreviation}} {{game.moneylineHome}} | {{game.awayTeam.abbreviation}} {{game.moneylineAway}}</span>
+                                    } @else {
+                                        <span>-</span>
+                                    }
+                                 </div>
                                 <div class="d-flex justify-content-between">
                                     <span>O/U:</span>
-                                    <span>{{game.overUnderTotal}}</span>
+                                    @if (game.spread != 0) {
+                                        <span>{{game.overUnderTotal}}</span>
+                                    } @else {
+                                        <span>-</span>
+                                    }
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!--Game Info-->
+                    <!--ScheduledGame Info-->
                     <div class="col-md-4">
                         <div class="card">
                             <div class="card-body">

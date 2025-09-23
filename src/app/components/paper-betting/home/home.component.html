@@ -5,7 +5,7 @@
         <span class="balance">
       <i class="bi bi-wallet2"></i> {{balance().remainingCredit }} / {{balance().totalCredit}}
     </span>
-    <span class="balance">
+        <span class="balance">
       <i class="bi bi-wallet2"></i> {{balance().balance }}
     </span>
         <i class="bi bi-bell notification"></i>
@@ -32,7 +32,15 @@
 <div class="games-container">
     <div class="games-header">
         <h2 class="title">Today's Games</h2>
-        @if (!isLoading() && !hasError() && displayedGames().length > 0) {
+        <!-- Show total count and pagination info -->
+        @if (!isLoading() && !hasError() && totalElements() > 0) {
+            <div class="games-info">
+                <small class="text-muted">
+                    Showing {{ ((currentPage() - 1) * pageSize() + 1) }} to
+                    {{ Math.min(currentPage() * pageSize(), totalElements()) }}
+                    of {{ totalElements() }} games
+                </small>
+            </div>
             <app-pagination
                     [currentPage]="currentPage()"
                     [totalPages]="totalPages()"
@@ -60,7 +68,7 @@
                 <i class="bi bi-arrow-clockwise"></i> Retry
             </button>
         </div>
-    } @else if (displayedGames().length === 0) {
+    } @else if (displayedGames().length === 0 && totalElements() === 0) {
         <div class="empty-container">
             <p>No games available at the moment.</p>
         </div>
@@ -74,15 +82,18 @@
             }
         </div>
 
-        <div class="games-footer">
-            <app-pagination
-                    [currentPage]="currentPage()"
-                    [totalPages]="totalPages()"
-                    [pageSize]="pageSize()"
-                    (pageChange)="onPageChange($event)"
-                    (pageSizeChange)="onPageSizeChange($event)">
-            </app-pagination>
-        </div>
+        <!-- Only show footer pagination if there are multiple pages -->
+        @if (totalPages() > 1) {
+            <div class="games-footer">
+                <app-pagination
+                        [currentPage]="currentPage()"
+                        [totalPages]="totalPages()"
+                        [pageSize]="pageSize()"
+                        (pageChange)="onPageChange($event)"
+                        (pageSizeChange)="onPageSizeChange($event)">
+                </app-pagination>
+            </div>
+        }
     }
 </div>
 

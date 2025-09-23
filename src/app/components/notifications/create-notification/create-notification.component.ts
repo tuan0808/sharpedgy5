@@ -9,6 +9,78 @@ export class BreakpointState {
   screenWidth: number = 1920;
   orientation: 'portrait' | 'landscape' = 'landscape';
 }
+
+export class NotificationGame {
+  id: string;
+  sportType : string;
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: string;
+  awayScore: string;
+  scheduledTime: string;
+  homeRecord: string;
+  awayRecord: string;
+  status: string;
+}
+
+export enum EventStatus {
+  UPCOMING = 'upcoming',
+  LIVE = 'live',
+  SCHEDULED = 'scheduled',
+  CANCELLED = 'cancelled',
+  POSTPONED = 'postponed',
+  RESCHEDULED = 'rescheduled',
+  SUSPENDED = 'suspended',
+  RESUMED = 'resumed',
+  COMPLETED = 'completed'
+}
+
+interface PointSpreadPreferences {
+  threshold: number;
+  alertOnIncrease: boolean;
+  alertOnDecrease: boolean;
+  minimumGameTime: string;
+}
+
+interface BettingVolumeSpikePreferences {
+  volumeThreshold: number;
+  timeWindow: string;
+}
+
+interface ScoreUpdatePreferences {
+  incrementThreshold: number;
+  realTimeUpdates: boolean;
+  onlySignificantScores: boolean;
+  quarterEnd: boolean;
+  halfTime: boolean;
+  periodEnd: boolean;
+  overtime: boolean;
+  twoMinuteWarning: boolean;
+}
+
+interface MoneyLinePreferences {
+  threshold: number;
+  trackFavoriteShift: boolean;
+  trackUnderdogShift: boolean;
+  minimumOddsValue: number;
+}
+
+interface OverUnderPreferences {
+  threshold: number;
+  alertOnIncrease: boolean;
+  alertOnDecrease: boolean;
+}
+
+interface GameStartEndPreferences {
+  gameStart: boolean;
+  gameEnd: boolean;
+  includeStats: boolean;
+  preGameReminder: string | null;
+  finalScoreDelay: string | null;
+}
+
+
+
 @Component({
   selector: 'app-create-notification',
   standalone: true,
@@ -32,18 +104,18 @@ export class CreateNotificationComponent {
   totalSteps = 2;
 
   // Data
-  upcomingGames = [
-    { id: 'bal-cle', home: 'CLE', away: 'BAL', homeScore: '', awayScore: '', time: '6:40 PM ET', homeRecord: '40-50', awayRecord: '44-55', status: 'upcoming', league: 'MLB' },
-    { id: 'det-pit', home: 'PIT', away: 'DET', homeScore: '', awayScore: '', time: '6:40 PM ET', homeRecord: '40-61', awayRecord: '50-41', status: 'upcoming', league: 'MLB' },
-    { id: 'sd-mia', home: 'MIA', away: 'SD', homeScore: '', awayScore: '', time: '6:40 PM ET', homeRecord: '45-53', awayRecord: '55-45', status: 'upcoming', league: 'MLB' },
-    { id: 'bos-phi', home: 'PHI', away: 'BOS', homeScore: '', awayScore: '', time: '6:45 PM ET', homeRecord: '57-43', awayRecord: '54-48', status: 'upcoming', league: 'MLB' },
-    { id: 'cin-wsh', home: 'WSH', away: 'CIN', homeScore: '', awayScore: '', time: '6:46 PM ET', homeRecord: '40-60', awayRecord: '52-49', status: 'upcoming', league: 'MLB' },
-    { id: 'chw-tb', home: 'TB', away: 'CHW', homeScore: '', awayScore: '', time: '7:05 PM ET', homeRecord: '52-49', awayRecord: '35-65', status: 'upcoming', league: 'MLB' }
+  upcomingGames: NotificationGame[] = [
+    { id: 'bal-cle', sportType: 'MLB', homeTeam: 'CLE', awayTeam: 'BAL', homeScore: '', awayScore: '', scheduledTime: '6:40 PM ET', homeRecord: '40-50', awayRecord: '44-55', status: EventStatus.UPCOMING },
+    { id: 'det-pit', sportType: 'MLB', homeTeam: 'PIT', awayTeam: 'DET', homeScore: '', awayScore: '', scheduledTime: '6:40 PM ET', homeRecord: '40-61', awayRecord: '50-41', status: EventStatus.UPCOMING },
+    { id: 'sd-mia', sportType: 'MLB', homeTeam: 'MIA', awayTeam: 'SD', homeScore: '', awayScore: '', scheduledTime: '6:40 PM ET', homeRecord: '45-53', awayRecord: '55-45', status: EventStatus.UPCOMING },
+    { id: 'bos-phi', sportType: 'MLB', homeTeam: 'PHI', awayTeam: 'BOS', homeScore: '', awayScore: '', scheduledTime: '6:45 PM ET', homeRecord: '57-43', awayRecord: '54-48', status: EventStatus.UPCOMING },
+    { id: 'cin-wsh', sportType: 'MLB', homeTeam: 'WSH', awayTeam: 'CIN', homeScore: '', awayScore: '', scheduledTime: '6:46 PM ET', homeRecord: '40-60', awayRecord: '52-49', status: EventStatus.UPCOMING },
+    { id: 'chw-tb', sportType: 'MLB', homeTeam: 'TB', awayTeam: 'CHW', homeScore: '', awayScore: '', scheduledTime: '7:05 PM ET', homeRecord: '52-49', awayRecord: '35-65', status: EventStatus.UPCOMING }
   ];
 
-  activeGames = [
-    { id: 'lal-gsw-live', home: 'GSW', away: 'LAL', homeScore: '89', awayScore: '92', time: 'Q3 8:24', homeRecord: '35-47', awayRecord: '42-40', status: 'live', league: 'NBA' },
-    { id: 'bos-mia-live', home: 'MIA', away: 'BOS', homeScore: '76', awayScore: '81', time: 'Q3 5:12', homeRecord: '44-38', awayRecord: '57-25', status: 'live', league: 'NBA' }
+  activeGames: NotificationGame[] = [
+    { id: 'lal-gsw-live', sportType: 'NBA', homeTeam: 'GSW', awayTeam: 'LAL', homeScore: '89', awayScore: '92', scheduledTime: 'Q3 8:24', homeRecord: '35-47', awayRecord: '42-40', status: EventStatus.LIVE },
+    { id: 'bos-mia-live', sportType: 'NBA', homeTeam: 'MIA', awayTeam: 'BOS', homeScore: '76', awayScore: '81', scheduledTime: 'Q3 5:12', homeRecord: '44-38', awayRecord: '57-25', status: EventStatus.LIVE }
   ];
 
   // Form mode and state
@@ -51,7 +123,7 @@ export class CreateNotificationComponent {
   editingNotificationId?: number;
   preselectedGameId?: string;
   activeTab = 'upcoming';
-  selectedGames: any[] = [];
+  selectedGames: NotificationGame[] = [];
   selectedNotificationType = 'Point Spread Diff';
   notificationSettings = {
     sensitivity: 'medium',
@@ -59,6 +131,7 @@ export class CreateNotificationComponent {
     enableImmediately: true,
     autoDisable: false
   };
+  typeSpecificPreferences: PointSpreadPreferences | BettingVolumeSpikePreferences | ScoreUpdatePreferences | MoneyLinePreferences | OverUnderPreferences | GameStartEndPreferences;
 
   notificationTypes = [
     'Point Spread Diff',
@@ -66,7 +139,7 @@ export class CreateNotificationComponent {
     'Score Update',
     'Moneyline Odds',
     'Over/Under',
-    'Game Start/End'
+    'ScheduledGame Start/End'
   ];
 
   darkMode = false;
@@ -75,7 +148,10 @@ export class CreateNotificationComponent {
       private router: Router,
       private route: ActivatedRoute,
       @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  ) {
+    // Initialize typeSpecificPreferences based on default notification type
+    this.typeSpecificPreferences = this.getDefaultPreferences('Point Spread Diff');
+  }
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -86,20 +162,15 @@ export class CreateNotificationComponent {
 
   private initializeFromRoute(): void {
     this.route.queryParams.subscribe(params => {
-      // Check if editing existing notification
       if (params['edit'] && params['id']) {
         this.mode = 'edit';
         this.editingNotificationId = parseInt(params['id']);
         this.loadExistingNotification(this.editingNotificationId);
-      }
-      // Check if creating from specific game
-      else if (params['gameId']) {
+      } else if (params['gameId']) {
         this.mode = 'create';
         this.preselectedGameId = params['gameId'];
         this.preselectGame(params['gameId']);
-      }
-      // Default create mode
-      else {
+      } else {
         this.mode = 'create';
         this.currentStep = 1;
       }
@@ -107,68 +178,39 @@ export class CreateNotificationComponent {
   }
 
   private preselectGame(gameId: string): void {
-    // Find the game in upcoming or active games
     const game = [...this.upcomingGames, ...this.activeGames].find(g => g.id === gameId);
     if (game) {
       this.selectedGames = [game];
-      // Skip game selection step and go directly to settings
       this.currentStep = 2;
-      // Set the active tab based on game status
-      this.activeTab = game.status === 'live' ? 'live' : 'upcoming';
+      this.activeTab = game.status === EventStatus.LIVE ? 'live' : 'upcoming';
     }
   }
 
   private loadExistingNotification(notificationId: number): void {
-    // In a real app, you'd load this from a service
-    // For now, we'll simulate loading from the notifications list
+    // Simulate loading from a service
     const existingNotifications = [
       {
         id: 1,
         type: 'Point Spread Diff',
         gameId: 'lal-gsw-20241125',
         homeTeam: 'Lakers',
-        awayTeam: 'Warriors',
-        gameDate: '2024-11-25',
-        gameTime: '7:30 PM PST',
-        sport: 'Basketball',
-        league: 'NBA',
-        enabled: true,
-        conditions: { threshold: 1.5, direction: 'any' },
-        lastTriggered: '2 min ago',
-        triggerCount: 3,
-        season: '2024-25 Regular Season',
-        priority: 5,
-        savings: 15,
-        settings: {
-          sensitivity: 'medium',
-          gameHoursOnly: true,
-          enableImmediately: true,
-          autoDisable: false
+        preferences: {
+          threshold: 2.5,
+          alertOnIncrease: true,
+          alertOnDecrease: true,
+          minimumGameTime: '30_MINUTES_BEFORE'
         }
       }
-      // Add other mock notifications as needed
     ];
-
     const notification = existingNotifications.find(n => n.id === notificationId);
     if (notification) {
-      // Find and set the game
-      const game = [...this.upcomingGames, ...this.activeGames].find(g =>
-          g.id === notification.gameId ||
-          (g.home === notification.homeTeam && g.away === notification.awayTeam)
-      );
-
+      this.selectedNotificationType = notification.type;
+      this.typeSpecificPreferences = this.getDefaultPreferences(notification.type);
+      Object.assign(this.typeSpecificPreferences, notification.preferences);
+      const game = [...this.upcomingGames, ...this.activeGames].find(g => g.id === notification.gameId);
       if (game) {
         this.selectedGames = [game];
-        this.activeTab = game.status === 'live' ? 'live' : 'upcoming';
       }
-
-      // Set the notification type and settings
-      this.selectedNotificationType = notification.type;
-      if (notification.settings) {
-        this.notificationSettings = { ...notification.settings };
-      }
-
-      // Go directly to settings step
       this.currentStep = 2;
     }
   }
@@ -198,6 +240,31 @@ export class CreateNotificationComponent {
         document.body.classList.add('ios-device');
       }
     }
+  }
+
+  // Initialize preferences based on notification type
+  private getDefaultPreferences(type: string): PointSpreadPreferences | BettingVolumeSpikePreferences | ScoreUpdatePreferences | MoneyLinePreferences | OverUnderPreferences | GameStartEndPreferences {
+    switch (type) {
+      case 'Point Spread Diff':
+        return { threshold: 2.5, alertOnIncrease: true, alertOnDecrease: true, minimumGameTime: '30_MINUTES_BEFORE' };
+      case 'Betting Volume Spike':
+        return { volumeThreshold: 200.0, timeWindow: '15_MINUTES' };
+      case 'Score Update':
+        return { incrementThreshold: 7, realTimeUpdates: true, onlySignificantScores: false, quarterEnd: false, halfTime: false, periodEnd: false, overtime: true, twoMinuteWarning: false };
+      case 'Moneyline Odds':
+        return { threshold: 15.0, trackFavoriteShift: true, trackUnderdogShift: true, minimumOddsValue: 100.0 };
+      case 'Over/Under':
+        return { threshold: 1.5, alertOnIncrease: true, alertOnDecrease: true };
+      case 'ScheduledGame Start/End':
+        return { gameStart: true, gameEnd: true, includeStats: false, preGameReminder: null, finalScoreDelay: null };
+      default:
+        return { threshold: 2.5, alertOnIncrease: true, alertOnDecrease: true, minimumGameTime: '30_MINUTES_BEFORE' };
+    }
+  }
+
+  // Update typeSpecificPreferences when notification type changes
+  onNotificationTypeChange(): void {
+    this.typeSpecificPreferences = this.getDefaultPreferences(this.selectedNotificationType);
   }
 
   // Navigation methods
@@ -231,9 +298,9 @@ export class CreateNotificationComponent {
     }
     if (this.preselectedGameId) {
       const game = this.selectedGames[0];
-      return game ? `Create Notification for ${game.away} @ ${game.home}` : 'Create Notification';
+      return game ? `Create Notification for ${game.awayTeam} @ ${game.homeTeam}` : 'Create Notification';
     }
-    return 'Create Game Notifications';
+    return 'Create ScheduledGame Notifications';
   }
 
   getPageSubtitle(): string {
@@ -253,15 +320,15 @@ export class CreateNotificationComponent {
 
   // Check if we should show settings step
   shouldShowSettings(): boolean {
-    return this.currentStep === 2 || this.preselectedGameId != null|| this.mode === 'edit';
+    return this.currentStep === 2 || this.preselectedGameId != null || this.mode === 'edit';
   }
 
-  // Game selection methods
+  // ScheduledGame selection methods
   isGameSelected(gameId: string): boolean {
     return this.selectedGames.some(game => game.id === gameId);
   }
 
-  toggleGameSelection(game: any): void {
+  toggleGameSelection(game: NotificationGame): void {
     if (this.isGameSelected(game.id)) {
       this.selectedGames = this.selectedGames.filter(g => g.id !== game.id);
     } else {
@@ -269,7 +336,7 @@ export class CreateNotificationComponent {
     }
   }
 
-  removeSelectedGame(game: any): void {
+  removeSelectedGame(game: NotificationGame): void {
     this.selectedGames = this.selectedGames.filter(g => g.id !== game.id);
   }
 
@@ -286,7 +353,8 @@ export class CreateNotificationComponent {
     console.log('Creating notifications:', {
       games: this.selectedGames,
       type: this.selectedNotificationType,
-      settings: this.notificationSettings
+      commonSettings: this.notificationSettings,
+      typeSpecificSettings: this.typeSpecificPreferences
     });
 
     const message = `${this.selectedGames.length} notification${this.selectedGames.length !== 1 ? 's' : ''} created successfully!`;
@@ -298,7 +366,8 @@ export class CreateNotificationComponent {
       id: this.editingNotificationId,
       games: this.selectedGames,
       type: this.selectedNotificationType,
-      settings: this.notificationSettings
+      commonSettings: this.notificationSettings,
+      typeSpecificSettings: this.typeSpecificPreferences
     });
 
     const message = 'Notification updated successfully!';
@@ -307,9 +376,7 @@ export class CreateNotificationComponent {
 
   private navigateBackWithMessage(message: string): void {
     this.router.navigate(['/notifications/home'], {
-      queryParams: {
-        message: message
-      }
+      queryParams: { message }
     });
   }
 
