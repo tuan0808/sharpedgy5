@@ -3,13 +3,8 @@ import {FormsModule} from "@angular/forms";
 import {CurrencyPipe, NgForOf, NgIf} from "@angular/common";
 import {GameCardComponent} from "../../paper-betting/home/game-card/game-card.component";
 import {PaginationComponent} from "../../../shared/components/pagination/pagination.component";
-import {firstValueFrom, Observable, of, retry, timeout} from "rxjs";
-import {BetSettlement} from "../../../shared/model/paper-betting/BetSettlement";
 import {Game} from "../../../shared/model/paper-betting/Game";
-import {HttpClient} from "@angular/common/http";
-import {Team} from "../../../shared/model/paper-betting/Team";
 import {BetTypes} from "../../../shared/model/enums/BetTypes";
-import {BetFormComponent} from "../../paper-betting/home/bet-form/bet-form.component";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {PredictionFormComponent} from "./prediction-form/prediction-form.component";
 
@@ -20,10 +15,7 @@ import {PredictionFormComponent} from "./prediction-form/prediction-form.compone
     imports: [
         FormsModule,
         NgIf,
-        NgForOf,
-        CurrencyPipe,
-        GameCardComponent,
-        PaginationComponent
+        NgForOf
     ],
   templateUrl: './prediction.component.html',
   styleUrl: './prediction.component.scss'
@@ -35,17 +27,7 @@ export class PredictionComponent {
   BetTypes = BetTypes; // Make enum available to the template
 
   // Bet type mapping to display names
-  betTypeNames: {[key: number]: string} = {
-    [BetTypes.MONEYLINE]: 'Moneyline',
-    [BetTypes.POINT_SPREAD]: 'Point Spread',
-    [BetTypes.OVER_UNDER]: 'Over/Under',
-    [BetTypes.SPREAD]: 'Spread',
-    [BetTypes.TOTAL]: 'Total',
-    [BetTypes.PARLAY]: 'Parlay',
-    [BetTypes.TEASER]: 'Teaser',
-    [BetTypes.ROUND_ROBIN]: 'Round Robin',
-    [BetTypes.PLEASER]: 'Pleaser'
-  };
+
   private gameType: any;
 
   constructor() {}
@@ -140,11 +122,6 @@ export class PredictionComponent {
   editGame(gameId: string, event: Event): void {
     event.stopPropagation();
     console.log(`Edit game ${gameId}`);
-  }
-
-  // Helper methods for bet results
-  getBetTypeName(betTypeId: number): string {
-    return this.betTypeNames[betTypeId] || 'Unknown';
   }
 
   submitPrediction(game : Game, event) {

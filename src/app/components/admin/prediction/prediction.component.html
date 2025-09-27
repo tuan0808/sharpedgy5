@@ -93,7 +93,7 @@
                             <h3 class="bet-results-title">Bet Results</h3>
                             <div class="bet-results-grid">
                                 <p class="label">Bet Type:</p>
-                                <p class="value">{{ getBetTypeName(game.betSettlement.betType) }}</p>
+                                <p class="value">{{game.betSettlement.betType}</p>
 
                                 <p class="label">Bet Amount:</p>
                                 <p class="value" *ngIf="game.betSettlement.wagerAmount">${{ game.betSettlement.wagerAmount.toFixed(2) }}</p>

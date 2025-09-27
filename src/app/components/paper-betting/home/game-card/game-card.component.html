@@ -41,9 +41,9 @@
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Spread:</span>
                                     @if (game.spread > 0) {
-                                    <span>{{ game.spread }}</span>
+                                        <span>{{ game.spread }}</span>
                                     } @else {
-                                    <span>-</span>
+                                        <span>-</span>
                                     }
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
@@ -53,7 +53,7 @@
                                     } @else {
                                         <span>-</span>
                                     }
-                                 </div>
+                                </div>
                                 <div class="d-flex justify-content-between">
                                     <span>O/U:</span>
                                     @if (game.spread != 0) {
@@ -70,12 +70,31 @@
                     <div class="col-md-4">
                         <div class="card">
                             <div class="card-body">
-                                @if (game.betSettlement; as bet) {
+                                @if (game.betSettlement; as result) {
                                     <div class="bet-info">
                                         <h6 class="mb-2">Your Bet</h6>
-                                        <div class="mb-1">Type: {{BetTypes[bet.betType]}}</div>
-                                        <div class="mb-1">Value: {{bet.wagerValue}}</div>
-                                        <div>Amount: ${{bet.wagerAmount}}</div>
+                                        <div class="mb-1">Status:
+                                            <span [ngClass]="{
+                                                'text-warning': result.status === 'PENDING',
+                                                'text-success': result.status === 'WIN',
+                                                'text-danger': result.status === 'LOSS',
+                                                'text-muted': result.status === 'CANCELLED',
+                                            }">
+                                                {{result.status}}
+                                            </span>
+                                        </div>
+                                        @if (result.betType) {
+                                            <div class="mb-1">{{(result.betType).value}}</div>
+                                        }
+                                        @if (result.selectedTeam) {
+                                            <div class="mb-1">{{result.selectedTeam}}</div>
+                                        }
+                                        @if (result.wagerValue) {
+                                            <div class="mb-1">Wager: ${{result.wagerValue}}</div>
+                                        }
+                                        @if (result.wagerAmount) {
+                                            <div class="mb-1">Amount: ${{result.wagerAmount}}</div>
+                                        }
                                     </div>
 
                                 } @else {
@@ -91,9 +110,28 @@
 
                 <!-- Buttons -->
                 <div class="d-flex gap-3 mt-4">
-
-                    <button class="btn btn-primary flex-fill" [ngClass]="game.betSettlement ? 'disabled' : ''" (click)="placePaperBet()">Place Bet</button>
-                    <button class="btn btn-secondary flex-fill" (click)="viewMatchupDetails()">View Matchup</button>
+                    <!-- Updated click handler with processing state -->
+                    <button class="btn btn-primary flex-fill"
+                            [ngClass]="{
+                                'disabled': !!game.betSettlement || isProcessingBet(),
+                                'btn-secondary': isProcessingBet()
+                            }"
+                            [disabled]="!!game.betSettlement || isProcessingBet()"
+                            (click)="placePaperBet()">
+                        @if (isProcessingBet()) {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            Processing...
+                        } @else if (game.betSettlement) {
+                            Bet Placed
+                        } @else {
+                            Place Bet
+                        }
+                    </button>
+                    <button class="btn btn-secondary flex-fill"
+                            (click)="viewMatchupDetails()"
+                            [disabled]="isProcessingBet()">
+                        View Matchup
+                    </button>
                 </div>
             </div>
         </div>

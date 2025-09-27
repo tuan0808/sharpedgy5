@@ -16,6 +16,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         return next(req);
     }
 
+    console.log(req.body)
+
     if (!isRefreshing) {
         isRefreshing = true;
         return from(authService.getFreshToken()).pipe(

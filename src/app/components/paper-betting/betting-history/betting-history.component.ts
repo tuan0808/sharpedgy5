@@ -83,7 +83,7 @@ export class BettingHistoryComponent {
   }
 
   calculateAvgBet(account: Account): string {
-    const total = account.betHistory.reduce((sum, bet) => sum + bet.amount, 0);
+    const total = account.betHistory.reduce((sum, bet) => sum + bet.wagerAmount, 0);
     return (total / account.betHistory.length || 0).toFixed(2);
   }
 
