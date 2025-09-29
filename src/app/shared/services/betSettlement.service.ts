@@ -1,5 +1,5 @@
 import { computed, Injectable, signal } from '@angular/core';
-import { firstValueFrom, Observable, of, throwError, timer } from 'rxjs';
+import { firstValueFrom, Observable, of, throwError, timer, Subject } from 'rxjs';
 import { map, catchError, tap, timeout, retry } from 'rxjs/operators';
 import { HttpParams } from '@angular/common/http';
 import { Game } from '../model/paper-betting/Game';
@@ -11,16 +11,25 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { environment } from '../../../environments/environment';
 import { Credit } from '../model/paper-betting/Credit';
-import { BetResponseState } from '../model/enums/BetResponseState';
+
+// Updated enum to use string values matching server responses
+export enum BetResponseState {
+    SUCCESS = 'SUCCESS',
+    CREDIT_LIMIT_EXCEEDED = 'CREDIT_LIMIT_EXCEEDED',
+    USER_NOT_FOUND = 'USER_NOT_FOUND',
+    ACCOUNT_NOT_FOUND = 'ACCOUNT_NOT_FOUND',
+    ERROR = 'ERROR'
+}
 
 // Interface matching Kotlin BetResult data class with enum
-interface BetResult {
+export interface BetResult {
     status: BetResponseState;
     message: string;
     remainingCredit?: number;
     totalCredit?: number;
     balance?: number;
     tempId?: string;
+    paperBetRecord?: PaperBetRecord;
 }
 
 interface OptimisticBet {
@@ -42,6 +51,12 @@ export interface PagedResponse<T> {
     last: boolean;
 }
 
+export interface GameUpdate {
+    gameId: number;
+    betRecord?: PaperBetRecord;
+    timestamp: number;
+}
+
 const getWebSocketUrl = (): string => {
     const baseUrl = environment.apiUrl.replace('http://', 'ws://').replace('https://', 'wss://');
     return `${baseUrl}/ws`;
@@ -60,6 +75,10 @@ export class BetSettlementService extends BaseService<Account> {
     readonly credit = signal<Credit | null>(null);
     readonly currentUserId = computed(() => this.userId());
 
+    // Use RxJS Subject instead of signals for notifications to avoid circular dependencies
+    private gameUpdateSubject = new Subject<GameUpdate>();
+    readonly gameUpdate$ = this.gameUpdateSubject.asObservable();
+
     // Optimistic update state
     private optimisticBets = signal<Map<string, OptimisticBet>>(new Map());
     readonly pendingBetsCount = computed(() => {
@@ -70,6 +89,7 @@ export class BetSettlementService extends BaseService<Account> {
     private stompClient: Client | null = null;
     private readonly SERVER_TIMEOUT = 10000; // 10 seconds
     private readonly RETRY_ATTEMPTS = 2;
+    private isBetProcessing = false;
 
     constructor() {
         super();
@@ -86,7 +106,6 @@ export class BetSettlementService extends BaseService<Account> {
         console.log('Initializing account for user:', userId);
         await this.fetchInitialAccount(userId);
         await this.fetchInitialCredit(userId);
-        await this.setupWebSocket(userId);
     }
 
     private async fetchInitialAccount(userId: string): Promise<void> {
@@ -117,94 +136,28 @@ export class BetSettlementService extends BaseService<Account> {
         }
     }
 
-    private async setupWebSocket(userId: string): Promise<void> {
-        try {
-            const token = await this.auth.getFreshToken();
-            if (!token) {
-                console.error('No token available for WebSocket connection');
-                this.errorMessage.set('Authentication error');
-                return;
-            }
-
-            this.stompClient = new Client({
-                webSocketFactory: () => new SockJS(getWebSocketUrl()),
-                connectHeaders: {
-                    Authorization: `Bearer ${token}`,
-                    userId: userId
-                },
-                reconnectDelay: 2000,
-                heartbeatIncoming: 4000,
-                heartbeatOutgoing: 4000,
-                onConnect: () => {
-                    console.log('STOMP WebSocket connected for user:', userId);
-                    this.errorMessage.set(null);
-                    this.subscribeToUpdates(userId);
-                },
-                onStompError: (frame) => {
-                    console.error('STOMP error:', frame);
-                    this.errorMessage.set('Failed to connect to live updates');
-                },
-                onWebSocketClose: (event) => {
-                    console.log('STOMP WebSocket disconnected:', event.reason);
-                    this.errorMessage.set('Lost connection to live updates');
-                }
-            });
-
-            this.stompClient.activate();
-
-            this.destroyRef.onDestroy(() => {
-                if (this.stompClient) {
-                    this.stompClient.deactivate();
-                    console.log('STOMP WebSocket disconnected due to service destruction');
-                }
-            });
-        } catch (error) {
-            console.error('Failed to setup STOMP WebSocket:', error);
-            this.errorMessage.set('WebSocket setup failed');
-        }
-    }
-
-    private subscribeToUpdates(userId: string): void {
-        if (!this.stompClient) return;
-
-        this.stompClient.subscribe(`/topic/accountUpdate/${userId}`, (message) => {
-            const account: Account = JSON.parse(message.body);
-            console.log('Received account update:', account);
-            if (this.isValidAccount(account)) {
-                this.updateAccountState(account);
-                this.reconcileOptimisticBets(account);
-            }
-        });
-
-        this.stompClient.subscribe('/topic/gameUpdate', (message) => {
-            const game: Game = JSON.parse(message.body);
-            console.log('Received game update:', game);
-            this.allGames.update(games => {
-                const index = games.findIndex(g => g.id === game.id);
-                if (index !== -1) {
-                    return [...games.slice(0, index), game, ...games.slice(index + 1)];
-                }
-                return [...games, game];
-            });
-        });
-
-        this.stompClient.subscribe(`/topic/creditUpdate/${userId}`, (message) => {
-            const credit: Credit = JSON.parse(message.body);
-            console.log('Received credit update:', credit);
-            this.credit.set(credit);
-        });
-    }
-
-    // CORRECTED BET SUBMISSION METHOD
     /**
      * Submit bet and return the actual server BetResult response
-     * Only handle true network errors - business logic errors come as BetResult
      */
     async addRecordOptimistic(paperBetRecord: PaperBetRecord, uid: string, tempId: string): Promise<BetResult> {
-        console.log(`Submitting bet with tempId ${tempId}:`, JSON.stringify(paperBetRecord));
+        // Prevent concurrent bet submissions
+        if (this.isBetProcessing) {
+            console.log(`Bet already processing, rejecting tempId ${tempId}`);
+            return {
+                status: BetResponseState.ERROR,
+                message: 'A bet is already being processed. Please wait.',
+                tempId
+            };
+        }
 
-        // Add optimistic bet to state
-        this.addOptimisticBet(tempId, paperBetRecord);
+        this.isBetProcessing = true;
+        console.log(`Submitting bet with tempId ${tempId}:`, paperBetRecord);
+
+        // Store original balance
+        const originalBalance = this.balance();
+
+        // Optimistically update balance
+        this.balance.set(originalBalance - paperBetRecord.wagerAmount);
 
         try {
             const result = await firstValueFrom(
@@ -214,228 +167,106 @@ export class BetSettlementService extends BaseService<Account> {
                     'Failed to save bet'
                 ).pipe(
                     timeout(this.SERVER_TIMEOUT),
-                    retry(this.RETRY_ATTEMPTS),
-                    tap(response => {
-                        console.log(`Server BetResult for tempId ${tempId}:`, JSON.stringify(response));
-                    })
-                    // No catchError here - let server BetResult responses flow through
+                    retry(this.RETRY_ATTEMPTS)
                 )
             );
 
-            // Process the server's BetResult response
-            this.processBetResult(result, tempId);
+            console.log(`Server response for bet ${tempId}:`, result);
 
-            return result; // Return actual server response
-
-        } catch (error) {
-            console.error(`Network error for bet ${tempId}:`, error);
-            this.rollbackOptimisticBet(tempId);
-
-            // Only create BetResult for true network/connectivity errors
-            const networkErrorResult: BetResult = {
-                status: BetResponseState.ERROR,
-                message: 'Network connection failed. Please check your connection and try again.',
-                tempId
-            };
-
-            return networkErrorResult;
-        }
-    }
-
-    /**
-     * Process the server's BetResult response
-     */
-    private processBetResult(result: BetResult, tempId: string): void {
-        switch (result.status) {
-            case BetResponseState.SUCCESS:
-                this.confirmOptimisticBet(tempId, result);
-
-                // Update balance and credit from server response
+            // Process successful bet
+            if (result.status === BetResponseState.SUCCESS) {
+                // Update balance from server
                 if (result.balance !== undefined) {
                     this.balance.set(result.balance);
                 }
 
+                // Update credit from server
                 if (result.remainingCredit !== undefined && result.totalCredit !== undefined) {
-                    this.updateCreditFromBetResult(result);
+                    this.credit.set({
+                        remainingCredit: result.remainingCredit,
+                        totalCredit: result.totalCredit,
+                        balance: result.balance || this.balance()
+                    });
                 }
-                break;
 
-            case BetResponseState.CREDIT_LIMIT_EXCEEDED:
-            case BetResponseState.USER_NOT_FOUND:
-            case BetResponseState.ACCOUNT_NOT_FOUND:
-            case BetResponseState.ERROR:
-            default:
-                // All non-success statuses should rollback optimistic changes
-                this.rollbackOptimisticBet(tempId);
-                break;
+                // Update the game with the bet
+                const betRecord = result.paperBetRecord || paperBetRecord;
+                this.updateGameWithBet(betRecord.gameId, betRecord);
+
+            } else {
+                // Rollback on failure
+                console.log(`Bet failed with status: ${result.status}`);
+                this.balance.set(originalBalance);
+            }
+
+            return result;
+
+        } catch (error) {
+            console.error(`Network error for bet ${tempId}:`, error);
+
+            // Rollback balance on error
+            this.balance.set(originalBalance);
+
+            return {
+                status: BetResponseState.ERROR,
+                message: 'Network connection failed. Please check your connection and try again.',
+                tempId
+            };
+        } finally {
+            this.isBetProcessing = false;
         }
     }
 
     /**
-     * Update credit state from BetResult response
+     * Update game with bet and notify via RxJS Subject
      */
-    private updateCreditFromBetResult(result: BetResult): void {
-        if (result.remainingCredit !== undefined && result.totalCredit !== undefined) {
-            const updatedCredit: Credit = {
-                remainingCredit: result.remainingCredit,
-                totalCredit: result.totalCredit,
-                balance: result.balance || this.balance()
+    public updateGameWithBet(gameId: number, betRecord: PaperBetRecord): void {
+        console.log(`Updating game ${gameId} with bet record`);
+
+        // Update the game in allGames
+        const currentGames = this.allGames();
+        const gameIndex = currentGames.findIndex(g => g.id === gameId);
+
+        if (gameIndex !== -1) {
+            const updatedGames = [...currentGames];
+            updatedGames[gameIndex] = {
+                ...updatedGames[gameIndex],
+                betSettlement: {
+                    betType: betRecord.betType,
+                    selectedTeam: betRecord.selectedTeam,
+                    status: betRecord.status,
+                    wagerValue: betRecord.wagerValue,
+                    wagerAmount: betRecord.wagerAmount
+                }
             };
 
-            this.credit.set(updatedCredit);
-            console.log('Updated credit from bet result:', updatedCredit);
+            this.allGames.set(updatedGames);
+
+            // Emit update via Subject (not signal)
+            this.gameUpdateSubject.next({
+                gameId,
+                betRecord,
+                timestamp: Date.now()
+            });
+
+            console.log(`Game ${gameId} updated and notification sent`);
         }
     }
 
     /**
-     * Public method to update balance (called from components)
+     * Public methods for balance/credit updates
      */
     updateBalance(newBalance: number): void {
         this.balance.set(newBalance);
-        console.log('Balance updated to:', newBalance);
     }
 
-    /**
-     * Public method to update credit (called from components)
-     */
     updateCredit(creditData: { remainingCredit: number; totalCredit: number; balance: number }): void {
-        const updatedCredit: Credit = {
+        this.credit.set({
             remainingCredit: creditData.remainingCredit,
             totalCredit: creditData.totalCredit,
             balance: creditData.balance
-        };
-
-        this.credit.set(updatedCredit);
+        });
         this.balance.set(creditData.balance);
-        console.log('Credit and balance updated:', updatedCredit);
-    }
-
-    // OPTIMISTIC UPDATE METHODS
-
-    /**
-     * Add optimistic bet to local state
-     */
-    addOptimisticBet(tempId: string, paperBetRecord: PaperBetRecord): void {
-        const currentBalance = this.balance();
-        const optimisticBet: OptimisticBet = {
-            tempId,
-            paperBetRecord: { ...paperBetRecord },
-            timestamp: Date.now(),
-            status: 'pending',
-            originalBalance: currentBalance
-        };
-
-        this.optimisticBets.update(bets => {
-            const newBets = new Map(bets);
-            newBets.set(tempId, optimisticBet);
-            return newBets;
-        });
-
-        // Update balance optimistically (subtract wager amount)
-        this.balance.set(currentBalance - paperBetRecord.wagerAmount);
-        console.log(`Optimistically reduced balance by $${paperBetRecord.wagerAmount}`);
-
-        // Set up timeout to handle stuck optimistic updates
-        this.setupOptimisticTimeout(tempId);
-    }
-
-    /**
-     * Set up timeout handling for optimistic bets
-     */
-    private setupOptimisticTimeout(tempId: string): void {
-        timer(this.SERVER_TIMEOUT * 2).subscribe(() => {
-            const bet = this.optimisticBets().get(tempId);
-            if (bet && bet.status === 'pending') {
-                console.error(`Optimistic bet ${tempId} timed out after ${this.SERVER_TIMEOUT * 2}ms`);
-                this.rollbackOptimisticBet(tempId);
-            }
-        });
-    }
-
-    /**
-     * Confirm optimistic bet with server data
-     */
-    confirmOptimisticBet(tempId: string, serverResult: BetResult): void {
-        this.optimisticBets.update(bets => {
-            const newBets = new Map(bets);
-            const bet = newBets.get(tempId);
-            if (bet) {
-                bet.status = 'confirmed';
-                newBets.set(tempId, bet);
-            }
-            return newBets;
-        });
-
-        console.log(`Optimistic bet ${tempId} confirmed with server result`);
-
-        // Clean up after confirmation
-        setTimeout(() => this.cleanupOptimisticBet(tempId), 2000);
-    }
-
-    /**
-     * Rollback optimistic bet
-     */
-    rollbackOptimisticBet(tempId: string): void {
-        const bet = this.optimisticBets().get(tempId);
-        if (bet && bet.originalBalance !== undefined) {
-            // Restore original balance
-            this.balance.set(bet.originalBalance);
-            console.log(`Rolled back optimistic bet ${tempId}, restored balance to: $${bet.originalBalance}`);
-
-            // Mark as failed
-            this.optimisticBets.update(bets => {
-                const newBets = new Map(bets);
-                const failedBet = newBets.get(tempId);
-                if (failedBet) {
-                    failedBet.status = 'failed';
-                    newBets.set(tempId, failedBet);
-                }
-                return newBets;
-            });
-
-            // Clean up after rollback
-            setTimeout(() => this.cleanupOptimisticBet(tempId), 3000);
-        }
-    }
-
-    /**
-     * Clean up optimistic bet state
-     */
-    private cleanupOptimisticBet(tempId: string): void {
-        this.optimisticBets.update(bets => {
-            const newBets = new Map(bets);
-            newBets.delete(tempId);
-            return newBets;
-        });
-        console.log(`Cleaned up optimistic bet ${tempId}`);
-    }
-
-    /**
-     * Reconcile optimistic state with server updates
-     */
-    private reconcileOptimisticBets(serverAccount: Account): void {
-        const optimisticBets = this.optimisticBets();
-        const serverBetHistory = serverAccount.betHistory || [];
-
-        optimisticBets.forEach((optimisticBet, tempId) => {
-            if (optimisticBet.status === 'pending') {
-                // Check if this bet now exists on the server
-                const matchingServerBet = serverBetHistory.find(bet =>
-                    bet.gameId === optimisticBet.paperBetRecord.gameId &&
-                    bet.wagerAmount === optimisticBet.paperBetRecord.wagerAmount &&
-                    Math.abs(new Date(bet.gameStart).getTime() - optimisticBet.paperBetRecord.gameStart.getTime()) < 1000
-                );
-
-                if (matchingServerBet) {
-                    const successResult: BetResult = {
-                        status: BetResponseState.SUCCESS,
-                        message: 'Bet confirmed via WebSocket',
-                        tempId
-                    };
-                    this.confirmOptimisticBet(tempId, successResult);
-                }
-            }
-        });
     }
 
     // STATUS HELPER METHODS
@@ -452,46 +283,20 @@ export class BetSettlementService extends BaseService<Account> {
             result.status === BetResponseState.ACCOUNT_NOT_FOUND;
     }
 
-    // EXISTING METHODS (Updated to handle optimistic state)
-
     private isValidAccount(account: Account | null): account is Account {
         return !!account && typeof account.balance === 'number' && Array.isArray(account.betHistory);
     }
 
     private updateAccountState(account: Account): void {
-        const pendingBets = Array.from(this.optimisticBets().values())
-            .filter(bet => bet.status === 'pending');
-
         this.account.set(account);
-
-        // Only update balance if no pending optimistic bets
-        if (pendingBets.length === 0) {
-            this.balance.set(account.balance);
-        }
+        this.balance.set(account.balance);
 
         if (account.betHistory && account.betHistory.length > 0) {
             const latestBet = account.betHistory[account.betHistory.length - 1];
             if (latestBet?.gameId) {
-                this.updateGameBetRecord(latestBet.gameId, latestBet);
+                this.updateGameWithBet(latestBet.gameId, latestBet);
             }
         }
-
-        // Reconcile optimistic bets
-        this.reconcileOptimisticBets(account);
-    }
-
-    private updateGameBetRecord(gameId: number, paperBetRecord: PaperBetRecord): void {
-        this.allGames.update(games => games.map(game =>
-            game.id === gameId ? {
-                ...game, betSettlement: {
-                    betType: paperBetRecord.betType,
-                    selectedTeam: paperBetRecord.selectedTeam,
-                    status: paperBetRecord.status,
-                    wagerValue: paperBetRecord.wagerValue,
-                    wagerAmount: paperBetRecord.wagerAmount
-                }
-            } : { ...game }
-        ));
     }
 
     // BACKWARD COMPATIBILITY - Original addRecord method
@@ -515,8 +320,6 @@ export class BetSettlementService extends BaseService<Account> {
         result.subscribe(s => console.log(`test ${JSON.stringify(s)}`));
         return result;
     }
-
-    // OTHER EXISTING METHODS
 
     getSportsByNFL(sportType: SportType): Observable<Game[]> {
         const userId = this.currentUserId();
@@ -545,7 +348,7 @@ export class BetSettlementService extends BaseService<Account> {
             'Failed to load paginated games',
             { params }
         ).pipe(
-            tap(response => console.log(`Received ${response.content.length} games for ${leagueParam}:`, response)),
+            tap(response => console.log(`Received ${response.content.length} games for ${leagueParam}`)),
             map(response => ({
                 ...response,
                 content: this.updateGamesWithBetHistory(response.content)
