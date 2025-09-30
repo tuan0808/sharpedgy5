@@ -11,6 +11,7 @@ import { ToastrService } from 'ngx-toastr';
 import { Game } from '../../../shared/model/paper-betting/Game';
 import { firstValueFrom, of, Subscription } from 'rxjs';
 import { catchError, retry, tap, timeout } from 'rxjs/operators';
+import {EventStatus} from "../../../shared/model/enums/EventStatus";
 
 interface SportDetail {
     name: string;
@@ -132,22 +133,13 @@ export class HomeComponent implements OnInit, OnDestroy {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // ================================
-    // PUBLIC METHOD FOR CHILD COMPONENTS
-    // ================================
 
-    async onBetPlaced(gameId: number): Promise<void> {
-        console.log('Bet placed for game:', gameId);
-        // The service will handle the update via RxJS Subject
-        this.toastr.success('Bet placed successfully!', 'Success');
-    }
 
     // ================================
     // SETUP METHODS
     // ================================
 
     private setupGameUpdateSubscription(): void {
-        // Subscribe to game updates from the service
         const gameUpdateSub = this.betSettlement.gameUpdate$.subscribe(update => {
             console.log('Received game update:', update);
 
@@ -155,31 +147,35 @@ export class HomeComponent implements OnInit, OnDestroy {
             const gameIndex = currentGames.findIndex(g => g.id === update.gameId);
 
             if (gameIndex !== -1) {
-                // Get the updated game from the service's allGames signal
                 const allGames = this.betSettlement.allGames();
                 const updatedGame = allGames.find(g => g.id === update.gameId);
 
                 if (updatedGame) {
-                    // Create a new array with the updated game
                     const newGames = [...currentGames];
                     newGames[gameIndex] = { ...updatedGame };
-                    this.currentPageGames.set(newGames);
-
-                    console.log(`Game ${update.gameId} updated in UI`);
-
-                    // Show notification if bet was placed
-                    if (update.betRecord) {
-                        this.toastr.success(
-                            `Bet confirmed: $${update.betRecord.wagerAmount} on ${update.betRecord.selectedTeam}`,
-                            'Bet Placed'
-                        );
-                    }
+                    this.currentPageGames.set(newGames); // Update displayed games
+                    console.log(`Updated game ${update.gameId} in currentPageGames with status: ${updatedGame.betSettlement?.status}`);
                 }
+            }
+
+            // Reload games to ensure consistency
+            this.loadGames().then(() => {
+                if (update.betRecord) {
+                    this.toastr.success(
+                        `Bet confirmed: $${update.betRecord.wagerAmount} on ${update.betRecord.selectedTeam} (Status: ${update.betRecord.status})`,
+                        'Bet Placed'
+                    );
+                }
+            }).catch(error => this.handleError(error));
+
+            if (update.betRecord && update.betRecord.status === 'FAILED') {
+                this.handleError(new Error('Bet failed'));
             }
         });
 
         this.subscriptions.add(gameUpdateSub);
     }
+
 
     // ================================
     // CORE LOGIC

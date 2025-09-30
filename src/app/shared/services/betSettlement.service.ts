@@ -140,7 +140,6 @@ export class BetSettlementService extends BaseService<Account> {
      * Submit bet and return the actual server BetResult response
      */
     async addRecordOptimistic(paperBetRecord: PaperBetRecord, uid: string, tempId: string): Promise<BetResult> {
-        // Prevent concurrent bet submissions
         if (this.isBetProcessing) {
             console.log(`Bet already processing, rejecting tempId ${tempId}`);
             return {
@@ -152,11 +151,8 @@ export class BetSettlementService extends BaseService<Account> {
 
         this.isBetProcessing = true;
         console.log(`Submitting bet with tempId ${tempId}:`, paperBetRecord);
-
-        // Store original balance
         const originalBalance = this.balance();
 
-        // Optimistically update balance
         this.balance.set(originalBalance - paperBetRecord.wagerAmount);
 
         try {
@@ -173,14 +169,10 @@ export class BetSettlementService extends BaseService<Account> {
 
             console.log(`Server response for bet ${tempId}:`, result);
 
-            // Process successful bet
             if (result.status === BetResponseState.SUCCESS) {
-                // Update balance from server
                 if (result.balance !== undefined) {
                     this.balance.set(result.balance);
                 }
-
-                // Update credit from server
                 if (result.remainingCredit !== undefined && result.totalCredit !== undefined) {
                     this.credit.set({
                         remainingCredit: result.remainingCredit,
@@ -188,13 +180,10 @@ export class BetSettlementService extends BaseService<Account> {
                         balance: result.balance || this.balance()
                     });
                 }
-
-                // Update the game with the bet
                 const betRecord = result.paperBetRecord || paperBetRecord;
+                console.log(`Updating game with betRecord:`, betRecord); // Debug log
                 this.updateGameWithBet(betRecord.gameId, betRecord);
-
             } else {
-                // Rollback on failure
                 console.log(`Bet failed with status: ${result.status}`);
                 this.balance.set(originalBalance);
             }
@@ -203,10 +192,7 @@ export class BetSettlementService extends BaseService<Account> {
 
         } catch (error) {
             console.error(`Network error for bet ${tempId}:`, error);
-
-            // Rollback balance on error
             this.balance.set(originalBalance);
-
             return {
                 status: BetResponseState.ERROR,
                 message: 'Network connection failed. Please check your connection and try again.',
