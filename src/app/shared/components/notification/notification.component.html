@@ -1,0 +1,7 @@
+<div class="notification" [ngClass]="notification().type">
+    <div class="notification-content">
+        <div class="notification-title">{{ notification().title }}</div>
+        <div class="notification-message">{{ notification().message }}</div>
+    </div>
+    <button class="notification-close" (click)="closeNotification()">×</button>
+</div>

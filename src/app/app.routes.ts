@@ -42,6 +42,6 @@ export const routes: Routes = [
         //canActivate: [AdminGuard],
         children: fullRoutes,
     },
-    {path: '404', component: Error400Component},
-    {path: '**', redirectTo: '/404', pathMatch: 'full'}
+    // {path: '404', component: Error400Component},
+    // {path: '**', redirectTo: '/404', pathMatch: 'full'}
 ];

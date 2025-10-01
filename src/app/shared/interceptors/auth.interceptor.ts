@@ -1,60 +1,83 @@
-import { HttpEvent, HttpHandlerFn, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
-import {BehaviorSubject, from, Observable, retry, throwError, timeout} from 'rxjs';
-import { catchError, debounceTime, switchMap } from 'rxjs/operators';
-import {DestroyRef, inject} from '@angular/core';
-import { AuthService } from "../services/auth.service";
-import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
+import { HttpInterceptorFn, HttpRequest, HttpEvent, HttpErrorResponse } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { throwError, BehaviorSubject, from, of, timer, finalize } from 'rxjs';
+import { catchError, switchMap, filter, take, tap, delay } from 'rxjs/operators';
+import { AuthService } from '../services/auth.service';
 
-export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: HttpHandlerFn): Observable<HttpEvent<any>> => {
-    console.log('Interceptor triggered for:', req.url);
+let isRefreshing = false;
+let refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
 
-    // Skip for specific endpoints
-    if (req.url.includes('/account-updates') || req.url.includes('/api/auth/token-refresh')) {
-        console.log('Skipping auth for:', req.url);
-        return next(req);
-    }
-
-    // Check for protected paths
-    const protectedPaths = [
-        '/api/auth',
-        '/dashboard/v1',
-        '/users/v1',
-        '/webhooks/v1',
-        '/paper-betting/v1'
-    ];
-
-    // Skip if not a protected path
-    if (!protectedPaths.some(path => req.url.includes(path))) {
-        return next(req);
-    }
-
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
+    console.log(`🔍 INTERCEPTOR START: ${req.method} ${req.url}`);
     const authService = inject(AuthService);
 
-    // This is the key part: wait for auth initialization to complete
-    // before attempting to get the token
-    return from(authService.ensureAuthInitialized()).pipe(
-        switchMap(() => {
-            console.log('Auth initialization confirmed complete');
-            return from(authService.getFreshToken());
-        }),
-        switchMap(token => {
-            if (!token) {
-                console.warn('No token available after auth init, proceeding without auth');
-                return next(req);
-            }
+    if (req.url.endsWith('/favicon.ico')) {
+        console.log(`🔍 Skipping favicon request`);
+        return next(req);
+    }
 
-            const authReq = req.clone({
-                setHeaders: {
-                    Authorization: `Bearer ${token}`
+    console.log(req.body)
+
+    if (!isRefreshing) {
+        isRefreshing = true;
+        return from(authService.getFreshToken()).pipe(
+            delay(500), // Adjustable delay to ensure token is ready
+            tap(token => {
+                console.log(`🔍 Token received:`, token ? 'YES' : 'NO');
+                if (token) {
+                    try {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        console.log(`🔍 Token claims:`, payload);
+                        console.log(`🔍 Issued at: ${new Date(payload.iat * 1000).toISOString()}`);
+                        console.log(`🔍 Expires at: ${new Date(payload.exp * 1000).toISOString()}`);
+                        if (payload.iat === payload.exp) {
+                            console.warn(`🔍 WARNING: Token expiration matches issuance time!`);
+                        }
+                    } catch (e) {
+                        console.error(`🔍 Error decoding token:`, e);
+                    }
                 }
-            });
+            }),
+            switchMap(token => {
+                if (token) {
+                    const finalReq = req.clone({
+                        setHeaders: { 'Authorization': `Bearer ${token}` },
+                        withCredentials: true,
+                    });
+                    console.log(`✅ Authorization header added: Bearer ${token.substring(0, 20)}...`);
+                    refreshTokenSubject.next(token);
+                    return next(finalReq);
+                }
+                console.log(`❌ No token available`);
+                refreshTokenSubject.next(null);
+                return next(req);
+            }),
+            catchError((error: HttpErrorResponse) => {
+                console.error(`❌ Request failed:`, error.status, error.message);
+                refreshTokenSubject.next(null);
+                return throwError(() => error);
+            }),
+            finalize(() => {
+                isRefreshing = false;
+            })
+        );
+    }
 
-            console.log('Sending request with auth header after auth init:', req.url);
-            return next(authReq);
+    // Wait for refresh if already in progress
+    return refreshTokenSubject.pipe(
+        filter(token => token !== null),
+        take(1),
+        switchMap(token => {
+            const finalReq = req.clone({
+                setHeaders: { 'Authorization': `Bearer ${token}` },
+                withCredentials: true,
+            });
+            console.log(`✅ Using refreshed token: Bearer ${token.substring(0, 20)}...`);
+            return next(finalReq);
         }),
-        catchError(error => {
-            console.error('Error in auth interceptor after auth init:', error);
-            return next(req);
+        catchError((error: HttpErrorResponse) => {
+            console.error(`❌ Request failed during refresh:`, error.status, error.message);
+            return throwError(() => error);
         })
     );
 };

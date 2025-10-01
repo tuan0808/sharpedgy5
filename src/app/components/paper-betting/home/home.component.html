@@ -1,23 +1,21 @@
-<!-- home.component.html -->
+<!-- home.component.html - UPDATED WITH COMPUTED SIGNAL FIX -->
 <div class="header">
     <h1>Bet Simulator</h1>
     <div class="right">
     <span class="balance">
-      <i class="bi bi-wallet2"></i> {{ account()?.balance | currency }}
+      <i class="bi bi-wallet2"></i>
+        {{credit()?.remainingCredit}} / {{credit()?.totalCredit}}
+    </span>
+        <span class="balance">
+      <i class="bi bi-wallet2"></i>
+            {{balance()}}
     </span>
         <i class="bi bi-bell notification"></i>
     </div>
 </div>
 
+<!-- Sports Selection -->
 <div class="top-container">
-    <div class="achievement">
-        <div>
-            <i class="bi bi-trophy-fill badge"></i>
-            Recent Achievement:
-            <span class="badge">Hot Streak! 🔥 Won 5 bets in a row</span>
-        </div>
-        <a href="#" class="badge">View All Achievements</a>
-    </div>
     <div class="sports-scroll border-bottom card">
         <div class="container-fluid px-4 position-relative">
             <div class="d-flex overflow-auto py-2">
@@ -26,7 +24,7 @@
                             [class.active]="selectedSport() === sport.type"
                             (click)="onSportSelect(sport.type)"
                             [disabled]="isLoading()">
-                        {{ sport.icon }}{{ sport.name }}<span class="badge"></span>
+                        {{ sport.icon }}{{ sport.name }}
                     </button>
                 }
             </div>
@@ -34,10 +32,19 @@
     </div>
 </div>
 
+<!-- Games Section -->
 <div class="games-container">
     <div class="games-header">
         <h2 class="title">Today's Games</h2>
-        @if (!isLoading() && !hasError() && displayedGames().length > 0) {
+
+        @if (!isLoading() && !hasError() && totalElements() > 0) {
+            <div class="games-info">
+                <small class="text-muted">
+                    Showing {{ ((currentPage() - 1) * pageSize() + 1) }} to
+                    {{ Math.min(currentPage() * pageSize(), totalElements()) }}
+                    of {{ totalElements() }} games
+                </small>
+            </div>
             <app-pagination
                     [currentPage]="currentPage()"
                     [totalPages]="totalPages()"
@@ -48,6 +55,7 @@
         }
     </div>
 
+    <!-- Loading State -->
     @if (isLoading()) {
         <div class="loading-container">
             <div class="spinner-border text-primary" role="status">
@@ -55,7 +63,8 @@
             </div>
             <p>Loading games...</p>
         </div>
-    } @else if (hasError()) {
+    }
+    @else if (hasError()) {
         <div class="error-container">
             <div class="alert alert-danger" role="alert">
                 <i class="bi bi-exclamation-triangle-fill"></i>
@@ -65,11 +74,13 @@
                 <i class="bi bi-arrow-clockwise"></i> Retry
             </button>
         </div>
-    } @else if (displayedGames().length === 0) {
+    }
+    @else if (displayedGames().length === 0 && totalElements() === 0) {
         <div class="empty-container">
             <p>No games available at the moment.</p>
         </div>
-    } @else {
+    }
+    @else {
         <div class="games">
             @for (game of displayedGames(); track game.id) {
                 <app-game-card
@@ -79,19 +90,21 @@
             }
         </div>
 
-        <div class="games-footer">
-            <app-pagination
-                    [currentPage]="currentPage()"
-                    [totalPages]="totalPages()"
-                    [pageSize]="pageSize()"
-                    (pageChange)="onPageChange($event)"
-                    (pageSizeChange)="onPageSizeChange($event)">
-            </app-pagination>
-        </div>
+        @if (totalPages() > 1) {
+            <div class="games-footer">
+                <app-pagination
+                        [currentPage]="currentPage()"
+                        [totalPages]="totalPages()"
+                        [pageSize]="pageSize()"
+                        (pageChange)="onPageChange($event)"
+                        (pageSizeChange)="onPageSizeChange($event)">
+                </app-pagination>
+            </div>
+        }
     }
 </div>
 
-<!-- Scroll to top button, only shown when not at top -->
+<!-- Scroll to top button -->
 @if (!isAtTop()) {
     <button class="btn btn-primary scroll-to-top" (click)="scrollToTop()">
         <i class="bi bi-arrow-up"></i>

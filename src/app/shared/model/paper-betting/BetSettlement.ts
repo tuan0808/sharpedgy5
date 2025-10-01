@@ -1,6 +1,10 @@
+import {BetTypes} from "../enums/BetTypes";
+import {EventStatus} from "../enums/EventStatus";
 
 export  class BetSettlement {
-    betType: number
+    betType: BetTypes
+    selectedTeam: string
     wagerValue: number
     wagerAmount: number
+    status : EventStatus
 }

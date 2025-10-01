@@ -1,0 +1,28 @@
+<div
+        (click)="onClick()"
+        [class]="getCardClass()"
+>
+    <div class="card-content">
+        <div class="team-row">
+            <div class="team-name" [class]="darkMode ? 'dark' : 'light'">{{game.away}}</div>
+            <div *ngIf="isActive" class="team-score" [class]="darkMode ? 'dark' : 'light'">{{game.awayScore}}</div>
+        </div>
+
+        <div class="versus" [class]="darkMode ? 'dark' : 'light'">
+            {{isActive ? 'VS' : '@'}}
+        </div>
+
+        <div class="team-row">
+            <div class="team-name" [class]="darkMode ? 'dark' : 'light'">{{game.home}}</div>
+            <div *ngIf="isActive" class="team-score" [class]="darkMode ? 'dark' : 'light'">{{game.homeScore}}</div>
+        </div>
+
+        <div [class]="getTimeClass()">
+            {{game.time}}
+        </div>
+
+        <div [class]="getHoverTextClass()">
+            Click to notify
+        </div>
+    </div>
+</div>

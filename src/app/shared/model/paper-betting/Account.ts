@@ -1,5 +1,5 @@
 import {Bet} from "./Bet";
-import {BetHistory} from "./BetHistory";
+import {PaperBetRecord} from "./PaperBetRecord";
 
 export interface Account {
     id: number;
@@ -9,5 +9,5 @@ export interface Account {
     closedDate?: string;     // When the account was closed (optional)
     activeAccount: boolean;  // Whether the account is active
     closureReason?: string;  // Reason for closure (optional)
-    betHistory: BetHistory[];      // Array of bets made on this account
+    betHistory: PaperBetRecord[];      // Array of bets made on this account
 }

@@ -3,11 +3,12 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import {ResizableContainerComponent} from "../../resizable-container/resizable-container.component";
 import {GridsterItem} from "angular-gridster2";
 import {HttpClient} from "@angular/common/http";
+import {BaseService} from "./base.service";
 
 @Injectable({
   providedIn: 'root'
 })
-export class DashboardService {
+export class DashboardService extends BaseService<any> {
   private componentRegistry = new Map<string, Type<any>>([
     ['ComponentA', ResizableContainerComponent],
     ['ComponentB', ResizableContainerComponent]
@@ -16,6 +17,6 @@ export class DashboardService {
   getComponent(name: string): Type<any> | undefined {
     return this.componentRegistry.get(name);
   }
-}
 
+}
 

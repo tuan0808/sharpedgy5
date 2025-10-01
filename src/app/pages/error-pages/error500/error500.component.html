@@ -1,18 +1,102 @@
-<!--error-500 start-->
-<div class="error-wrapper">
-    <div class="container">
-        <img class="img-100" src="assets/images/other-images/sad.png" alt="">
-        <div class="error-heading">            
-            <h2 class="headline font-primary">500</h2>            
+<!-- src/app/site-down/site-down.component.html -->
+<div class="field-container">
+    <div class="football-field"></div>
+
+    <div class="yard-lines">
+        <div class="endzone-top">
+            <div class="endzone-text">TOUCHDOWN</div>
         </div>
-        <div class="col-md-8 offset-md-2">
-            <p class="sub-content">The page you are attempting to reach is currently not available. This may be because
-                the page does not exist or has been moved.
-            </p>
+        <div class="endzone-bottom">
+            <div class="endzone-text">TOUCHDOWN</div>
         </div>
-        <div class="">
-            <a [routerLink]="'/dashboard/default'" class="btn btn-primary-gradien btn-lg">BACK TO HOME PAGE</a>
+
+        <div class="yard-line field-line-10"></div>
+        <div class="yard-line field-line-20"></div>
+        <div class="yard-line field-line-30"></div>
+        <div class="yard-line field-line-40"></div>
+        <div class="yard-line field-line-50"></div>
+        <div class="yard-line field-line-60"></div>
+        <div class="yard-line field-line-70"></div>
+        <div class="yard-line field-line-80"></div>
+        <div class="yard-line field-line-90"></div>
+
+        <div class="yard-number yard-number-10">10</div>
+        <div class="yard-number yard-number-20">20</div>
+        <div class="yard-number yard-number-30">30</div>
+        <div class="yard-number yard-number-40">40</div>
+        <div class="yard-number yard-number-50">50</div>
+        <div class="yard-number yard-number-40r">40</div>
+        <div class="yard-number yard-number-30r">30</div>
+        <div class="yard-number yard-number-20r">20</div>
+        <div class="yard-number yard-number-10r">10</div>
+
+        <div class="sideline-left"></div>
+        <div class="sideline-right"></div>
+    </div>
+
+    <!-- Animated Players -->
+    <div class="player offense-player" style="left: 30%; top: 45%;">QB</div>
+    <div class="player offense-player" style="left: 25%; top: 48%;">RB</div>
+    <div class="player offense-player" style="left: 20%; top: 40%;">WR</div>
+    <div class="player offense-player" style="left: 40%; top: 40%;">WR</div>
+    <div class="player offense-player" style="left: 35%; top: 46%;">TE</div>
+    <div class="player offense-player" style="left: 28%; top: 42%;">OL</div>
+    <div class="player offense-player" style="left: 30%; top: 42%;">OL</div>
+    <div class="player offense-player" style="left: 32%; top: 42%;">OL</div>
+    <div class="player offense-player" style="left: 34%; top: 42%;">OL</div>
+    <div class="player offense-player" style="left: 36%; top: 42%;">OL</div>
+
+    <div class="player defense-player" style="left: 28%; top: 39%;">DL</div>
+    <div class="player defense-player" style="left: 30%; top: 39%;">DL</div>
+    <div class="player defense-player" style="left: 32%; top: 39%;">DL</div>
+    <div class="player defense-player" style="left: 34%; top: 39%;">DL</div>
+    <div class="player defense-player" style="left: 28%; top: 35%;">LB</div>
+    <div class="player defense-player" style="left: 32%; top: 35%;">LB</div>
+    <div class="player defense-player" style="left: 36%; top: 35%;">LB</div>
+    <div class="player defense-player" style="left: 20%; top: 35%;">CB</div>
+    <div class="player defense-player" style="left: 40%; top: 35%;">CB</div>
+    <div class="player defense-player" style="left: 25%; top: 30%;">S</div>
+    <div class="player defense-player" style="left: 35%; top: 30%;">S</div>
+
+    <!-- Error Message Card -->
+    <div class="content-card">
+        <div class="badge">ScheduledGame Delay</div>
+        <h1 class="mb-3">Flag on the Play!</h1>
+        <p class="lead mb-4">Our NFL data servers are taking a timeout. Our tech officials are reviewing the situation and working to restore service.</p>
+
+        <div class="row align-items-center mb-4">
+            <div class="col-md-4 text-center text-md-start">
+                <h5>System Review Progress</h5>
+            </div>
+            <div class="col-md-8">
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h4>Estimated time remaining:</h4>
+                <div class="status-time">{{countdownDisplay}}</div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-7">
+                <h5>Coach's Challenge</h5>
+                <p>Like a crucial replay review, our team needs a moment to make adjustments. We're optimizing our servers to provide you with faster, more reliable NFL betting data.</p>
+            </div>
+            <div class="col-md-5 text-center">
+                <button class="btn btn-check-status" (click)="checkStatus()">
+                    <i class="fas fa-sync-alt me-2"></i> Check EventStatus
+                </button>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-<!--error-500 end-->

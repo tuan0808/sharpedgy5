@@ -1,206 +1,273 @@
-import {computed, DestroyRef, inject, Injectable, signal} from '@angular/core';
-import {Game} from "../model/paper-betting/Game";
-import {Account} from "../model/paper-betting/Account";
-import {firstValueFrom, Observable, of, retry, throwError, timeout, timer} from "rxjs";
-import {catchError, map} from "rxjs/operators";
-import {BaseApiService} from "./base-api.service";
-import {SportType} from "../model/SportType";
-import {BetHistory} from "../model/paper-betting/BetHistory";
-import {AuthService} from "./auth.service";
-import {environment} from "../../../environments/environment";
-import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
-import { Client, messageCallbackType } from '@stomp/stompjs';
-import SockJS from "sockjs-client";
+import { computed, Injectable, signal } from '@angular/core';
+import { firstValueFrom, Observable, of, throwError, timer, Subject } from 'rxjs';
+import { map, catchError, tap, timeout, retry } from 'rxjs/operators';
+import { HttpParams } from '@angular/common/http';
+import { Game } from '../model/paper-betting/Game';
+import { Account } from '../model/paper-betting/Account';
+import { SportType } from '../model/SportType';
+import { PaperBetRecord } from '../model/paper-betting/PaperBetRecord';
+import { BaseService } from './base.service';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+import { environment } from '../../../environments/environment';
+import { Credit } from '../model/paper-betting/Credit';
 
+// Updated enum to use string values matching server responses
+export enum BetResponseState {
+    SUCCESS = 'SUCCESS',
+    CREDIT_LIMIT_EXCEEDED = 'CREDIT_LIMIT_EXCEEDED',
+    USER_NOT_FOUND = 'USER_NOT_FOUND',
+    ACCOUNT_NOT_FOUND = 'ACCOUNT_NOT_FOUND',
+    ERROR = 'ERROR'
+}
 
-// Dynamic WebSocket URL based on environment
+// Interface matching Kotlin BetResult data class with enum
+export interface BetResult {
+    status: BetResponseState;
+    message: string;
+    remainingCredit?: number;
+    totalCredit?: number;
+    balance?: number;
+    tempId?: string;
+    paperBetRecord?: PaperBetRecord;
+}
+
+interface OptimisticBet {
+    tempId: string;
+    paperBetRecord: PaperBetRecord;
+    timestamp: number;
+    status: 'pending' | 'confirmed' | 'failed';
+    originalBalance?: number;
+}
+
+export interface PagedResponse<T> {
+    content: T[];
+    totalPages: number;
+    totalElements: number;
+    size: number;
+    number: number;
+    numberOfElements: number;
+    first: boolean;
+    last: boolean;
+}
+
+export interface GameUpdate {
+    gameId: number;
+    betRecord?: PaperBetRecord;
+    timestamp: number;
+}
+
 const getWebSocketUrl = (): string => {
     const baseUrl = environment.apiUrl.replace('http://', 'ws://').replace('https://', 'wss://');
-    return `${baseUrl}/ws`; // Matches Spring Boot STOMP endpoint
+    return `${baseUrl}/ws`;
 };
 
 @Injectable({
     providedIn: 'root'
 })
-export class BetSettlementService extends BaseApiService<Game> {
-    private readonly destroyRef = inject(DestroyRef);
-    private readonly auth = inject(AuthService);
-    private stompClient: Client | null = null; // STOMP client instance
-    protected override apiUrl = environment.apiUrl + '/paper-betting/v1';
+export class BetSettlementService extends BaseService<Account> {
+    protected override apiUrl = `${environment.apiUrl}/paper-betting/v1`;
 
-    private readonly MAX_API_RETRIES = 3;
-    private readonly BASE_RETRY_DELAY = 2000;
-    private readonly REQUEST_TIMEOUT = 15000;
-
+    // Core state
     readonly account = signal<Account | null>(null);
     readonly allGames = signal<Game[]>([]);
-    readonly isLoading = signal<boolean>(false);
-    readonly errorMessage = signal<string | null>(null);
-    private readonly balance = signal<number>(0);
-    private readonly uid = signal<string | null>(null);
+    readonly balance = signal<number>(0);
+    readonly credit = signal<Credit | null>(null);
+    readonly currentUserId = computed(() => this.userId());
 
-    readonly currentUserId = computed(() => this.uid());
+    // Use RxJS Subject instead of signals for notifications to avoid circular dependencies
+    private gameUpdateSubject = new Subject<GameUpdate>();
+    readonly gameUpdate$ = this.gameUpdateSubject.asObservable();
+
+    // Optimistic update state
+    private optimisticBets = signal<Map<string, OptimisticBet>>(new Map());
+    readonly pendingBetsCount = computed(() => {
+        const bets = this.optimisticBets();
+        return Array.from(bets.values()).filter(bet => bet.status === 'pending').length;
+    });
+
+    private stompClient: Client | null = null;
+    private readonly SERVER_TIMEOUT = 10000; // 10 seconds
+    private readonly RETRY_ATTEMPTS = 2;
+    private isBetProcessing = false;
 
     constructor() {
         super();
-        this.initializeUser();
+        this.initializeAccount();
     }
 
-    private async initializeUser(retryCount = 0): Promise<void> {
-        try {
-            this.isLoading.set(true);
-            this.errorMessage.set(null);
-
-            const userId = await Promise.race<string | null>([
-                this.auth.getUID(),
-                new Promise<null>((_, reject) =>
-                    setTimeout(() => reject(new Error('Auth timeout')), 5000)
-                ),
-            ]);
-
-            if (!userId) {
-                throw new Error('Failed to get user ID');
-            }
-
-            this.uid.set(userId);
-            console.log('User initialized with ID:', userId);
-            await this.fetchInitialAccount(userId);
-            this.setupWebSocket(userId);
-            this.isLoading.set(false);
-        } catch (error) {
-            console.error('Error initializing user:', error);
-            this.errorMessage.set('Failed to initialize user');
-
-            if (retryCount < this.MAX_API_RETRIES) {
-                this.errorMessage.set(`Retrying initialization (${retryCount + 1}/${this.MAX_API_RETRIES})...`);
-                await this.retryInitialize(retryCount);
-            } else {
-                console.error('Failed to initialize user after max retries');
-                this.errorMessage.set('Failed to initialize after multiple attempts. Please refresh the page.');
-                this.uid.set(null);
-                this.isLoading.set(false);
-            }
+    private async initializeAccount(): Promise<void> {
+        const userId = await this.initializeUser();
+        if (!userId) {
+            console.error('Failed to initialize user ID');
+            this.errorMessage.set('User authentication failed');
+            return;
         }
+        console.log('Initializing account for user:', userId);
+        await this.fetchInitialAccount(userId);
+        await this.fetchInitialCredit(userId);
     }
+
     private async fetchInitialAccount(userId: string): Promise<void> {
         try {
             const initialAccount = await firstValueFrom(
-                this.getAccount(userId).pipe(
-                    timeout(this.REQUEST_TIMEOUT),
-                    retry({
-                        count: 2,
-                        delay: (error, retryCount) => {
-                            console.log(`Retrying account fetch (${retryCount})...`);
-                            return timer(this.BASE_RETRY_DELAY * Math.pow(1.5, retryCount));
-                        }
-                    }),
-                    catchError(error => {
-                        console.error('Failed to get initial account:', error);
-                        this.errorMessage.set('Could not load account data');
-                        return of(null);
-                    })
-                )
+                this.get<Account | null>(`${this.apiUrl}/${userId}/getAccount`, 'Could not load account data')
             );
-
             if (this.isValidAccount(initialAccount)) {
                 this.updateAccountState(initialAccount);
-                this.errorMessage.set(null);
             }
         } catch (error) {
             console.error('Error fetching initial account:', error);
-            this.errorMessage.set('Failed to fetch account data');
+            this.errorMessage.set('Failed to load account');
         }
     }
 
-    private async retryInitialize(retryCount: number): Promise<void> {
-        const delayMs = this.BASE_RETRY_DELAY * Math.pow(1.5, retryCount);
-        console.log(`Retry ${retryCount + 1} of ${this.MAX_API_RETRIES} in ${delayMs}ms`);
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-        return this.initializeUser(retryCount + 1);
-    }
-
-    // ... (other methods unchanged until setupWebSocket)
-
-    private async setupWebSocket(userId: string): Promise<void> {
+    private async fetchInitialCredit(userId: string): Promise<void> {
         try {
-            const token = await this.auth.getFreshToken();
-            if (!token) {
-                console.error('No token available for WebSocket connection');
-                this.errorMessage.set('Authentication error');
-                return;
-            }
-
-            // Initialize STOMP client with SockJS fallback
-            this.stompClient = new Client({
-                webSocketFactory: () => new  SockJS(getWebSocketUrl()), // Use default-imported SockJS
-                connectHeaders: {
-                    Authorization: `Bearer ${token}`,
-                    userId: userId // Pass userId in headers if needed by backend
-                },
-                reconnectDelay: 2000, // Reconnect after 2 seconds
-                heartbeatIncoming: 4000, // Server heartbeat
-                heartbeatOutgoing: 4000, // Client heartbeat
-                onConnect: () => {
-                    console.log('STOMP WebSocket connected for user:', userId);
-                    this.errorMessage.set(null);
-                    this.subscribeToUpdates(userId);
-                },
-                onStompError: (frame) => {
-                    console.error('STOMP error:', frame);
-                    this.errorMessage.set('Failed to connect to live updates');
-                },
-                onWebSocketClose: (event) => {
-                    console.log('STOMP WebSocket disconnected:', event.reason);
-                    this.errorMessage.set('Lost connection to live updates');
-                }
-            });
-
-            // Optional: Enable debug logging
-            // this.stompClient.debug = (str) => console.log(str);
-
-            // Activate the STOMP client
-            this.stompClient.activate();
-
-            // Clean up on service destruction
-            this.destroyRef.onDestroy(() => {
-                if (this.stompClient) {
-                    this.stompClient.deactivate();
-                    console.log('STOMP WebSocket disconnected due to service destruction');
-                }
-            });
+            const credit = await firstValueFrom(
+                this.get<Credit>(`${this.apiUrl}/${userId}/getCreditByUUID`, 'Failed to load credit')
+            );
+            console.log('Fetched initial credit:', credit);
+            this.credit.set(credit);
         } catch (error) {
-            console.error('Failed to setup STOMP WebSocket:', error);
-            this.errorMessage.set('WebSocket setup failed');
+            console.error('Error fetching initial credit:', error);
+            this.credit.set(null);
+            this.errorMessage.set('Failed to load credit');
         }
     }
 
-    private subscribeToUpdates(userId: string): void {
-        if (!this.stompClient) return;
+    /**
+     * Submit bet and return the actual server BetResult response
+     */
+    async addRecordOptimistic(paperBetRecord: PaperBetRecord, uid: string, tempId: string): Promise<BetResult> {
+        if (this.isBetProcessing) {
+            console.log(`Bet already processing, rejecting tempId ${tempId}`);
+            return {
+                status: BetResponseState.ERROR,
+                message: 'A bet is already being processed. Please wait.',
+                tempId
+            };
+        }
 
-        // Subscribe to account updates
-        this.stompClient.subscribe(`/topic/accountUpdate/${userId}`, (message) => {
-            const account: Account = JSON.parse(message.body);
-            console.log('Received account update:', account);
-            if (this.isValidAccount(account)) {
-                this.updateAccountState(account);
-            }
-        });
+        this.isBetProcessing = true;
+        console.log(`Submitting bet with tempId ${tempId}:`, paperBetRecord);
+        const originalBalance = this.balance();
 
-        // Subscribe to game updates
-        this.stompClient.subscribe('/topic/gameUpdate', (message) => {
-            const game: Game = JSON.parse(message.body);
-            console.log('Received game update:', game);
-            this.allGames.update(games => {
-                const index = games.findIndex(g => g.id === game.id);
-                if (index !== -1) {
-                    return [...games.slice(0, index), game, ...games.slice(index + 1)];
+        this.balance.set(originalBalance - paperBetRecord.wagerAmount);
+
+        try {
+            const result = await firstValueFrom(
+                this.post<BetResult, PaperBetRecord>(
+                    `${this.apiUrl}/${uid}/saveBetRecord`,
+                    paperBetRecord,
+                    'Failed to save bet'
+                ).pipe(
+                    timeout(this.SERVER_TIMEOUT),
+                    retry(this.RETRY_ATTEMPTS)
+                )
+            );
+
+            console.log(`Server response for bet ${tempId}:`, result);
+
+            if (result.status === BetResponseState.SUCCESS) {
+                if (result.balance !== undefined) {
+                    this.balance.set(result.balance);
                 }
-                return [...games, game];
-            });
-        });
+                if (result.remainingCredit !== undefined && result.totalCredit !== undefined) {
+                    this.credit.set({
+                        remainingCredit: result.remainingCredit,
+                        totalCredit: result.totalCredit,
+                        balance: result.balance || this.balance()
+                    });
+                }
+                const betRecord = result.paperBetRecord || paperBetRecord;
+                console.log(`Updating game with betRecord:`, betRecord); // Debug log
+                this.updateGameWithBet(betRecord.gameId, betRecord);
+            } else {
+                console.log(`Bet failed with status: ${result.status}`);
+                this.balance.set(originalBalance);
+            }
+
+            return result;
+
+        } catch (error) {
+            console.error(`Network error for bet ${tempId}:`, error);
+            this.balance.set(originalBalance);
+            return {
+                status: BetResponseState.ERROR,
+                message: 'Network connection failed. Please check your connection and try again.',
+                tempId
+            };
+        } finally {
+            this.isBetProcessing = false;
+        }
     }
 
-    // ... (rest of the methods unchanged)
+    /**
+     * Update game with bet and notify via RxJS Subject
+     */
+    public updateGameWithBet(gameId: number, betRecord: PaperBetRecord): void {
+        console.log(`Updating game ${gameId} with bet record`);
+
+        // Update the game in allGames
+        const currentGames = this.allGames();
+        const gameIndex = currentGames.findIndex(g => g.id === gameId);
+
+        if (gameIndex !== -1) {
+            const updatedGames = [...currentGames];
+            updatedGames[gameIndex] = {
+                ...updatedGames[gameIndex],
+                betSettlement: {
+                    betType: betRecord.betType,
+                    selectedTeam: betRecord.selectedTeam,
+                    status: betRecord.status,
+                    wagerValue: betRecord.wagerValue,
+                    wagerAmount: betRecord.wagerAmount
+                }
+            };
+
+            this.allGames.set(updatedGames);
+
+            // Emit update via Subject (not signal)
+            this.gameUpdateSubject.next({
+                gameId,
+                betRecord,
+                timestamp: Date.now()
+            });
+
+            console.log(`Game ${gameId} updated and notification sent`);
+        }
+    }
+
+    /**
+     * Public methods for balance/credit updates
+     */
+    updateBalance(newBalance: number): void {
+        this.balance.set(newBalance);
+    }
+
+    updateCredit(creditData: { remainingCredit: number; totalCredit: number; balance: number }): void {
+        this.credit.set({
+            remainingCredit: creditData.remainingCredit,
+            totalCredit: creditData.totalCredit,
+            balance: creditData.balance
+        });
+        this.balance.set(creditData.balance);
+    }
+
+    // STATUS HELPER METHODS
+    isSuccessfulBet(result: BetResult): boolean {
+        return result.status === BetResponseState.SUCCESS;
+    }
+
+    isCreditError(result: BetResult): boolean {
+        return result.status === BetResponseState.CREDIT_LIMIT_EXCEEDED;
+    }
+
+    isAccountError(result: BetResult): boolean {
+        return result.status === BetResponseState.USER_NOT_FOUND ||
+            result.status === BetResponseState.ACCOUNT_NOT_FOUND;
+    }
 
     private isValidAccount(account: Account | null): account is Account {
         return !!account && typeof account.balance === 'number' && Array.isArray(account.betHistory);
@@ -213,168 +280,129 @@ export class BetSettlementService extends BaseApiService<Game> {
         if (account.betHistory && account.betHistory.length > 0) {
             const latestBet = account.betHistory[account.betHistory.length - 1];
             if (latestBet?.gameId) {
-                this.updateGameBetRecord(latestBet.gameId, latestBet);
+                this.updateGameWithBet(latestBet.gameId, latestBet);
             }
         }
     }
 
-    private updateGameBetRecord(gameId: string, betHistory: BetHistory): void {
-        this.allGames.update(games => games.map(game =>
-            game.id === gameId ? {
-                ...game, betSettlement: {
-                    betType: betHistory.betType,
-                    wagerValue: betHistory.wagerValue,
-                    wagerAmount: betHistory.wagerAmount
-                }
-            } : game
-        ));
-    }
-
-    addHistory(betHistory: BetHistory): Observable<number> {
-        this.isLoading.set(true);
-        this.errorMessage.set(null);
-
-        const currentAccount = this.account();
-        if (currentAccount && currentAccount.balance >= betHistory.wagerAmount) {
-            const newBalance = currentAccount.balance - betHistory.wagerAmount;
-            this.balance.set(newBalance);
-            this.account.set({
-                ...currentAccount,
-                balance: newBalance,
-                betHistory: [...currentAccount.betHistory, betHistory]
-            });
-        } else {
-            this.errorMessage.set('Insufficient funds');
-            this.isLoading.set(false);
-            return throwError(() => new Error('Insufficient funds'));
-        }
-
-        console.log(`Submitting bet history: ${JSON.stringify(betHistory)}`);
-        return this.http.post<number>(`${this.apiUrl}/saveBetHistory`, betHistory).pipe(
-            timeout(this.REQUEST_TIMEOUT),
-            retry({ count: 1, delay: this.BASE_RETRY_DELAY }),
-            takeUntilDestroyed(this.destroyRef),
-            map(response => {
-                this.isLoading.set(false);
-                this.errorMessage.set(null);
-                return response;
-            }),
+    // BACKWARD COMPATIBILITY - Original addRecord method
+    addRecord(paperBetRecord: PaperBetRecord): Observable<any> {
+        console.log(`paperBetRecord ${JSON.stringify(paperBetRecord)}`);
+        const result = this.post<any, PaperBetRecord>(
+            `${this.apiUrl}/saveBetHistory`,
+            paperBetRecord,
+            'Failed to save bet'
+        ).pipe(
+            map(response => response),
             catchError(error => {
+                const currentAccount = this.account();
                 if (currentAccount) {
                     this.balance.set(currentAccount.balance);
                     this.account.set(currentAccount);
                 }
-                this.isLoading.set(false);
-                this.errorMessage.set('Failed to save bet');
                 return throwError(() => error);
             })
         );
+        result.subscribe(s => console.log(`test ${JSON.stringify(s)}`));
+        return result;
     }
 
     getSportsByNFL(sportType: SportType): Observable<Game[]> {
-        const userId = this.uid();
+        const userId = this.currentUserId();
         if (!userId) {
             this.errorMessage.set('User not authenticated');
             return of([]);
         }
 
-        this.isLoading.set(true);
-        this.errorMessage.set(null);
+        return this.get<Game[]>(
+            `${this.apiUrl}/${userId}/${sportType}/getUpcomingGames`,
+            'Failed to load games'
+        ).pipe(
+            tap(games => console.log('Raw API Games:', games)),
+            map(games => this.updateGamesWithBetHistory(games))
+        );
+    }
 
-        return this.http.get<Game[]>(`${this.apiUrl}/${userId}/${sportType}/getUpcomingGames`, {
-            withCredentials: true
-        }).pipe(
-            timeout(this.REQUEST_TIMEOUT),
-            map(games => {
-                this.isLoading.set(false);
-                this.errorMessage.set(null);
-                return this.updateGamesWithBetHistory(games);
-            }),
-            retry({
-                count: this.MAX_API_RETRIES,
-                delay: (error, retryCount) => {
-                    console.log(`Retrying game load attempt ${retryCount}`);
-                    this.errorMessage.set(`Loading games (retry ${retryCount}/${this.MAX_API_RETRIES})...`);
-                    return timer(this.BASE_RETRY_DELAY * Math.pow(1.5, retryCount));
-                }
-            }),
-            takeUntilDestroyed(this.destroyRef),
+    getUpcomingGamesPaginated(uid: string, league: SportType, page: number, resultsPerPage: number): Observable<PagedResponse<Game>> {
+        const leagueParam = this.convertSportTypeToLeague(league);
+        const params = new HttpParams()
+            .set('page', page.toString())
+            .set('resultsPerPage', resultsPerPage.toString());
+
+        return this.get<PagedResponse<Game>>(
+            `${this.apiUrl}/${uid}/${leagueParam}/getUpcomingGames`,
+            'Failed to load paginated games',
+            { params }
+        ).pipe(
+            tap(response => console.log(`Received ${response.content.length} games for ${leagueParam}`)),
+            map(response => ({
+                ...response,
+                content: this.updateGamesWithBetHistory(response.content)
+            })),
             catchError(error => {
-                console.error('Error fetching games:', error);
-                this.isLoading.set(false);
-                this.errorMessage.set('Failed to load games. Please try again.');
-                return of([]);
+                console.error(`Error fetching paginated games for ${leagueParam}:`, error);
+                throw error;
             })
         );
+    }
+
+    private convertSportTypeToLeague(sportType: SportType): string {
+        const sportMapping: Record<SportType, string> = {
+            [SportType.NFL]: 'NFL', [SportType.NHL]: 'NHL', [SportType.ALL]: 'ALL', [SportType.NBA]: 'NBA',
+            [SportType.MLB]: 'MLB', [SportType.MLS]: 'MLS', [SportType.EPL]: 'EPL', [SportType.UFC]: 'UFC',
+            [SportType.PGA]: 'PGA', [SportType.WTA]: 'WTA', [SportType.NASCAR]: 'NASCAR',
+            [SportType.NCAA_FOOTBALL]: 'NCAAF', [SportType.NCAA_BASKETBALL]: 'NCAAB', [SportType.SOCCER]: 'SOCCER'
+        };
+
+        return sportMapping[sportType] || 'NFL';
     }
 
     private updateGamesWithBetHistory(games: Game[]): Game[] {
         const betHistory = this.account()?.betHistory;
-        if (!betHistory) return games;
+        if (!betHistory) return [...games];
 
-        const updatedGames = games.map(game => {
+        return games.map(game => {
             const betRecord = betHistory.find(bet => bet.gameId === game.id);
             return betRecord ? {
                 ...game, betSettlement: {
                     betType: betRecord.betType,
+                    selectedTeam: betRecord.selectedTeam,
+                    status: betRecord.status,
                     wagerValue: betRecord.wagerValue,
                     wagerAmount: betRecord.wagerAmount
                 }
-            } : game;
+            } : { ...game };
         });
-        this.allGames.set(updatedGames);
-        return updatedGames;
+    }
+
+    async refreshUserData(): Promise<void> {
+        const userId = this.currentUserId();
+        if (!userId) return;
+
+        try {
+            await this.fetchInitialAccount(userId);
+            await this.fetchInitialCredit(userId);
+        } catch (error) {
+            console.error('Failed to refresh user data:', error);
+        }
     }
 
     getAccount(uid: string): Observable<Account | null> {
-        return this.http.get<Account>(`${this.apiUrl}/${uid}/getAccount`, {
-            withCredentials: true
-        }).pipe(
-            timeout(this.REQUEST_TIMEOUT),
-            retry({
-                count: this.MAX_API_RETRIES,
-                delay: (error, retryCount) => {
-                    console.log(`Retrying account fetch attempt ${retryCount}`);
-                    return timer(this.BASE_RETRY_DELAY * Math.pow(1.5, retryCount));
-                }
-            }),
-            takeUntilDestroyed(this.destroyRef),
-            catchError(error => {
-                console.error('Error fetching account:', error);
-                return of(null);
-            })
-        );
+        return this.get<Account | null>(`${this.apiUrl}/${uid}/getAccount`, 'Error fetching account');
     }
 
     getAccounts(): Observable<Account[] | null> {
-        const userId = this.uid();
+        const userId = this.currentUserId();
         if (!userId) return of(null);
+        return this.get<Account[]>(`${this.apiUrl}/${userId}/getAccounts`, 'Failed to load accounts');
+    }
 
-        this.isLoading.set(true);
-
-        const url = `${this.apiUrl}/${userId}/getAccounts`;
-        console.log(url);
-
-        return this.http.get<Account[]>(url).pipe(
-            timeout(this.REQUEST_TIMEOUT),
-            retry({
-                count: this.MAX_API_RETRIES,
-                delay: (error, retryCount) => {
-                    console.log(`Retrying accounts fetch attempt ${retryCount}`);
-                    return timer(this.BASE_RETRY_DELAY * Math.pow(1.5, retryCount));
-                }
-            }),
-            takeUntilDestroyed(this.destroyRef),
-            map(accounts => {
-                this.isLoading.set(false);
-                return accounts;
-            }),
-            catchError(error => {
-                console.error('Error fetching accounts:', error);
-                this.isLoading.set(false);
-                this.errorMessage.set('Failed to load accounts');
-                return of(null);
-            })
-        );
+    getBalanceById(): Observable<Credit> {
+        const userId = this.currentUserId();
+        if (!userId) {
+            this.errorMessage.set('User not authenticated');
+            return throwError(() => new Error('User not authenticated'));
+        }
+        return this.get<Credit>(`${this.apiUrl}/${userId}/getCreditByUUID`, 'Failed to load credit');
     }
 }

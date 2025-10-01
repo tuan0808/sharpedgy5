@@ -1,13 +1,14 @@
-import { Routes } from '@angular/router';
+ import { Routes } from '@angular/router';
 import {authGuard} from "../guard/AuthGuard";
 import {adminGuard} from "../guard/admin.guard";
+import {StatusComponent} from "../../components/status/status.component";
 
 export const content: Routes = [
-    {
-        path: '',
-        pathMatch: 'full',
-        redirectTo: '/dashboard'
-    },
+    // {
+    //     path: '',
+    //     pathMatch: 'full',
+    //     redirectTo: '/dashboard'
+    // },
     {
         path: 'dashboard',
         canActivate: [authGuard],
@@ -32,13 +33,28 @@ export const content: Routes = [
         }
     },
     {
+        path: 'notifications',
+        canActivate: [authGuard],
+        data: {
+            breadcrumb: "notifications"
+        },
+        loadChildren: () => import('../../components/notifications/notifications.routes').then(r => r.notificationsRoutes)
+    },
+    {
         path: 'admin',
-        canActivate: [adminGuard],
+        // canActivate: [adminGuard],
         loadChildren: () => import('../../components/admin/admin.routes').then(r=>r.adminRoutes),
         data: {
             breadcrumb: "admin"
         }
-    }
-
+    },
+    {
+        path: 'status',
+        pathMatch: 'full',
+        component: StatusComponent, // Changed from redirectTo to load StatusPageComponent
+        data: {
+            breadcrumb: "EventStatus"
+        }
+    },
 
 ]

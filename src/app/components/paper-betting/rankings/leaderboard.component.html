@@ -1,0 +1,288 @@
+<div class="rankings-container">
+    <div class="header-section">
+        <h1 class="page-title">Player Rankings</h1>
+        <div class="sorting-tabs" *ngIf="screenWidth >= 768">
+            <button *ngFor="let period of filterPeriods"
+                    class="sort-tab"
+                    [class.active]="activePeriod === period"
+                    (click)="setActivePeriod(period)">
+                {{ period }}
+            </button>
+        </div>
+        <div class="mobile-menu" *ngIf="screenWidth < 768">
+            <button class="menu-toggle" (click)="toggleMenu()">Filter Period</button>
+            <div class="menu-options" [ngClass]="{'active': showMenu}">
+                <button *ngFor="let period of filterPeriods"
+                        class="menu-option"
+                        [class.active]="activePeriod === period"
+                        (click)="setActivePeriod(period); toggleMenu()">
+                    {{ period }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="rankings-table">
+        <!-- Table Controls -->
+        <div class="table-controls">
+            <div class="controls-left">
+                <span>Show</span>
+                <select class="entries-select" [(ngModel)]="pageSize" (ngModelChange)="setPageSize($event)">
+                    <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+                </select>
+                <span>entries</span>
+            </div>
+            <div class="controls-right">
+                <span>Search:</span>
+                <input type="text" class="search-input" [(ngModel)]="searchTerm" (ngModelChange)="onSearch($event)" placeholder="">
+            </div>
+        </div>
+
+        <!-- Table Body -->
+        <div class="table-body">
+            <div class="player-row-container" *ngFor="let user of filteredUsers; let i = index">
+                <div class="player-row" *ngIf="screenWidth >= 768" (click)="toggleAccordion(user.id)">
+                    <div class="cell rank-col">
+                        <span class="rank-badge" [ngClass]="{
+                            'top-3': (user.rank || (i + 1 + page * pageSize)) <= 3,
+                            'top-10': (user.rank || (i + 1 + page * pageSize)) > 3 && (user.rank || (i + 1 + page * pageSize)) <= 10,
+                            'default': (user.rank || (i + 1 + page * pageSize)) > 10
+                        }">{{ user.rank || (i + 1 + page * pageSize) }}</span>
+                    </div>
+                    <div class="cell username-col">
+                        <span class="username">{{ user.username }}</span>
+                    </div>
+                    <div class="cell wins-col">{{ user.betWins || 0 }}</div>
+                    <div class="cell losses-col">{{ user.betLosses || 0 }}</div>
+                    <div class="cell winrate-col">
+                        <span class="win-rate" [ngClass]="{'high-rate': user.winRate >= 70}">
+                            {{ user.winRate ? (user.winRate | number:'1.1-1') + '%' : '0%' }}
+                        </span>
+                    </div>
+                    <div class="cell returns-col">
+                        <span class="returns" [ngClass]="{'positive': user.totalAmount > 0}">
+                            {{ user.totalAmount ? formatCurrency(user.totalAmount) : '$0.00' }}
+                        </span>
+                    </div>
+                    <div class="cell expand-col">
+                        <svg class="expand-icon" [ngClass]="{'rotated': isRowSelected(user.id)}" width="20" height="20" viewBox="0 0 20 20">
+                            <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="player-card" *ngIf="screenWidth < 768" (click)="toggleAccordion(user.id)">
+                    <div class="card-header">
+                        <span class="rank-badge" [ngClass]="{
+                            'top-3': (user.rank || (i + 1 + page * pageSize)) <= 3,
+                            'top-10': (user.rank || (i + 1 + page * pageSize)) > 3 && (user.rank || (i + 1 + page * pageSize)) <= 10,
+                            'default': (user.rank || (i + 1 + page * pageSize)) > 10
+                        }">{{ user.rank || (i + 1 + page * pageSize) }}</span>
+                        <span class="username">{{ user.username }}</span>
+                        <div class="stats">
+                            <span>Wins: {{ user.betWins || 0 }}</span>
+                            <span>Losses: {{ user.betLosses || 0 }}</span>
+                            <span>Win Rate: {{ user.winRate ? (user.winRate | number:'1.1-1') + '%' : '0%' }}</span>
+                            <span>Total Returns: {{ user.totalAmount ? formatCurrency(user.totalAmount) : '$0.00' }}</span>
+                        </div>
+                        <svg class="expand-icon" [ngClass]="{'rotated': isRowSelected(user.id)}" width="20" height="20" viewBox="0 0 20 20">
+                            <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Player Details -->
+                <div class="player-details" [ngClass]="{'expanded': isRowSelected(user.id)}">
+                    <div class="details-content">
+                        <div class="stats-section">
+                            <h3>Betting Statistics</h3>
+                            <div class="stats-row">
+                                <div class="stat-item">
+                                    <span class="stat-label">Average Bet Amount</span>
+                                    <span class="stat-value">{{ user.statistics.avgBetAmount ? formatCurrency(user.statistics.avgBetAmount) : '$0.00' }}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Highest Win</span>
+                                    <span class="stat-value highlight">{{ user.statistics.highestWin ? formatCurrency(user.statistics.highestWin) : '$0.00' }}</span>
+                                </div>
+                            </div>
+                            <div class="stats-row">
+                                <div class="stat-item">
+                                    <span class="stat-label">Favorite Category</span>
+                                    <span class="stat-value">{{ user.statistics.favoriteCategory || 'N/A' }}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Average Odds</span>
+                                    <span class="stat-value">{{ user.statistics.avgOdds ? (user.statistics.avgOdds | number:'1.2-2') : '0.00' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="recent-bets-section">
+                            <h3>Recent Bets</h3>
+                            <div class="bets-table">
+                                <div class="bets-header">
+                                    <div class="bet-header-cell">Date</div>
+                                    <div class="bet-header-cell">ScheduledGame</div>
+                                    <div class="bet-header-cell">Selected Team</div>
+                                    <div class="bet-header-cell">Wager Amount</div>
+                                    <div class="bet-header-cell">Wager Value</div>
+                                    <div class="bet-header-cell">EventStatus</div>
+                                </div>
+                                <div class="bets-body">
+                                    <div class="bet-row" *ngFor="let bet of user.lastBets">
+                                        <div class="bet-cell">{{ bet.date }}</div>
+                                        <div class="bet-cell">{{ bet.gameName }}</div>
+                                        <div class="bet-cell">{{ bet.selectedTeam }}</div>
+                                        <div class="bet-cell">{{ formatCurrency(bet.wagerAmount) }}</div>
+                                        <div class="bet-cell">{{ formatCurrency(bet.wagerValue) }}</div>
+                                        <div class="bet-cell">
+                                            <span class="status-badge" [ngClass]="{
+                                                'won': bet.status.toLowerCase() === 'won',
+                                                'lost': bet.status.toLowerCase() === 'lost',
+                                                'pending': bet.status.toLowerCase() === 'pending'
+                                            }">{{ bet.status }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="bet-row" *ngIf="!user.lastBets || user.lastBets.length === 0">
+                                        <div class="bet-cell" style="grid-column: span 6; text-align: center;">No recent bets available</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current User Section -->
+            <div class="player-row-container" *ngIf="currentUser">
+                <div class="player-row" *ngIf="screenWidth >= 768" (click)="toggleCurrentUserAccordion()">
+                    <div class="cell rank-col">
+                        <span class="rank-badge" [ngClass]="{
+                            'top-3': currentUser.rank <= 3,
+                            'top-10': currentUser.rank > 3 && currentUser.rank <= 10,
+                            'default': currentUser.rank > 10
+                        }">{{ currentUser.rank || 'N/A' }}</span>
+                    </div>
+                    <div class="cell username-col">
+                        <span class="username">{{ currentUser.username }} (You)</span>
+                    </div>
+                    <div class="cell wins-col">{{ currentUser.betWins || 0 }}</div>
+                    <div class="cell losses-col">{{ currentUser.betLosses || 0 }}</div>
+                    <div class="cell winrate-col">
+                        <span class="win-rate" [ngClass]="{'high-rate': currentUser.winRate >= 70}">
+                            {{ currentUser.winRate ? (currentUser.winRate | number:'1.1-1') + '%' : '0%' }}
+                        </span>
+                    </div>
+                    <div class="cell returns-col">
+                        <span class="returns" [ngClass]="{'positive': currentUser.totalAmount > 0}">
+                            {{ currentUser.totalAmount ? formatCurrency(currentUser.totalAmount) : '$0.00' }}
+                        </span>
+                    </div>
+                    <div class="cell expand-col">
+                        <svg class="expand-icon" [ngClass]="{'rotated': expandedCurrentUser}" width="20" height="20" viewBox="0 0 20 20">
+                            <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="player-card" *ngIf="screenWidth < 768" (click)="toggleCurrentUserAccordion()">
+                    <div class="card-header">
+                        <span class="rank-badge" [ngClass]="{
+                            'top-3': currentUser.rank <= 3,
+                            'top-10': currentUser.rank > 3 && currentUser.rank <= 10,
+                            'default': currentUser.rank > 10
+                        }">{{ currentUser.rank || 'N/A' }}</span>
+                        <span class="username">{{ currentUser.username }} (You)</span>
+                        <div class="stats">
+                            <span>Wins: {{ currentUser.betWins || 0 }}</span>
+                            <span>Losses: {{ currentUser.betLosses || 0 }}</span>
+                            <span>Win Rate: {{ currentUser.winRate ? (currentUser.winRate | number:'1.1-1') + '%' : '0%' }}</span>
+                            <span>Total Returns: {{ currentUser.totalAmount ? formatCurrency(currentUser.totalAmount) : '$0.00' }}</span>
+                        </div>
+                        <svg class="expand-icon" [ngClass]="{'rotated': expandedCurrentUser}" width="20" height="20" viewBox="0 0 20 20">
+                            <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="player-details" [ngClass]="{'expanded': expandedCurrentUser}">
+                    <div class="details-content">
+                        <div class="stats-section">
+                            <h3>Betting Statistics</h3>
+                            <div class="stats-row">
+                                <div class="stat-item">
+                                    <span class="stat-label">Average Bet Amount</span>
+                                    <span class="stat-value">{{ currentUser.statistics.avgBetAmount ? formatCurrency(currentUser.statistics.avgBetAmount) : '$0.00' }}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Highest Win</span>
+                                    <span class="stat-value highlight">{{ currentUser.statistics.highestWin ? formatCurrency(currentUser.statistics.highestWin) : '$0.00' }}</span>
+                                </div>
+                            </div>
+                            <div class="stats-row">
+                                <div class="stat-item">
+                                    <span class="stat-label">Favorite Category</span>
+                                    <span class="stat-value">{{ currentUser.statistics.favoriteCategory || 'N/A' }}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Average Odds</span>
+                                    <span class="stat-value">{{ currentUser.statistics.avgOdds ? (currentUser.statistics.avgOdds | number:'1.2-2') : '0.00' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="recent-bets-section">
+                            <h3>Recent Bets</h3>
+                            <div class="bets-table">
+                                <div class="bets-header">
+                                    <div class="bet-header-cell">Date</div>
+                                    <div class="bet-header-cell">ScheduledGame</div>
+                                    <div class="bet-header-cell">Selected Team</div>
+                                    <div class="bet-header-cell">Wager Amount</div>
+                                    <div class="bet-header-cell">Wager Value</div>
+                                    <div class="bet-header-cell">EventStatus</div>
+                                </div>
+                                <div class="bets-body">
+                                    <div class="bet-row" *ngFor="let bet of currentUser.lastBets">
+                                        <div class="bet-cell">{{ (bet.date || '').split('T')[0] }}</div>
+                                        <div class="bet-cell">{{ bet.gameName }}</div>
+                                        <div class="bet-cell">{{ bet.selectedTeam }}</div>
+                                        <div class="bet-cell">{{ formatCurrency(bet.wagerAmount) }}</div>
+                                        <div class="bet-cell">{{ formatCurrency(bet.wagerValue) }}</div>
+                                        <div class="bet-cell">
+                                            <span class="status-badge" [ngClass]="{
+                                                'won': bet.status.toLowerCase() === 'won',
+                                                'lost': bet.status.toLowerCase() === 'lost',
+                                                'pending': bet.status.toLowerCase() === 'pending'
+                                            }">{{ bet.status }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="bet-row" *ngIf="!currentUser.lastBets || currentUser.lastBets.length === 0">
+                                        <div class="bet-cell" style="grid-column: span 6; text-align: center;">No recent bets available</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Footer -->
+        <div class="table-footer">
+            <div class="table-info">
+                <span>Showing {{ paginationStart }} to {{ paginationEnd }} of {{ totalElements }} entries</span>
+            </div>
+            <div class="pagination">
+                <button class="page-btn" (click)="prevPage()" [disabled]="page === 0">Previous</button>
+                <div class="page-numbers">
+                    <button class="page-btn" *ngFor="let p of getPageNumbers()"
+                            [class.active]="p === page + 1"
+                            (click)="page = p - 1; loadLeaderboard()">
+                        {{ p }}
+                    </button>
+                </div>
+                <button class="page-btn" (click)="nextPage()" [disabled]="!hasNextPage">Next</button>
+            </div>
+        </div>
+    </div>
+</div>

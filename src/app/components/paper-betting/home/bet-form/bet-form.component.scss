@@ -1,48 +1,49 @@
 .betting-card {
   background: white;
   border-radius: 8px;
-  padding: 24px;
-  width: 200%;
+  padding: 16px;
+  width: 100%;
+  max-width: 100%;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 h2 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .layout-container {
   display: flex;
-  gap: 32px;
+  gap: 16px;
 }
 
-// Left side - Bet Types
 .bet-types {
-  width: 250px;
+  flex: 0 0 200px;
 
   h3 {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 500;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
 }
 
 .bet-type-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .bet-type-btn {
   display: flex;
   align-items: center;
-  padding: 12px;
+  padding: 8px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   background: transparent;
   cursor: pointer;
   transition: background-color 0.2s;
+  font-size: 14px;
 
   &:hover {
     background-color: #f4f4f5;
@@ -54,37 +55,36 @@ h2 {
   }
 
   .bet-icon {
-    margin-right: 12px;
-    font-size: 18px;
+    margin-right: 8px;
+    font-size: 16px;
   }
 }
 
-// Right side - Form
 .bet-form {
   flex: 1;
 }
 
 .form-section {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 
   label {
     display: block;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 }
 
 .team-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
 }
 
 .team-btn {
-  padding: 16px;
+  padding: 12px;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 6px;
   background: white;
   cursor: pointer;
   transition: border-color 0.2s;
@@ -105,6 +105,11 @@ h2 {
   .team-odds {
     color: #6b7280;
   }
+
+  .team-probability {
+    font-size: 12px;
+    color: #6b7280;
+  }
 }
 
 .amount-input {
@@ -112,7 +117,7 @@ h2 {
 
   .dollar-sign {
     position: absolute;
-    left: 12px;
+    left: 10px;
     top: 50%;
     transform: translateY(-50%);
     color: #6b7280;
@@ -120,10 +125,10 @@ h2 {
 
   input {
     width: 100%;
-    padding: 8px 16px 8px 28px;
+    padding: 6px 12px 6px 24px;
     border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 16px;
+    border-radius: 6px;
+    font-size: 14px;
 
     &:focus {
       outline: none;
@@ -135,10 +140,10 @@ h2 {
 
 .control-note-input {
   width: 100%;
-  padding: 8px 16px;
+  padding: 6px 12px;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: 6px;
+  font-size: 14px;
 
   &:focus {
     outline: none;
@@ -147,17 +152,22 @@ h2 {
   }
 }
 
+input[type="range"] {
+  width: 100%;
+  margin-top: 6px;
+}
+
 .error-message {
   color: #ef4444;
-  font-size: 14px;
+  font-size: 12px;
   margin-top: 4px;
 }
 
 .potential-winnings {
-  margin-bottom: 24px;
-  padding: 16px;
+  margin-bottom: 16px;
+  padding: 12px;
   background-color: #ecfdf5;
-  border-radius: 8px;
+  border-radius: 6px;
 
   .winnings-info {
     display: flex;
@@ -165,7 +175,7 @@ h2 {
     align-items: center;
 
     .amount {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
       color: #047857;
     }
@@ -174,11 +184,11 @@ h2 {
 
 .place-bet-btn {
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   background: #4b5563;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -190,5 +200,61 @@ h2 {
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout-container {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .bet-types {
+    flex: none;
+
+    h3 {
+      font-size: 14px;
+    }
+  }
+
+  .bet-type-btn {
+    padding: 6px;
+    font-size: 13px;
+
+    .bet-icon {
+      font-size: 14px;
+      margin-right: 6px;
+    }
+  }
+
+  .team-btn {
+    padding: 10px;
+  }
+
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .amount-input input {
+    padding: 6px 10px 6px 20px;
+    font-size: 13px;
+  }
+
+  .control-note-input {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  input[type="range"] {
+    margin-top: 4px;
+  }
+
+  .potential-winnings {
+    padding: 10px;
+  }
+
+  .place-bet-btn {
+    padding: 8px;
+    font-size: 14px;
   }
 }

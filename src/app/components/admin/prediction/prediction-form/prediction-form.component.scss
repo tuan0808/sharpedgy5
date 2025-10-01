@@ -1,0 +1,375 @@
+/* Existing styles for the form view (unchanged) */
+.betting-card {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  width: 200%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.layout-container {
+  display: flex;
+  gap: 32px;
+}
+
+// Left side - Bet Types
+.bet-types {
+  width: 250px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+}
+
+.bet-type-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bet-type-btn {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f4f4f5;
+  }
+
+  &.selected {
+    background-color: #ecfdf5;
+    color: #047857;
+  }
+
+  .bet-icon {
+    margin-right: 12px;
+    font-size: 18px;
+  }
+}
+
+// Right side - Form
+.bet-form {
+  flex: 1;
+}
+
+.form-section {
+  margin-bottom: 24px;
+
+  label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.team-btn {
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: #d1d5db;
+  }
+
+  &.selected {
+    border-color: #9ca3af;
+  }
+
+  .team-name {
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .team-odds {
+    color: #6b7280;
+  }
+}
+
+.amount-input {
+  position: relative;
+
+  .dollar-sign {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+  }
+
+  input {
+    width: 100%;
+    padding: 8px 16px 8px 28px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 16px;
+
+    &:focus {
+      outline: none;
+      border-color: #d1d5db;
+      box-shadow: 0 0 0 2px rgba(209, 213, 219, 0.2);
+    }
+  }
+}
+
+.control-note-input {
+  width: 100%;
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 16px;
+
+  &:focus {
+    outline: none;
+    border-color: #d1d5db;
+    box-shadow: 0 0 0 2px rgba(209, 213, 219, 0.2);
+  }
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.potential-winnings {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #ecfdf5;
+  border-radius: 8px;
+
+  .winnings-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .amount {
+      font-size: 18px;
+      font-weight: 600;
+      color: #047857;
+    }
+  }
+}
+
+.place-bet-btn {
+  width: 100%;
+  padding: 12px;
+  background: #4b5563;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background: #374151;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.confidence-display {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 1rem;
+  color: #333;
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.bet-form {
+  width: 100%; // Ensure the form itself takes the full width
+}
+
+.form-section {
+  width: 100%; // Ensure all form sections take the full width
+}
+
+.notes-section {
+  width: 100%; // Ensure the notes section takes the full width
+
+  .notes-textarea {
+    width: 100%; // Make the textarea take the full width of its parent
+    resize: vertical; // Allow vertical resizing only
+    box-sizing: border-box; // Ensure padding and borders don't affect the width
+    min-height: 80px; // Optional: Set a minimum height to match the design
+  }
+}
+
+/* New styles for the confirmation view */
+.confirmation-view {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.confirmation-details {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.game-header {
+  text-align: center;
+  margin-bottom: 20px;
+
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+  }
+}
+
+.details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex: 1;
+  }
+
+  .value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    flex: 1;
+    text-align: right;
+  }
+
+  .highlight {
+    color: #047857; // Green for potential winnings, matching form view
+  }
+
+  .status-pending {
+    color: #d97706; // Amber for pending status
+    font-weight: 500;
+  }
+}
+
+.confirmation-prompt {
+  text-align: center;
+
+  p {
+    font-size: 14px;
+    color: #374151;
+    margin-bottom: 16px;
+  }
+
+  .confirmation-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+  }
+}
+
+.btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-secondary {
+  background-color: #e5e7eb;
+  color: #374151;
+
+  &:hover {
+    background-color: #d1d5db;
+  }
+}
+
+.btn-primary {
+  background-color: #4b5563; // Match the place-bet-btn color
+  color: #ffffff;
+
+  &:hover {
+    background-color: #374151;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .confirmation-details {
+    padding: 16px;
+  }
+
+  .game-header h3 {
+    font-size: 16px;
+  }
+
+  .detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+
+    .label,
+    .value {
+      text-align: left;
+      flex: none;
+    }
+  }
+
+  .confirmation-prompt p {
+    font-size: 13px;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}

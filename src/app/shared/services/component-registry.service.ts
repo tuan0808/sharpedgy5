@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {PlayersComponent} from "../../components/nfl/players/players.component";
 import {ScoresComponent} from "../../components/nfl/scores/scores.component";
 import {StandingComponent} from "../../components/nfl/standing/standing.component";
@@ -13,11 +13,12 @@ import {Dashboard} from "../data/dashboard/Dashboard";
     providedIn: 'root'
 })
 export class  ComponentRegistryService {
+    private httpClient = inject(HttpClient)
     private registerDirectories: String[] = [""]
     private registryMap: Map<String, any> = new Map<String, any>()
     private endpoint = "http://localhost:8080"
 
-    constructor(private httpClient: HttpClient) {
+    constructor() {
         this.registryMap.set("playerInfo", PlayersComponent)
         this.registryMap.set("scores", ScoresComponent)
         this.registryMap.set("standing", StandingComponent)

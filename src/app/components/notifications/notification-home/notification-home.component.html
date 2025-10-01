@@ -1,0 +1,511 @@
+<!-- notification-home.component.html -->
+<div class="dashboard"
+     [class.mobile]="breakpoint().isMobile"
+     [class.tablet]="breakpoint().isTablet"
+     [class.desktop]="breakpoint().isDesktop">
+
+    <!-- Mobile Header -->
+    <div class="header mobile-header"
+         [style.padding-top]="getSafeAreaTop()">
+        <div class="header-container">
+            <div class="header-content">
+                <div class="d-flex align-items-center">
+                    <h1 class="header-title">
+                        NOTIFICATIONS
+                    </h1>
+                    @if (breakpoint().isMobile) {
+                        <span class="badge bg-primary ms-2">{{ filteredNotifications().length }}</span>
+                    }
+                </div>
+
+                <div class="header-actions">
+                    <!-- Mobile Search Toggle -->
+                    @if (breakpoint().isMobile) {
+                        <button class="btn btn-outline-secondary btn-sm" (click)="toggleMobileSearch()">
+                            <i class="bi bi-search"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" (click)="toggleMobileFilters()">
+                            <i class="bi bi-funnel"></i>
+                        </button>
+                    }
+
+                    <!-- Desktop Search -->
+                    @if (!breakpoint().isMobile) {
+                        <div class="search-container">
+                            <i class="bi bi-search search-icon"></i>
+                            <input type="text"
+                                   [ngModel]="searchTerm()"
+                                   (ngModelChange)="searchTerm.set($event)"
+                                   placeholder="Search..."
+                                   class="search-input" />
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Expandable Search -->
+    @if (breakpoint().isMobile && mobileSearchExpanded()) {
+        <div class="mobile-search-overlay">
+            <div class="container-fluid p-3">
+                <div class="position-relative">
+                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                    <input type="text"
+                           [ngModel]="searchTerm()"
+                           (ngModelChange)="searchTerm.set($event)"
+                           placeholder="Search notifications..."
+                           class="form-control ps-5 mobile-search-input"
+                           (blur)="mobileSearchExpanded.set(false)">
+                    <button class="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y me-2"
+                            (click)="toggleMobileSearch()">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Games Bar -->
+    <div class="games-bar">
+        <div class="games-container">
+            <!-- Mobile Tabs -->
+            @if (breakpoint().isMobile) {
+                <div class="mobile-games-tabs">
+                    <button class="mobile-tab-btn"
+                            [class.active]="activeTab() === 'upcoming'"
+                            (click)="activeTab.set('upcoming')">
+                        Upcoming
+                        <span class="badge bg-secondary ms-2">{{ upcomingGames.length }}</span>
+                    </button>
+                    <button class="mobile-tab-btn"
+                            [class.active]="activeTab() === 'live'"
+                            (click)="activeTab.set('live')">
+                        Live
+                        <span class="badge bg-danger ms-2">{{ activeGames.length }}</span>
+                    </button>
+                </div>
+            } @else {
+                <!-- Desktop Tabs -->
+                <div class="games-tabs">
+                    <button class="tab-button"
+                            [class.active]="activeTab() === 'upcoming'"
+                            (click)="activeTab.set('upcoming')">
+                        Upcoming Games
+                    </button>
+                    <button class="tab-button"
+                            [class.active]="activeTab() === 'live'"
+                            (click)="activeTab.set('live')">
+                        Live Games ({{ activeGames.length }})
+                    </button>
+                </div>
+            }
+
+            <!-- Games Scroll -->
+            <div class="games-scroll">
+                <div class="games-list" [style.grid-template-columns]="getGridColumns()">
+                    @if (activeTab() === 'upcoming') {
+                        @for (game of upcomingGames; track game.id) {
+                            <div class="game-card"
+                                 (click)="handleMobileGameSelection(game, $event)">
+                                <div class="game-card-content">
+                                    <div class="game-teams">
+                                        <div class="team">{{ game.away }}</div>
+                                        <div class="game-separator">&#64;</div>
+                                        <div class="team">{{ game.home }}</div>
+                                    </div>
+                                    <div class="game-time">{{ game.time }}</div>
+                                    <div class="game-league">{{ game.league }}</div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    @if (activeTab() === 'live') {
+                        @for (game of activeGames; track game.id) {
+                            <div class="game-card live-game"
+                                 (click)="handleMobileGameSelection(game, $event)">
+                                <div class="game-card-content">
+                                    <div class="game-teams">
+                                        <div class="team">
+                                            {{ game.away }}
+                                            <span class="score">{{ game.awayScore }}</span>
+                                        </div>
+                                        <div class="game-separator">VS</div>
+                                        <div class="team">
+                                            {{ game.home }}
+                                            <span class="score">{{ game.homeScore }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="game-time live">{{ game.time }}</div>
+                                    <div class="game-league">{{ game.league }}</div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-layout" [class.mobile-layout]="breakpoint().isMobile">
+
+            <!-- Desktop Sidebar - Fixed Height Layout -->
+            @if (!breakpoint().isMobile) {
+                <div class="sidebar">
+                    <div class="sidebar-content sidebar-sticky">
+                        <h2 class="sidebar-title">Filter</h2>
+
+                        <!-- Sports Filter -->
+                        <div class="filter-section">
+                            <h3 class="filter-title">Sports</h3>
+                            <div class="filter-options">
+                                <div class="filter-option">
+                                    <input type="radio"
+                                           id="sport-all"
+                                           name="sport"
+                                           value="all"
+                                           [checked]="filters().sport === 'all'"
+                                           (change)="updateFilters({sport: 'all'})">
+                                    <label for="sport-all" class="filter-label">
+                                        All Sports
+                                    </label>
+                                </div>
+                                @for (sport of sports; track sport) {
+                                    <div class="filter-option">
+                                        <input type="radio"
+                                               [id]="'sport-' + sport"
+                                               name="sport"
+                                               [value]="sport"
+                                               [checked]="filters().sport === sport"
+                                               (change)="updateFilters({sport: sport})">
+                                        <label [for]="'sport-' + sport" class="filter-label">
+                                            {{ sport }}
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Type Filter -->
+                        <div class="filter-section">
+                            <h3 class="filter-title">Type</h3>
+                            <div class="filter-options">
+                                <div class="filter-option">
+                                    <input type="radio"
+                                           id="type-all"
+                                           name="type"
+                                           value="all"
+                                           [checked]="filters().type === 'all'"
+                                           (change)="updateFilters({type: 'all'})">
+                                    <label for="type-all" class="filter-label">
+                                        All Types
+                                    </label>
+                                </div>
+                                @for (type of notificationTypes; track type) {
+                                    <div class="filter-option">
+                                        <input type="radio"
+                                               [id]="'type-' + type"
+                                               name="type"
+                                               [value]="type"
+                                               [checked]="filters().type === type"
+                                               (change)="updateFilters({type: type})">
+                                        <label [for]="'type-' + type" class="filter-label">
+                                            {{ type }}
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- EventStatus Filter -->
+                        <div class="filter-section">
+                            <h3 class="filter-title">EventStatus</h3>
+                            <div class="filter-options">
+                                <div class="filter-option">
+                                    <input type="radio"
+                                           id="status-all"
+                                           name="status"
+                                           value="all"
+                                           [checked]="filters().enabled === 'all'"
+                                           (change)="updateFilters({enabled: 'all'})">
+                                    <label for="status-all" class="filter-label">
+                                        All EventStatus
+                                    </label>
+                                </div>
+                                <div class="filter-option">
+                                    <input type="radio"
+                                           id="status-enabled"
+                                           name="status"
+                                           value="enabled"
+                                           [checked]="filters().enabled === 'enabled'"
+                                           (change)="updateFilters({enabled: 'enabled'})">
+                                    <label for="status-enabled" class="filter-label">
+                                        Enabled
+                                    </label>
+                                </div>
+                                <div class="filter-option">
+                                    <input type="radio"
+                                           id="status-disabled"
+                                           name="status"
+                                           value="disabled"
+                                           [checked]="filters().enabled === 'disabled'"
+                                           (change)="updateFilters({enabled: 'disabled'})">
+                                    <label for="status-disabled" class="filter-label">
+                                        Disabled
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Content Header -->
+                <div class="content-header">
+                    <div>
+                        <h1 class="content-title">
+                            {{ filters().sport === 'all' ? 'All Sports' : filters().sport }} Notifications
+                        </h1>
+                        <p class="content-subtitle">
+                            {{ totalElements() }} notifications found
+                            @if (totalPages() > 1) {
+                                <span> • Page {{ currentPage() }} of {{ totalPages() }}</span>
+                            }
+                        </p>
+                    </div>
+
+                    @if (!breakpoint().isMobile) {
+                        <div class="content-actions">
+                            <button class="select-button"
+                                    (click)="toggleSelectionMode()">
+                                <input type="checkbox" [checked]="selectionMode()" readonly>
+                                Select
+                            </button>
+                            <button class="create-button" (click)="navigateToCreateNotification()">
+                                <i class="bi bi-plus"></i>
+                                Create New
+                            </button>
+                        </div>
+                    }
+                </div>
+
+                <!-- Notifications Grid -->
+                <div class="notifications-grid" [style.grid-template-columns]="getGridColumns()">
+                    @for (notification of filteredNotifications(); track notification.id) {
+                        <div class="notification-item">
+                            @if (selectionMode() && !breakpoint().isMobile) {
+                                <input type="checkbox"
+                                       class="selection-checkbox"
+                                       [checked]="isNotificationSelected(notification.id)"
+                                       (change)="isNotificationSelected(notification.id) ? removeSelectedNotification(notification.id) : addSelectedNotification(notification.id)">
+                            }
+
+                            <div class="notification-card"
+                                 [class.mobile]="breakpoint().isMobile">
+                                <div class="notification-header">
+                                    <div class="notification-badges">
+                                        <span class="badge notification-type-badge">
+                                            {{ notification.eventType }}
+                                        </span>
+                                        <span class="badge league-badge">{{ notification.league }}</span>
+                                    </div>
+                                    <div class="notification-status"
+                                         [class.enabled]="notification.isEnabled"
+                                         [class.disabled]="!notification.isEnabled"></div>
+                                </div>
+
+                                <div class="notification-content">
+                                    <h3 class="notification-title">
+                                        {{ notification.game?.awayTeam || notification.awayTeam }} &#64; {{ notification.game?.homeTeam || notification.homeTeam }}
+                                    </h3>
+                                    <div class="notification-meta">
+                                        {{ (notification.game?.scheduledTime || notification.game.scheduledTime) | date:'shortDate' }} • {{ notification.game?.scheduledTime || notification.game.scheduledTime }}
+                                    </div>
+                                    <div class="notification-stats">
+                                        <div class="stat">
+                                            <i class="bi bi-clock"></i>
+                                            Last: {{ notification.lastTriggered }}
+                                        </div>
+                                        <div class="stat">
+                                            <i class="bi bi-lightning"></i>
+                                            {{ notification.triggerCount }} triggers
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="notification-actions" [class.mobile]="breakpoint().isMobile">
+                                    <button class="action-btn toggle-btn"
+                                            [class.enabled]="notification.isEnabled"
+                                            [class.disabled]="!notification.isEnabled"
+                                            (click)="toggleNotificationMobile(notification.id, $event)">
+                                        <i class="bi"
+                                           [class.bi-volume-up]="notification.isEnabled"
+                                           [class.bi-volume-mute]="!notification.isEnabled"></i>
+                                    </button>
+                                    <button class="action-btn edit-btn"
+                                            (click)="navigateToEditNotification(notification.id)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="action-btn delete-btn"
+                                            (click)="deleteNotification(notification.id)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Pagination Section -->
+                <div class="pagination-container">
+                    <app-pagination [totalPages]="totalPages()"
+                                    [currentPage]="currentPage()"
+                                    (pageChange)="changePage($event)">
+                    </app-pagination>
+                </div>
+
+                <!-- Empty State -->
+                @if (filteredNotifications().length === 0 && !loading()) {
+                    <div class="empty-state" [class.mobile]="breakpoint().isMobile">
+                        <div class="empty-icon">
+                            <i class="bi bi-bell"></i>
+                        </div>
+                        <h3 class="empty-title">
+                            No notifications found
+                        </h3>
+                        <p class="empty-description">
+                            @if (hasFiltersApplied()) {
+                                Try adjusting your filters or search terms to find more notifications.
+                            } @else {
+                                Get started by creating your first notification to stay updated on your favorite sports events.
+                            }
+                        </p>
+                        @if (!hasFiltersApplied()) {
+                            <button class="empty-action" (click)="navigateToCreateNotification()">
+                                Create Your First Notification
+                            </button>
+                        } @else {
+                            <button class="empty-action" (click)="clearFilters()">
+                                Clear Filters
+                            </button>
+                        }
+                    </div>
+                }
+
+                <!-- Loading Overlay -->
+                @if (loading()) {
+                    <div class="loading-overlay">
+                        <div class="loading-spinner"></div>
+                        <p class="loading-text">Loading notifications...</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Floating Action Button -->
+    @if (breakpoint().isMobile) {
+        <button class="mobile-fab"
+                [style.bottom]="getSafeAreaBottom()"
+                (click)="navigateToCreateNotification()">
+            <i class="bi bi-plus"></i>
+        </button>
+    }
+
+    <!-- Mobile Filters Bottom Sheet -->
+    @if (breakpoint().isMobile) {
+        <div class="mobile-filters-overlay"
+             [class.show]="mobileFiltersOpen()"
+             (click)="toggleMobileFilters()"></div>
+
+        <div class="mobile-filters"
+             [class.show]="mobileFiltersOpen()"
+             [style.bottom]="getSafeAreaBottom()">
+            <div class="filter-handle"></div>
+            <div class="mobile-filters-content">
+                <div class="mobile-filters-header">
+                    <h3>Filters</h3>
+                    <button class="btn btn-sm btn-outline-secondary"
+                            (click)="clearFilters()">
+                        Clear All
+                    </button>
+                </div>
+
+                <!-- Mobile Filter Sections -->
+                <div class="mobile-filter-section">
+                    <h4>Sports</h4>
+                    <div class="mobile-filter-chips">
+                        <button class="filter-chip"
+                                [class.active]="filters().sport === 'all'"
+                                (click)="updateFilters({sport: 'all'})">
+                            All
+                        </button>
+                        @for (sport of sports; track sport) {
+                            <button class="filter-chip"
+                                    [class.active]="filters().sport === sport"
+                                    (click)="updateFilters({sport: sport})">
+                                {{ sport }}
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <div class="mobile-filter-section">
+                    <h4>Type</h4>
+                    <div class="mobile-filter-chips">
+                        <button class="filter-chip"
+                                [class.active]="filters().type === 'all'"
+                                (click)="updateFilters({type: 'all'})">
+                            All
+                        </button>
+                        @for (type of notificationTypes; track type) {
+                            <button class="filter-chip"
+                                    [class.active]="filters().type === type"
+                                    (click)="updateFilters({type: type})">
+                                {{ type }}
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <div class="mobile-filter-section">
+                    <h4>EventStatus</h4>
+                    <div class="mobile-filter-chips">
+                        @for (status of [{value: 'all', label: 'All'}, {value: 'enabled', label: 'Enabled'}, {value: 'disabled', label: 'Disabled'}]; track status.value) {
+                            <button class="filter-chip"
+                                    [class.active]="filters().enabled === status.value"
+                                    (click)="updateFilters({enabled: status.value})">
+                                {{ status.label }}
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Toast Notification -->
+    @if (toastMessage()) {
+        <div class="toast-notification"
+             [class]="'toast-' + toastType()"
+             [class.mobile]="breakpoint().isMobile"
+             [style.top]="breakpoint().isMobile ? getSafeAreaTop() : '1rem'">
+            <div class="toast-content">
+                <i class="bi"
+                   [class.bi-check-circle]="toastType() === 'success'"
+                   [class.bi-exclamation-circle]="toastType() === 'error'"
+                   [class.bi-info-circle]="toastType() === 'info'"></i>
+                {{ toastMessage() }}
+            </div>
+        </div>
+    }
+
+    <!-- Mobile Overlay -->
+    @if (breakpoint().isMobile && (mobileFiltersOpen() || mobileSearchExpanded())) {
+        <div class="mobile-overlay" (click)="closeMobileOverlays()"></div>
+    }
+</div>

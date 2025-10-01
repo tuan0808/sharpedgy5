@@ -4,7 +4,7 @@ import {Betting} from "./Betting";
 import {BetSettlement} from "./BetSettlement";
 
 export interface Game extends Betting {
-    id: string
+    id: number
     status: string
     scheduled: string
     venue: string

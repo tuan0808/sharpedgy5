@@ -8,7 +8,6 @@ import {RouterModule} from '@angular/router';
 import {AuthService} from "../../services/auth.service";
 import {User} from '@angular/fire/auth'
 import {Observable, toArray} from "rxjs";
-import {NflDataService} from "../../services/nfl-data.service";
 import {map} from "rxjs/operators";
 
 var body = document.getElementsByTagName("body")[0];
@@ -56,7 +55,7 @@ export class HeaderComponent implements OnInit {
     constructor(
         protected auth: AuthService,
         public navServices: NavService,
-        private nflService: NflDataService,
+        // private nflService: NflDataService,
         @Inject(DOCUMENT) private document: any,
         private translate: TranslateService) {
     }

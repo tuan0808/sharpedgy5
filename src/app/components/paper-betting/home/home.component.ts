@@ -1,197 +1,316 @@
-import {Component, computed, effect, HostListener, inject, OnInit, Signal, signal, WritableSignal} from '@angular/core';
-import {MdbAccordionModule} from "mdb-angular-ui-kit/accordion";
-import {GameCardComponent} from "./game-card/game-card.component";
-import {SportType} from "../../../shared/model/SportType";
-import {BetSettlementService} from "../../../shared/services/betSettlement.service";
-import {firstValueFrom, of, retry, timeout} from "rxjs";
-import {CurrencyPipe, DatePipe} from "@angular/common";
-import {SportDetail} from "../../../shared/model/SportDetail";
-import {PaginationComponent} from "../../../shared/components/pagination/pagination.component";
-import {catchError, filter, tap} from "rxjs/operators";
-import {ToastrService} from "ngx-toastr";
+// ================================
+// home.component.ts - SIMPLIFIED WITHOUT SIGNAL EFFECTS
+// ================================
+
+import { Component, computed, HostListener, inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { GameCardComponent } from './game-card/game-card.component';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { SportType } from '../../../shared/model/SportType';
+import { BetSettlementService, PagedResponse } from '../../../shared/services/betSettlement.service';
+import { ToastrService } from 'ngx-toastr';
+import { Game } from '../../../shared/model/paper-betting/Game';
+import { firstValueFrom, of, Subscription } from 'rxjs';
+import { catchError, retry, tap, timeout } from 'rxjs/operators';
+import {EventStatus} from "../../../shared/model/enums/EventStatus";
+
+interface SportDetail {
+    name: string;
+    icon: string;
+    type: SportType;
+}
 
 @Component({
-  selector: 'app-home',
-  templateUrl: './home.component.html',
-  standalone: true,
-  imports: [
-    MdbAccordionModule,
-    GameCardComponent,
-    DatePipe,
-    PaginationComponent,
-    CurrencyPipe
-  ],
-  styleUrls: ['./home.component.scss']
+    selector: 'app-home',
+    templateUrl: './home.component.html',
+    standalone: true,
+    imports: [GameCardComponent, PaginationComponent],
+    styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit {
-  private readonly betSettlement = inject(BetSettlementService);
-  private readonly toastr = inject(ToastrService);
-  private readonly MAX_LOAD_RETRIES = 3;
-  private readonly RETRY_DELAY = 2000; // 2 seconds
-  private previousBalance: number | null = null;
+export class HomeComponent implements OnInit, OnDestroy {
+    private readonly betSettlement = inject(BetSettlementService);
+    private readonly toastr = inject(ToastrService);
 
-  // Scroll tracking
-  protected isAtTop = signal<boolean>(true);
+    // Constants
+    private readonly MAX_RETRIES = 2;
+    private readonly TIMEOUT_MS = 10000;
+    private readonly RETRY_DELAY = 2000;
 
-  // Signals
-  protected readonly account = this.betSettlement.account;
-  protected readonly displayedGames = computed(() => {
-    const allGames = this.betSettlement.allGames();
-    const startIndex = (this.currentPage() - 1) * this.pageSize();
-    const endIndex = Math.min(startIndex + this.pageSize(), allGames.length);
-    return allGames.slice(startIndex, endIndex);
-  });
+    // Subscriptions
+    private subscriptions = new Subscription();
 
-  protected readonly sports = signal<SportDetail[]>([
-    new SportDetail("NFL", "🏈", SportType.NFL),
-    new SportDetail("NHL", "🏒", SportType.NHL),
-  ]);
-  protected readonly selectedSport = signal<SportType>(SportType.NFL);
-  protected readonly isLoading = signal<boolean>(false);
-  protected readonly hasError = signal<boolean>(false);
-  protected readonly errorMessage = signal<string>('');
-  protected readonly currentPage = signal<number>(1);
-  protected readonly pageSize = signal<number>(10);
-  protected readonly totalPages = computed(() => {
-    const totalGames = this.betSettlement.allGames().length;
-    return Math.ceil(totalGames / this.pageSize());
-  });
+    // UI State
+    protected readonly isAtTop = signal<boolean>(true);
+    protected readonly selectedSport = signal<SportType>(SportType.NFL);
+    protected readonly currentPageGames = signal<Game[]>([]);
+    protected readonly isLoading = signal<boolean>(false);
+    protected readonly hasError = signal<boolean>(false);
+    protected readonly errorMessage = signal<string>('');
+    protected readonly currentPage = signal<number>(1);
+    protected readonly pageSize = signal<number>(10);
+    protected readonly totalPages = signal<number>(0);
+    protected readonly totalElements = signal<number>(0);
 
-  constructor() {
-    // Setup effect to watch for account changes
-    effect(() => {
-      const account = this.account();
-      if (account) {
+    // Service state - COMPUTED SIGNALS
+    protected readonly account = computed(() => this.betSettlement.account());
+    protected readonly balance = computed(() => this.betSettlement.balance());
+    protected readonly credit = computed(() => this.betSettlement.credit());
+
+    // Computed
+    protected readonly displayedGames = computed(() => this.currentPageGames());
+
+    // Configuration
+    protected readonly sports = signal<SportDetail[]>([
+        { name: 'NFL', icon: '🏈', type: SportType.NFL },
+        { name: 'NHL', icon: '🏒', type: SportType.NHL },
+        { name: 'MLB', icon: '⚾', type: SportType.MLB },
+        { name: 'NBA', icon: '🏀', type: SportType.NBA }
+    ]);
+
+    constructor() {
+        this.setupGameUpdateSubscription();
+    }
+
+    async ngOnInit(): Promise<void> {
+        await this.waitForUser();
+        await this.loadGames();
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.unsubscribe();
+    }
+
+    @HostListener('window:scroll')
+    onWindowScroll(): void {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        const wasAtTop = this.isAtTop();
+        const nowAtTop = scrollTop <= 10;
+
+        this.isAtTop.set(nowAtTop);
+
+        if (wasAtTop && !nowAtTop) {
+            this.toastr.info('Scroll back to top to see all options', 'Scrolled Down');
+        }
+    }
+
+    // ================================
+    // EVENT HANDLERS
+    // ================================
+
+    async onSportSelect(type: SportType): Promise<void> {
+        if (this.selectedSport() === type && this.currentPageGames().length > 0 && !this.hasError()) {
+            return;
+        }
+
+        this.selectedSport.set(type);
+        this.currentPage.set(1);
+        this.clearGameState();
+        await this.loadGames();
+
+        if (this.currentPageGames().length > 0) {
+            this.toastr.info(`Loaded ${SportType[type]} games`, 'Sport Changed');
+        }
+    }
+
+    async onPageChange(page: number): Promise<void> {
+        const validPage = Math.max(1, Math.min(page, this.totalPages()));
+        if (this.currentPage() !== validPage) {
+            this.currentPage.set(validPage);
+            await this.loadGames();
+        }
+    }
+
+    async onPageSizeChange(size: number): Promise<void> {
+        this.pageSize.set(size);
+        this.currentPage.set(1);
+        await this.loadGames();
+    }
+
+    async onRetry(): Promise<void> {
+        await this.loadGames();
+    }
+
+    scrollToTop(): void {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+
+
+    // ================================
+    // SETUP METHODS
+    // ================================
+
+    private setupGameUpdateSubscription(): void {
+        const gameUpdateSub = this.betSettlement.gameUpdate$.subscribe(update => {
+            console.log('Received game update:', update);
+
+            const currentGames = this.currentPageGames();
+            const gameIndex = currentGames.findIndex(g => g.id === update.gameId);
+
+            if (gameIndex !== -1) {
+                const allGames = this.betSettlement.allGames();
+                const updatedGame = allGames.find(g => g.id === update.gameId);
+
+                if (updatedGame) {
+                    const newGames = [...currentGames];
+                    newGames[gameIndex] = { ...updatedGame };
+                    this.currentPageGames.set(newGames); // Update displayed games
+                    console.log(`Updated game ${update.gameId} in currentPageGames with status: ${updatedGame.betSettlement?.status}`);
+                }
+            }
+
+            // Reload games to ensure consistency
+            this.loadGames().then(() => {
+                if (update.betRecord) {
+                    this.toastr.success(
+                        `Bet confirmed: $${update.betRecord.wagerAmount} on ${update.betRecord.selectedTeam} (Status: ${update.betRecord.status})`,
+                        'Bet Placed'
+                    );
+                }
+            }).catch(error => this.handleError(error));
+
+            if (update.betRecord && update.betRecord.status === 'FAILED') {
+                this.handleError(new Error('Bet failed'));
+            }
+        });
+
+        this.subscriptions.add(gameUpdateSub);
+    }
+
+
+    // ================================
+    // CORE LOGIC
+    // ================================
+
+    private async waitForUser(): Promise<void> {
+        const maxRetries = 3;
+        let retryCount = 0;
+
+        while (!this.betSettlement.currentUserId() && retryCount < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            retryCount++;
+        }
+
+        if (!this.betSettlement.currentUserId()) {
+            throw new Error('Failed to authenticate user');
+        }
+    }
+
+    private async loadGames(): Promise<void> {
+        const userId = this.betSettlement.currentUserId();
+        if (this.isLoading() || !userId) return;
+
+        try {
+            this.setLoadingState(true);
+
+            const pageIndex = this.currentPage() - 1;
+            const sport = this.selectedSport();
+
+            const response = await firstValueFrom(
+                this.betSettlement.getUpcomingGamesPaginated(userId, sport, pageIndex, this.pageSize())
+                    .pipe(
+                        timeout(this.TIMEOUT_MS),
+                        retry({
+                            count: this.MAX_RETRIES,
+                            delay: () => new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY))
+                        }),
+                        tap(response => console.log(`Loaded ${response.content.length} ${SportType[sport]} games`)),
+                        catchError(error => {
+                            console.error(`Failed to load ${SportType[sport]} games:`, error);
+                            this.handleError(error);
+                            return of(this.createEmptyResponse(pageIndex));
+                        })
+                    )
+            );
+
+            this.updateGameState(response);
+
+            // Also update the service's allGames signal with the loaded games
+            this.syncGamesToService(response.content);
+
+            if (response.totalElements === 0) {
+                this.toastr.info(`No ${SportType[sport]} games available at the moment`, 'No Games');
+            }
+
+        } catch (error) {
+            this.handleError(error);
+            this.currentPageGames.set([]);
+        } finally {
+            this.setLoadingState(false);
+        }
+    }
+
+    /**
+     * Sync loaded games to the service's allGames signal
+     */
+    private syncGamesToService(games: Game[]): void {
+        if (games.length === 0) return;
+
+        // Get current games from service
+        const currentAllGames = this.betSettlement.allGames();
+        const updatedGames = [...currentAllGames];
+
+        games.forEach(newGame => {
+            const existingIndex = updatedGames.findIndex(g => g.id === newGame.id);
+            if (existingIndex !== -1) {
+                // Preserve bet information if it exists in the current game
+                const existingGame = updatedGames[existingIndex];
+                if (existingGame.betSettlement && !newGame.betSettlement) {
+                    newGame.betSettlement = existingGame.betSettlement;
+                }
+                updatedGames[existingIndex] = newGame;
+            } else {
+                updatedGames.push(newGame);
+            }
+        });
+
+        // Update the service's allGames signal
+        this.betSettlement.allGames.set(updatedGames);
+        console.log(`Synced ${games.length} games to service`);
+    }
+
+    // ================================
+    // HELPER METHODS
+    // ================================
+
+    private setLoadingState(loading: boolean): void {
+        this.isLoading.set(loading);
+        if (loading) {
+            this.hasError.set(false);
+            this.errorMessage.set('');
+        }
+    }
+
+    private updateGameState(response: PagedResponse<Game>): void {
+        this.currentPageGames.set(response.content);
+        this.totalPages.set(response.totalPages);
+        this.totalElements.set(response.totalElements);
+    }
+
+    private handleError(error: any): void {
+        this.hasError.set(true);
+        const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+        this.errorMessage.set(message);
+        this.toastr.error(message, 'Error');
+    }
+
+    private clearGameState(): void {
+        this.currentPageGames.set([]);
         this.hasError.set(false);
         this.errorMessage.set('');
-
-        this.toastr.info(account.balance.toFixed(), "Balance Change");
-        // Check for balance changes and show notification
-        if (this.previousBalance !== null && this.previousBalance !== account.balance) {
-          const difference = account.balance - this.previousBalance;
-          const message = difference > 0
-              ? `Balance increased by ${difference.toFixed(2)}!`
-              : `Balance decreased by ${Math.abs(difference).toFixed(2)}`;
-
-          const toastrType = difference > 0 ? 'success' : 'info';
-          this.toastr[toastrType](message, 'Balance Update');
-        }
-        this.previousBalance = account.balance;
-      }
-    });
-  }
-
-  async ngOnInit(): Promise<void> {
-    await this.waitForUser();
-    console.log('User ID ready:', this.betSettlement.currentUserId());
-    await this.loadGames();
-  }
-
-  // Use Angular's HostListener for scroll events
-  @HostListener('window:scroll')
-  onWindowScroll(): void {
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-    const wasAtTop = this.isAtTop();
-    this.isAtTop.set(scrollTop <= 10);
-
-    // If user just scrolled away from the top, show notification
-    if (wasAtTop && !this.isAtTop()) {
-      this.toastr.info('Scroll back to top to see all options', 'Scrolled Down');
-    }
-  }
-
-  private async waitForUser(retryCount = 0): Promise<void> {
-    try {
-      while (!this.betSettlement.currentUserId()) {
-        if (retryCount >= this.MAX_LOAD_RETRIES) {
-          throw new Error('Failed to load user after maximum retries');
-        }
-        console.log(`Waiting for user, attempt ${retryCount + 1}/${this.MAX_LOAD_RETRIES}`);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        retryCount++;
-      }
-    } catch (error) {
-      console.error('Error waiting for user:', error);
-      this.handleError(error);
-    }
-  }
-
-  private async loadGames(): Promise<void> {
-    if (this.isLoading() || !this.betSettlement.currentUserId()) {
-      console.log('Skipping loadGames: Loading in progress or no user ID');
-      return;
     }
 
-    try {
-      this.isLoading.set(true);
-      this.hasError.set(false);
-      this.errorMessage.set('');
-
-      const gamesObservable = this.betSettlement.getSportsByNFL(this.selectedSport()).pipe(
-          timeout(10000),
-          retry({
-            count: 2,
-            delay: (error, retryCount) => {
-              console.log(`Retrying game load attempt ${retryCount}`, error);
-              return new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY));
-            },
-          }),
-          tap(games => console.log(`Retrieved ${games?.length} games`)),
-          catchError(err => {
-            console.error('Game fetch failed:', err);
-            return of([]); // Return an empty array as a fallback
-          })
-      );
-
-      gamesObservable.subscribe(s=>console.log(JSON.stringify(s)))
-
-      await firstValueFrom(gamesObservable);
-    } catch (error) {
-      console.error('Failed to load games:', error);
-      this.handleError(error);
-      this.betSettlement.allGames.set([]);
-    } finally {
-      this.isLoading.set(false);
-    }
-  }
-
-  private handleError(error: any) {
-    this.hasError.set(true);
-    if (error instanceof Error) {
-      this.errorMessage.set(error.message);
-      this.toastr.error(error.message, 'Error');
-    } else {
-      this.errorMessage.set('An unexpected error occurred');
-      this.toastr.error('An unexpected error occurred', 'Error');
-    }
-  }
-
-  // Event Handlers
-  async onSportSelect(type: SportType): Promise<void> {
-    if (this.selectedSport() === type && this.betSettlement.allGames().length > 0) {
-      return;
+    private createEmptyResponse(pageIndex: number): PagedResponse<Game> {
+        return {
+            content: [],
+            totalPages: 0,
+            totalElements: 0,
+            size: this.pageSize(),
+            number: pageIndex,
+            numberOfElements: 0,
+            first: true,
+            last: true
+        };
     }
 
-    this.selectedSport.set(type);
-    this.currentPage.set(1);
-    await this.loadGames();
-  }
-
-  async onPageChange(page: number): Promise<void> {
-    this.currentPage.set(page);
-  }
-
-  async onPageSizeChange(size: number): Promise<void> {
-    this.pageSize.set(size);
-    this.currentPage.set(1);
-  }
-
-  async onRetry(): Promise<void> {
-    await this.loadGames();
-  }
-
-  // Scroll to top helper method
-  scrollToTop(): void {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+    protected readonly Math = Math;
 }

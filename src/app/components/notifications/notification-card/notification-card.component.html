@@ -1,0 +1,54 @@
+<!--<div class="notification-card"-->
+<!--     [class.mobile]="breakpoint().isMobile"-->
+<!--     [class.light]="!darkMode"-->
+<!--     [class.dark]="darkMode">-->
+<!--    <div class="notification-header">-->
+<!--        <div class="notification-badges">-->
+<!--                                        <span class="badge notification-type-badge">-->
+<!--                                            {{ notification.eventType }}-->
+<!--                                        </span>-->
+<!--            <span class="badge league-badge">{{ notification.league }}</span>-->
+<!--        </div>-->
+<!--        <div class="notification-status"-->
+<!--             [class.enabled]="notification.isEnabled"-->
+<!--             [class.disabled]="!notification.isEnabled"></div>-->
+<!--    </div>-->
+
+<!--    <div class="notification-content">-->
+<!--        <h3 class="notification-title">-->
+<!--            {{ notification.game?.awayTeam || notification.awayTeam }} &#64; {{ notification.game?.homeTeam || notification.homeTeam }}-->
+<!--        </h3>-->
+<!--        <div class="notification-meta">-->
+<!--            {{ (notification.game?.scheduledTime || notification.game.scheduledTime) | date:'shortDate' }} â€¢ {{ notification.game?.scheduledTime || notification.game.scheduledTime }}-->
+<!--        </div>-->
+<!--        <div class="notification-stats">-->
+<!--            <div class="stat">-->
+<!--                <i class="bi bi-clock"></i>-->
+<!--                Last: {{ notification.lastTriggered }}-->
+<!--            </div>-->
+<!--            <div class="stat">-->
+<!--                <i class="bi bi-lightning"></i>-->
+<!--                {{ notification.triggerCount }} triggers-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+
+<!--    <div class="notification-actions" [class.mobile]="breakpoint().isMobile">-->
+<!--        <button class="action-btn toggle-btn"-->
+<!--                [class.enabled]="notification.isEnabled"-->
+<!--                [class.disabled]="!notification.isEnabled"-->
+<!--                (click)="toggleNotificationMobile(notification.id, $event)">-->
+<!--            <i class="bi"-->
+<!--               [class.bi-volume-up]="notification.isEnabled"-->
+<!--               [class.bi-volume-mute]="!notification.isEnabled"></i>-->
+<!--        </button>-->
+<!--        <button class="action-btn edit-btn"-->
+<!--                (click)="navigateToEditNotification(notification.id)">-->
+<!--            <i class="bi bi-pencil"></i>-->
+<!--        </button>-->
+<!--        <button class="action-btn delete-btn"-->
+<!--                (click)="deleteNotification(notification.id)">-->
+<!--            <i class="bi bi-trash"></i>-->
+<!--        </button>-->
+<!--    </div>-->
+<!--</div>-->
