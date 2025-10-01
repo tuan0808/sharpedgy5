@@ -24,26 +24,24 @@
         <form [formGroup]="bettingForm" (ngSubmit)="onSubmit()" class="bet-form">
             <div class="form-section">
                 <label>Select Team</label>
-                <div class="team-grid">
-                    <button
-                            type="button"
-                            (click)="setSelectedTeam({ name: game.homeTeam.name, odds: game.moneylineHome, type: 'home' })"
-                            [class.selected]="selectedTeam?.type === 'home'"
-                            class="team-btn">
-                        <div class="team-name">{{ game.homeTeam.name }}</div>
-                        <div class="team-odds">{{ game.moneylineHome >= 0 ? '+' : '' }}{{ game.moneylineHome }}</div>
-                        <div class="team-probability">{{ homeTeamWinProbability.toFixed(2) }}%</div>
-                    </button>
-                    <button
-                            type="button"
-                            (click)="setSelectedTeam({ name: game.awayTeam.name, odds: game.moneylineAway, type: 'away' })"
-                            [class.selected]="selectedTeam?.type === 'away'"
-                            class="team-btn">
-                        <div class="team-name">{{ game.awayTeam.name }}</div>
-                        <div class="team-odds">{{ game.moneylineAway >= 0 ? '+' : '' }}{{ game.moneylineAway }}</div>
-                        <div class="team-probability">{{ awayTeamWinProbability.toFixed(2) }}%</div>
-                    </button>
-                </div>
+                <button
+                        type="button"
+                        (click)="setSelectedTeam({ name: game.homeTeam.name, abbreviation: game.homeTeam.abbreviation, odds: game.moneylineHome, type: 'home' })"
+                        [class.selected]="selectedTeam?.type === 'home'"
+                        class="team-btn">
+                    <div class="team-name">{{ game.homeTeam.name }}</div>
+                    <div class="team-odds">{{ game.moneylineHome >= 0 ? '+' : '' }}{{ game.moneylineHome }}</div>
+                    <div class="team-probability">{{ homeTeamWinProbability.toFixed(2) }}%</div>
+                </button>
+                <button
+                        type="button"
+                        (click)="setSelectedTeam({ name: game.awayTeam.name, abbreviation: game.awayTeam.abbreviation, odds: game.moneylineAway, type: 'away' })"
+                        [class.selected]="selectedTeam?.type === 'away'"
+                        class="team-btn">
+                    <div class="team-name">{{ game.awayTeam.name }}</div>
+                    <div class="team-odds">{{ game.moneylineAway >= 0 ? '+' : '' }}{{ game.moneylineAway }}</div>
+                    <div class="team-probability">{{ awayTeamWinProbability.toFixed(2) }}%</div>
+                </button>
             </div>
 
             <div class="form-section">

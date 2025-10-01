@@ -77,7 +77,7 @@ export class GameCardComponent {
     paperBetRecord.wagerValue = betData.wagerValue;
     paperBetRecord.wagerAmount = betData.wagerAmount;
     paperBetRecord.betStatus = EventStatus.PENDING;
-    paperBetRecord.selectedTeam = betData.selectedTeam.toString();
+    paperBetRecord.selectedTeam = betData.selectedTeam;
     paperBetRecord.potentialWinnings = this.calculatePotentialWinnings(betData.wagerAmount, betData.wagerValue);
 
     try {
