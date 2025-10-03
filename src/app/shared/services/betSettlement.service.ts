@@ -57,6 +57,23 @@ export interface GameUpdate {
     timestamp: number;
 }
 
+export interface BetSettlementNotification {
+    userId: string;
+    betId: number;
+    gameId: string;
+    sport: string;
+    status: string;
+    wagerAmount: number;
+    totalReturn: number;
+    profit: number;
+    oldBalance: number;
+    newBalance: number;
+    homeTeam: string;
+    awayTeam: string;
+    homeScore?: number;
+    awayScore?: number;
+}
+
 const getWebSocketUrl = (): string => {
     const baseUrl = environment.apiUrl.replace('http://', 'ws://').replace('https://', 'wss://');
     return `${baseUrl}/ws`;
@@ -86,7 +103,13 @@ export class BetSettlementService extends BaseService<Account> {
         return Array.from(bets.values()).filter(bet => bet.status === 'pending').length;
     });
 
+    // WebSocket state
     private stompClient: Client | null = null;
+    private isWebSocketConnected = signal<boolean>(false);
+    private reconnectAttempts = 0;
+    private readonly MAX_RECONNECT_ATTEMPTS = 5;
+    private readonly RECONNECT_DELAY = 5000;
+
     private readonly SERVER_TIMEOUT = 10000; // 10 seconds
     private readonly RETRY_ATTEMPTS = 2;
     private isBetProcessing = false;
@@ -106,6 +129,9 @@ export class BetSettlementService extends BaseService<Account> {
         console.log('Initializing account for user:', userId);
         await this.fetchInitialAccount(userId);
         await this.fetchInitialCredit(userId);
+
+        // Initialize WebSocket connection after user is authenticated
+        this.connectWebSocket(userId);
     }
 
     private async fetchInitialAccount(userId: string): Promise<void> {
@@ -181,7 +207,7 @@ export class BetSettlementService extends BaseService<Account> {
                     });
                 }
                 const betRecord = result.paperBetRecord || paperBetRecord;
-                console.log(`Updating game with betRecord:`, betRecord); // Debug log
+                console.log(`Updating game with betRecord:`, betRecord);
                 this.updateGameWithBet(betRecord.gameId, betRecord);
             } else {
                 console.log(`Bet failed with status: ${result.status}`);
@@ -209,7 +235,6 @@ export class BetSettlementService extends BaseService<Account> {
     public updateGameWithBet(gameId: number, betRecord: PaperBetRecord): void {
         console.log(`Updating game ${gameId} with bet record`);
 
-        // Update the game in allGames
         const currentGames = this.allGames();
         const gameIndex = currentGames.findIndex(g => g.id === gameId);
 
@@ -228,7 +253,6 @@ export class BetSettlementService extends BaseService<Account> {
 
             this.allGames.set(updatedGames);
 
-            // Emit update via Subject (not signal)
             this.gameUpdateSubject.next({
                 gameId,
                 betRecord,
@@ -285,7 +309,165 @@ export class BetSettlementService extends BaseService<Account> {
         }
     }
 
-    // BACKWARD COMPATIBILITY - Original addRecord method
+    // ================================
+    // WEBSOCKET METHODS
+    // ================================
+
+    private connectWebSocket(userId: string): void {
+        if (this.stompClient?.connected) {
+            console.log('WebSocket already connected');
+            return;
+        }
+
+        const wsUrl = getWebSocketUrl();
+        console.log('Connecting to WebSocket:', wsUrl);
+
+        const socket = new SockJS(wsUrl);
+
+        this.stompClient = new Client({
+            webSocketFactory: () => socket as any,
+            reconnectDelay: this.RECONNECT_DELAY,
+            heartbeatIncoming: 4000,
+            heartbeatOutgoing: 4000,
+            debug: (str) => {
+                console.log('STOMP Debug:', str);
+            },
+            onConnect: () => {
+                console.log('WebSocket Connected');
+                this.isWebSocketConnected.set(true);
+                this.reconnectAttempts = 0;
+                this.subscribeToUserQueue(userId);
+            },
+            onDisconnect: () => {
+                console.log('WebSocket Disconnected');
+                this.isWebSocketConnected.set(false);
+                this.handleReconnect(userId);
+            },
+            onStompError: (frame) => {
+                console.error('STOMP Error:', frame);
+                this.isWebSocketConnected.set(false);
+                this.handleReconnect(userId);
+            }
+        });
+
+        this.stompClient.activate();
+    }
+
+    private subscribeToUserQueue(userId: string): void {
+        if (!this.stompClient?.connected) {
+            console.error('Cannot subscribe: STOMP client not connected');
+            return;
+        }
+
+        this.stompClient.subscribe(
+            `/user/queue/bet-settlement`,
+            (message) => {
+                try {
+                    const notification: BetSettlementNotification = JSON.parse(message.body);
+                    console.log('Received bet settlement notification:', notification);
+                    this.handleBetSettlementNotification(notification);
+                } catch (error) {
+                    console.error('Error parsing bet settlement notification:', error);
+                }
+            }
+        );
+
+        console.log(`Subscribed to /user/queue/bet-settlement for user ${userId}`);
+    }
+
+    private handleBetSettlementNotification(notification: BetSettlementNotification): void {
+        console.log('Processing bet settlement notification:', notification);
+
+        if (notification.newBalance !== undefined) {
+            this.balance.set(notification.newBalance);
+            console.log(`Balance updated to: ${notification.newBalance}`);
+        }
+
+        const currentGames = this.allGames();
+        const gameId = parseInt(notification.gameId);
+        const gameIndex = currentGames.findIndex(g => g.id === gameId);
+
+        if (gameIndex !== -1) {
+            const updatedGames = [...currentGames];
+            const game = updatedGames[gameIndex];
+
+            if (game.betSettlement) {
+                game.betSettlement = {
+                    ...game.betSettlement,
+                    status: notification.status as any
+                };
+
+                console.log(
+                    `Game ${notification.gameId} bet settled: ${notification.status}, ` +
+                    `Profit: ${notification.profit}, New Balance: ${notification.newBalance}`
+                );
+            } else {
+                game.betSettlement = {
+                    betType: game.betSettlement?.betType,
+                    selectedTeam: notification.homeTeam,
+                    status: notification.status as any,
+                    wagerValue: 0,
+                    wagerAmount: notification.wagerAmount
+                };
+            }
+
+            this.allGames.set(updatedGames);
+
+            this.gameUpdateSubject.next({
+                gameId: gameId,
+                timestamp: Date.now()
+            });
+
+            console.log(`Game ${notification.gameId} updated and notification sent`);
+        } else {
+            console.warn(`Game ${notification.gameId} not found in current games list`);
+        }
+
+        this.refreshCreditAfterSettlement();
+    }
+
+    private async refreshCreditAfterSettlement(): Promise<void> {
+        const userId = this.currentUserId();
+        if (!userId) return;
+
+        try {
+            await this.fetchInitialCredit(userId);
+        } catch (error) {
+            console.error('Failed to refresh credit after settlement:', error);
+        }
+    }
+
+    private handleReconnect(userId: string): void {
+        if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
+            console.error('Max reconnection attempts reached');
+            return;
+        }
+
+        this.reconnectAttempts++;
+        console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS})...`);
+
+        setTimeout(() => {
+            this.connectWebSocket(userId);
+        }, this.RECONNECT_DELAY);
+    }
+
+    disconnectWebSocket(): void {
+        if (this.stompClient?.connected) {
+            this.stompClient.deactivate();
+            this.stompClient = null;
+            this.isWebSocketConnected.set(false);
+            console.log('WebSocket connection closed');
+        }
+    }
+
+    isWebSocketActive(): boolean {
+        return this.isWebSocketConnected();
+    }
+
+    // ================================
+    // BACKWARD COMPATIBILITY
+    // ================================
+
     addRecord(paperBetRecord: PaperBetRecord): Observable<any> {
         console.log(`paperBetRecord ${JSON.stringify(paperBetRecord)}`);
         const result = this.post<any, PaperBetRecord>(
@@ -388,7 +570,7 @@ export class BetSettlementService extends BaseService<Account> {
     }
 
     getAccount(uid: string): Observable<Account | null> {
-        return this.get<Account | null>(`${this.apiUrl}/${uid}/getAccount`, 'Error fetching account');
+        return this.get<Account | null>(`/api/v1/paper-betting/accounts/${uid}`, 'Error fetching account');
     }
 
     getAccounts(): Observable<Account[] | null> {
@@ -404,5 +586,9 @@ export class BetSettlementService extends BaseService<Account> {
             return throwError(() => new Error('User not authenticated'));
         }
         return this.get<Credit>(`${this.apiUrl}/${userId}/getCreditByUUID`, 'Failed to load credit');
+    }
+
+    ngOnDestroy(): void {
+        this.disconnectWebSocket();
     }
 }

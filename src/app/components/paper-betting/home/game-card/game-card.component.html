@@ -57,7 +57,7 @@
                                 <div class="d-flex justify-content-between">
                                     <span>O/U:</span>
                                     @if (game.spread != 0) {
-                                        <span>{{game.overUnderTotal}}</span>
+                                        <span>{{game.overUnder}}</span>
                                     } @else {
                                         <span>-</span>
                                     }
@@ -84,16 +84,16 @@
                                             </span>
                                         </div>
                                         @if (result.betType) {
-                                            <div class="mb-1">{{(result.betType).value}}</div>
+                                            <div class="mb-1">{{result.betType}}</div>
                                         }
                                         @if (result.selectedTeam) {
                                             <div class="mb-1">{{result.selectedTeam}}</div>
                                         }
                                         @if (result.wagerValue) {
-                                            <div class="mb-1">Wager: ${{result.wagerValue}}</div>
+                                            <div class="mb-1">Wager: {{result.wagerValue}}</div>
                                         }
                                         @if (result.wagerAmount) {
-                                            <div class="mb-1">Amount: ${{result.wagerAmount}}</div>
+                                            <div class="mb-1">Bet: ${{result.wagerAmount}}</div>
                                         }
                                     </div>
 

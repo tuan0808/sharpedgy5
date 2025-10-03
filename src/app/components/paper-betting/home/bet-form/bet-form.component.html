@@ -6,11 +6,12 @@
         <div class="bet-types">
             <h3>Bet Type</h3>
             <div class="bet-type-list">
-                @for (bet of betTypes; track bet.id) {
+                @for (bet of betTypes; track $index) {
                     <button
                             [ngClass]="bet.isEnabled ? '' : 'disabled'"
+                            [disabled]="!bet.isEnabled"
                             type="button"
-                            (click)="setSelectedBetType(bet.id)"
+                            (click)="onBetTypeClick(bet)"
                             [class.selected]="selectedBetType === bet.id"
                             class="bet-type-btn">
                         <span class="bet-icon">{{ bet.icon }}</span>
@@ -22,46 +23,213 @@
 
         <!-- Right Side - Form -->
         <form [formGroup]="bettingForm" (ngSubmit)="onSubmit()" class="bet-form">
-            <div class="form-section">
-                <label>Select Team</label>
-                <button
-                        type="button"
-                        (click)="setSelectedTeam({ name: game.homeTeam.name, abbreviation: game.homeTeam.abbreviation, odds: game.moneylineHome, type: 'home' })"
-                        [class.selected]="selectedTeam?.type === 'home'"
-                        class="team-btn">
-                    <div class="team-name">{{ game.homeTeam.name }}</div>
-                    <div class="team-odds">{{ game.moneylineHome >= 0 ? '+' : '' }}{{ game.moneylineHome }}</div>
-                    <div class="team-probability">{{ homeTeamWinProbability.toFixed(2) }}%</div>
-                </button>
-                <button
-                        type="button"
-                        (click)="setSelectedTeam({ name: game.awayTeam.name, abbreviation: game.awayTeam.abbreviation, odds: game.moneylineAway, type: 'away' })"
-                        [class.selected]="selectedTeam?.type === 'away'"
-                        class="team-btn">
-                    <div class="team-name">{{ game.awayTeam.name }}</div>
-                    <div class="team-odds">{{ game.moneylineAway >= 0 ? '+' : '' }}{{ game.moneylineAway }}</div>
-                    <div class="team-probability">{{ awayTeamWinProbability.toFixed(2) }}%</div>
-                </button>
-            </div>
 
-            <div class="form-section">
-                <label for="betAmount">Bet Amount ($)</label>
-                <div class="amount-input">
-                    <span class="dollar-sign">$</span>
-                    <input
-                            id="betAmount"
-                            type="number"
-                            formControlName="amount"
-                            placeholder="Enter amount"
-                            (input)="updatePotentialWinnings()">
-                </div>
-                @if (bettingForm.get('amount')?.errors?.['max']) {
-                    <div class="error-message">Maximum bet amount is $5000</div>
+            <!-- Dynamic Form Fields based on selected bet type -->
+            @for (field of currentFormFields; track $index) {
+
+                <!-- Team Selector Field -->
+                @if (field.type === 'team-selector') {
+                    <div class="form-section">
+                        <label>{{ field.label }}</label>
+
+                        <!-- Show different data based on bet type -->
+                        @if (selectedBetType === 0) {
+                            <!-- MONEYLINE -->
+                            <button
+                                    type="button"
+                                    (click)="setSelectedTeam({ name: game.homeTeam.name, abbreviation: game.homeTeam.abbreviation, odds: game.moneylineHome, type: 'home' })"
+                                    [class.selected]="selectedTeam?.type === 'home'"
+                                    class="team-btn">
+                                <div class="team-name">{{ game.homeTeam.name }}</div>
+                                <div class="team-odds">{{ game.moneylineHome >= 0 ? '+' : '' }}{{ game.moneylineHome }}</div>
+                            </button>
+                            <button
+                                    type="button"
+                                    (click)="setSelectedTeam({ name: game.awayTeam.name, abbreviation: game.awayTeam.abbreviation, odds: game.moneylineAway, type: 'away' })"
+                                    [class.selected]="selectedTeam?.type === 'away'"
+                                    class="team-btn">
+                                <div class="team-name">{{ game.awayTeam.name }}</div>
+                                <div class="team-odds">{{ game.moneylineAway >= 0 ? '+' : '' }}{{ game.moneylineAway }}</div>
+                            </button>
+                        }
+
+                        @else if (selectedBetType === 1) {
+                            <!-- POINT SPREAD -->
+                            <button
+                                    type="button"
+                                    (click)="setSelectedTeam({ name: game.homeTeam.name, abbreviation: game.homeTeam.abbreviation, odds: -110, spread: game.spread, type: 'home' })"
+                                    [class.selected]="selectedTeam?.type === 'home'"
+                                    class="team-btn">
+                                <div class="team-name">{{ game.homeTeam.name }}</div>
+                                <div class="team-odds">{{ game.spread >= 0 ? '+' : '' }}{{ game.spread }}</div>
+                                <div class="team-probability">-110</div>
+                            </button>
+                            <button
+                                    type="button"
+                                    (click)="setSelectedTeam({ name: game.awayTeam.name, abbreviation: game.awayTeam.abbreviation, odds: -110, spread: -game.spread, type: 'away' })"
+                                    [class.selected]="selectedTeam?.type === 'away'"
+                                    class="team-btn">
+                                <div class="team-name">{{ game.awayTeam.name }}</div>
+                                <div class="team-odds">{{ -game.spread >= 0 ? '+' : '' }}{{ -game.spread }}</div>
+                                <div class="team-probability">-110</div>
+                            </button>
+                        }
+                    </div>
                 }
-                @if (bettingForm.get('amount')?.errors?.['min']) {
-                    <div class="error-message">Minimum bet amount is $0</div>
+
+                @else if (field.type === 'number') {
+                    <div class="form-section">
+                        <label [for]="field.name">{{ field.label }}</label>
+                        <div class="amount-input">
+                            <span class="dollar-sign">$</span>
+                            <input
+                                    [id]="field.name"
+                                    type="number"
+                                    [formControlName]="field.name"
+                                    [placeholder]="field.placeholder || ''"
+                                    [min]="field.min"
+                                    [max]="field.max"
+                                    [step]="field.step || 1"
+                                    (input)="updatePotentialWinnings()">
+                        </div>
+                        @if (bettingForm.get(field.name)?.errors?.['max']) {
+                            <div class="error-message">Maximum bet amount is ${{ field.max }}</div>
+                        }
+                        @if (bettingForm.get(field.name)?.errors?.['min']) {
+                            <div class="error-message">Minimum bet amount is ${{ field.min }}</div>
+                        }
+                    </div>
                 }
-            </div>
+
+                @else if (field.type === 'slider') {
+                    <div class="form-section">
+                        <label [for]="field.name">{{ field.label }}</label>
+                        <div class="slider-input">
+                            <input
+                                    [id]="field.name"
+                                    type="range"
+                                    [formControlName]="field.name"
+                                    [min]="field.min"
+                                    [max]="field.max"
+                                    [step]="field.step || 1"
+                                    (input)="updatePotentialWinnings()"
+                                    class="slider">
+                            <div class="slider-value">
+                                <span>{{ bettingForm.get(field.name)?.value || 0 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @else if (field.type === 'range') {
+                    <div class="form-section">
+                        <label [for]="field.name">{{ field.label }}</label>
+                        <div class="range-slider-container">
+                            <div class="range-values">
+                    <span class="range-value-display">
+                        <span class="dollar-sign">$</span>
+                        <span>{{ getRangeMin(field.name) }}</span>
+                    </span>
+                                <span class="range-separator">to</span>
+                                <span class="range-value-display">
+                        <span class="dollar-sign">$</span>
+                        <span>{{ getRangeMax(field.name) }}</span>
+                    </span>
+                            </div>
+                            <div class="dual-range-slider">
+                                <div class="range-track"></div>
+                                <input
+                                        [id]="field.name + '-min'"
+                                        type="range"
+                                        [min]="field.min"
+                                        [max]="field.max"
+                                        [step]="field.step || 1"
+                                        [value]="getRangeMin(field.name)"
+                                        (input)="updateRangeMin(field.name, $event)"
+                                        class="slider range-min">
+                                <input
+                                        [id]="field.name + '-max'"
+                                        type="range"
+                                        [min]="field.min"
+                                        [max]="field.max"
+                                        [step]="field.step || 1"
+                                        [value]="getRangeMax(field.name)"
+                                        (input)="updateRangeMax(field.name, $event)"
+                                        class="slider range-max">
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @else if (field.type === 'select') {
+                    <div class="form-section">
+                        <label [for]="field.name">{{ field.label }}</label>
+                        <select
+                                [id]="field.name"
+                                [formControlName]="field.name"
+                                class="select-input">
+                            @for (option of field.options; track $index) {
+                                <option [value]="option.value">{{ option.label }}</option>
+                            }
+                        </select>
+                    </div>
+                }
+
+                @else if (field.type === 'radio' && selectedBetType === 2) {
+                    <!-- OVER/UNDER -->
+                    <div class="form-section">
+                        <label>{{ field.label }}</label>
+                        <button
+                                type="button"
+                                (click)="setOverUnderSelection('OVER', field.name)"
+                                [class.selected]="bettingForm.get(field.name)?.value === 'OVER'"
+                                class="team-btn">
+                            <div class="team-name">Over {{ game.overUnder }}</div>
+                            <div class="team-odds">-110</div>
+                        </button>
+                        <button
+                                type="button"
+                                (click)="setOverUnderSelection('UNDER', field.name)"
+                                [class.selected]="bettingForm.get(field.name)?.value === 'UNDER'"
+                                class="team-btn">
+                            <div class="team-name">Under {{ game.overUnder }}</div>
+                            <div class="team-odds">-110</div>
+                        </button>
+                    </div>
+                }
+
+                @else if (field.type === 'radio') {
+                    <div class="form-section">
+                        <label>{{ field.label }}</label>
+                        <div class="radio-group">
+                            @for (option of field.options; track $index) {
+                                <label class="radio-option">
+                                    <input
+                                            type="radio"
+                                            [name]="field.name"
+                                            [value]="option.value"
+                                            [formControlName]="field.name">
+                                    <span>{{ option.label }}</span>
+                                </label>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @else if (field.type === 'toggle') {
+                    <div class="form-section">
+                        <label>{{ field.label }}</label>
+                        <div class="toggle-input">
+                            <label class="switch">
+                                <input
+                                        type="checkbox"
+                                        [formControlName]="field.name">
+                                <span class="slider-toggle"></span>
+                            </label>
+                        </div>
+                    </div>
+                }
+            }
 
             @if (potentialWinnings > 0) {
                 <div class="potential-winnings">

@@ -1,164 +1,78 @@
-<!-- prediction-form.component.html -->
 <div class="betting-card">
-    <h2 *ngIf="!showConfirmation">Place Your Bet</h2>
-    <h2 *ngIf="showConfirmation">Confirm Your Bet</h2>
+    <h2>Place Your Bet</h2>
 
-    <!-- Form View (unchanged) -->
-    <div *ngIf="!showConfirmation">
-        <div class="layout-container">
-            <!-- Left Side - Bet Types -->
-            <div class="bet-types">
-                <h3>Bet Type</h3>
-                <div class="bet-type-list">
-                    @for (bet of betTypes; track bet.id) {
-                        <button
-                                [ngClass]="bet.isEnabled ? '' : 'disabled'"
-                                type="button"
-                                (click)="setSelectedBetType(bet.id)"
-                                [class.selected]="selectedBetType === bet.id"
-                                class="bet-type-btn"
-                        >
-                            <span class="bet-icon">{{ bet.icon }}</span>
-                            <span>{{ bet.label }}</span>
-                        </button>
-                    }
-                </div>
-            </div>
-
-            <!-- Right Side - Form -->
-            <form [formGroup]="bettingForm" (ngSubmit)="onSubmit()" class="bet-form">
-                <div class="form-section">
-                    <label>Select Team</label>
-                    <div class="team-grid">
-                        <!-- Home Team -->
-                        <button
-                                type="button"
-                                (click)="setSelectedTeam({
-                name: game.homeTeam.name,
-                odds: game.moneylineHome,
-                type: 'home'
-              })"
-                                [class.selected]="selectedTeam?.type === 'home'"
-                                class="team-btn"
-                        >
-                            <div class="team-name">{{ game.homeTeam.name }}</div>
-                            <div class="team-odds">
-                                {{ game.moneylineHome | americanOdds }}
-                            </div>
-                            <div class="team-probability">
-                                {{ homeTeamWinProbability.toFixed(2) }}% chance to win
-                            </div>
-                        </button>
-                        <!-- Away Team -->
-                        <button
-                                type="button"
-                                (click)="setSelectedTeam({
-                name: game.awayTeam.name,
-                odds: game.moneylineAway,
-                type: 'away'
-              })"
-                                [class.selected]="selectedTeam?.type === 'away'"
-                                class="team-btn"
-                        >
-                            <div class="team-name">{{ game.awayTeam.name }}</div>
-                            <div class="team-odds">
-                                {{ game.moneylineAway | americanOdds }}
-                            </div>
-                            <div class="team-probability">
-                                {{ awayTeamWinProbability.toFixed(2) }}% chance to win
-                            </div>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="form-section notes-section">
-                    <label for="notes">#</label>
-                    <input type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="#">
-                </div>
-
-                <!-- Notes Text Area -->
-                <div class="form-section notes-section">
-                    <label for="notes">Notes</label>
-                    <textarea
-                            id="notes"
-                            formControlName="notes"
-                            placeholder="Enter additional notes about your bet"
-                            class="notes-textarea"
-                            rows="3"
-                    ></textarea>
-                </div>
-
-                <!-- Potential Winnings Display -->
-                @if (potentialWinnings > 0) {
-                    <div class="potential-winnings">
-                        <div class="winnings-info">
-                            <span>Potential Winnings:</span>
-                            <span class="amount">${{ potentialWinnings.toFixed(2) }}</span>
-                        </div>
-                    </div>
+    <div class="layout-container">
+        <!-- Left Side - Bet Types -->
+        <div class="bet-types">
+            <h3>Bet Type</h3>
+            <div class="bet-type-list">
+                @for (bet of betTypes; track bet.id) {
+                    <button
+                            [ngClass]="bet.isEnabled ? '' : 'disabled'"
+                            type="button"
+                            (click)="setSelectedBetType(bet.id)"
+                            [class.selected]="selectedBetType === bet.id"
+                            class="bet-type-btn">
+                        <span class="bet-icon">{{ bet.icon }}</span>
+                        <span>{{ bet.label }}</span>
+                    </button>
                 }
+            </div>
+        </div>
 
-                <button type="submit" class="place-bet-btn" [disabled]="!isFormValid()">
-                    Review Bet
+        <!-- Right Side - Form -->
+        <form [formGroup]="bettingForm" (ngSubmit)="onSubmit()" class="bet-form">
+            <div class="form-section">
+                <label>Select Team</label>
+                <button
+                        type="button"
+                        (click)="setSelectedTeam({ name: game.homeTeam.name, abbreviation: game.homeTeam.abbreviation, odds: game.moneylineHome, type: 'home' })"
+                        [class.selected]="selectedTeam?.type === 'home'"
+                        class="team-btn">
+                    <div class="team-name">{{ game.homeTeam.name }}</div>
+                    <div class="team-odds">{{ game.moneylineHome >= 0 ? '+' : '' }}{{ game.moneylineHome }}</div>
+                    <div class="team-probability">{{ homeTeamWinProbability.toFixed(2) }}%</div>
                 </button>
-            </form>
-        </div>
-    </div>
+                <button
+                        type="button"
+                        (click)="setSelectedTeam({ name: game.awayTeam.name, abbreviation: game.awayTeam.abbreviation, odds: game.moneylineAway, type: 'away' })"
+                        [class.selected]="selectedTeam?.type === 'away'"
+                        class="team-btn">
+                    <div class="team-name">{{ game.awayTeam.name }}</div>
+                    <div class="team-odds">{{ game.moneylineAway >= 0 ? '+' : '' }}{{ game.moneylineAway }}</div>
+                    <div class="team-probability">{{ awayTeamWinProbability.toFixed(2) }}%</div>
+                </button>
+            </div>
 
-    <!-- Updated Confirmation View -->
-    <div *ngIf="showConfirmation" class="confirmation-view">
-        <div class="confirmation-details">
-            <div class="game-header">
-                <h3>{{ submittedBetData?.gameDetails?.homeTeam || 'N/A' }} vs {{ submittedBetData?.gameDetails?.awayTeam || 'N/A' }}</h3>
+            <div class="form-section">
+                <label for="betAmount">Bet Amount ($)</label>
+                <div class="amount-input">
+                    <span class="dollar-sign">$</span>
+                    <input
+                            id="betAmount"
+                            type="number"
+                            formControlName="amount"
+                            placeholder="Enter amount"
+                            (input)="updatePotentialWinnings()">
+                </div>
+                @if (bettingForm.get('amount')?.errors?.['max']) {
+                    <div class="error-message">Maximum bet amount is $5000</div>
+                }
+                @if (bettingForm.get('amount')?.errors?.['min']) {
+                    <div class="error-message">Minimum bet amount is $0</div>
+                }
             </div>
-            <div class="details-list">
-                <div class="detail-item">
-                    <span class="label">Bet Type:</span>
-                    <span class="value">{{ submittedBetData?.gameDetails?.betType || 'N/A' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Selected Team:</span>
-                    <span class="value">{{ submittedBetData?.gameDetails?.selectedTeam || 'N/A' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Odds:</span>
-                    <span class="value">{{ submittedBetData?.gameDetails?.wagerValue | americanOdds }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Win Probability:</span>
-                    <span class="value">
-            {{ (submittedBetData?.gameDetails?.selectedTeam === submittedBetData?.gameDetails?.homeTeam ? homeTeamWinProbability : awayTeamWinProbability).toFixed(2) }}%
-          </span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Bet Amount:</span>
-                    <span class="value">${{ submittedBetData?.gameDetails?.amount?.toFixed(2) || '0.00' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Potential Winnings:</span>
-                    <span class="value highlight">${{ submittedBetData?.gameDetails?.potentialWinnings?.toFixed(2) || '0.00' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Confidence Level:</span>
-                    <span class="value">{{ formatConfidence(JSON.parse(submittedBetData?.gameDetails?.comment)?.confidence) || 'N/A' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Notes:</span>
-                    <span class="value">{{ JSON.parse(submittedBetData?.gameDetails?.comment)?.notes || 'None' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">EventStatus:</span>
-                    <span class="value status-pending">{{ submittedBetData?.gameDetails?.controlNote || 'N/A' }}</span>
-                </div>
-            </div>
-        </div>
 
-        <div class="confirmation-prompt">
-            <p>Is this information correct?</p>
-            <div class="confirmation-buttons">
-                <button class="btn btn-secondary" (click)="editBet()">Edit</button>
-                <button class="btn btn-primary" (click)="confirmBet()">Confirm</button>
-            </div>
-        </div>
+            @if (potentialWinnings > 0) {
+                <div class="potential-winnings">
+                    <div class="winnings-info">
+                        <span>Potential Winnings:</span>
+                        <span class="amount">${{ potentialWinnings.toFixed(2) }}</span>
+                    </div>
+                </div>
+            }
+
+            <button type="submit" class="place-bet-btn" [disabled]="!isFormValid()">Place Bet</button>
+        </form>
     </div>
 </div>

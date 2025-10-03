@@ -2,6 +2,7 @@ import { Component, Input, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BetTypes } from '../../shared/model/enums/BetTypes';
 import { Game } from '../../shared/model/paper-betting/Game';
+import {BetTypeMapping} from "../../shared/model/paper-betting/FieldConfig";
 
 interface BetTypeOption {
   id: BetTypes;
@@ -27,15 +28,6 @@ export abstract class BaseBetFormComponent {
   homeTeamWinProbability = 0;
   awayTeamWinProbability = 0;
 
-  betTypes: BetTypeOption[] = [
-    { id: BetTypes.MONEYLINE, label: 'Money Line', icon: '💰', isEnabled: true },
-    { id: BetTypes.POINT_SPREAD, label: 'Point Spread', icon: '📊', isEnabled: true },
-    { id: BetTypes.OVER_UNDER, label: 'Over/Under', icon: '⚖️', isEnabled: true },
-    { id: BetTypes.PARLAY, label: 'Parlay', icon: '🎲', isEnabled: false },
-    { id: BetTypes.TEASER, label: 'Teaser', icon: '🎯', isEnabled: false },
-    { id: BetTypes.ROUND_ROBIN, label: 'Round Robin', icon: '🔄', isEnabled: false },
-    { id: BetTypes.PLEASER, label: 'Pleaser', icon: '🎪', isEnabled: false }
-  ];
 
   constructor() {
     this.bettingForm = this.fb.group({

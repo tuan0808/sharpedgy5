@@ -1,0 +1,249 @@
+[
+  {
+    "id": 0,
+    "label": "Money Line",
+    "icon": "💰",
+    "isEnabled": true,
+    "fieldMapping": {
+      "amountField": "betAmount",
+      "valueField": "betValue",
+      "teamField": "selectedTeam"
+    },
+    "valueSource": "moneyline",
+    "formFields": [
+      {
+        "name": "teamSelector",
+        "label": "Select Team",
+        "type": "team-selector",
+        "showOdds": true,
+        "showProbability": true,
+        "validators": {
+          "required": true
+        }
+      },
+      {
+        "name": "amount",
+        "label": "Bet Amount ($)",
+        "type": "number",
+        "placeholder": "Enter amount",
+        "min": 0,
+        "max": 5000,
+        "step": 1,
+        "defaultValue": 0,
+        "validators": {
+          "required": true,
+          "min": 0,
+          "max": 5000
+        }
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "label": "Point Spread",
+    "icon": "📊",
+    "isEnabled": true,
+    "fieldMapping": {
+      "amountField": "betAmount",
+      "valueField": "betValue",
+      "teamField": "selectedTeam"
+    },
+    "valueSource": "spread",
+    "formFields": [
+      {
+        "name": "teamSelector",
+        "label": "Select Team",
+        "type": "team-selector",
+        "showOdds": true,
+        "showProbability": true,
+        "validators": {
+          "required": true
+        }
+      },
+      {
+        "name": "amount",
+        "label": "Bet Amount ($)",
+        "type": "number",
+        "placeholder": "Enter amount",
+        "min": 0,
+        "max": 5000,
+        "step": 1,
+        "defaultValue": 0,
+        "validators": {
+          "required": true,
+          "min": 0,
+          "max": 5000
+        }
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "label": "Over/Under",
+    "icon": "⚖️",
+    "isEnabled": true,
+    "fieldMapping": {
+      "amountField": "betAmount",
+      "valueField": "betValue"
+    },
+    "valueSource": "total",
+    "formFields": [
+      {
+        "name": "prediction",
+        "label": "Prediction",
+        "type": "radio",
+        "options": [
+          { "label": "Over", "value": "over" },
+          { "label": "Under", "value": "under" }
+        ],
+        "defaultValue": "over",
+        "validators": {
+          "required": true
+        }
+      },
+      {
+        "name": "amount",
+        "label": "Bet Amount ($)",
+        "type": "number",
+        "placeholder": "Enter amount",
+        "min": 0,
+        "max": 5000,
+        "step": 1,
+        "defaultValue": 0,
+        "validators": {
+          "required": true,
+          "min": 0,
+          "max": 5000
+        }
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "label": "Parlay",
+    "icon": "🎲",
+    "isEnabled": false,
+    "fieldMapping": {
+      "amountField": "betAmount",
+      "valueField": "betValue"
+    },
+    "valueSource": "custom",
+    "formFields": [
+      {
+        "name": "numSelections",
+        "label": "Number of Selections",
+        "type": "select",
+        "options": [
+          { "label": "2 Teams", "value": 2 },
+          { "label": "3 Teams", "value": 3 },
+          { "label": "4 Teams", "value": 4 },
+          { "label": "5 Teams", "value": 5 }
+        ],
+        "defaultValue": 2,
+        "validators": {
+          "required": true
+        }
+      },
+      {
+        "name": "amount",
+        "label": "Bet Amount ($)",
+        "type": "slider",
+        "sportConfig": {
+          "default": {
+            "min": 0,
+            "max": 1000,
+            "step": 5,
+            "defaultValue": 50
+          }
+        },
+        "validators": {
+          "required": true
+        }
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "label": "Teaser",
+    "icon": "🎯",
+    "isEnabled": false,
+    "fieldMapping": {
+      "amountField": "betAmount",
+      "valueField": "betValue"
+    },
+    "valueSource": "custom",
+    "formFields": [
+      {
+        "name": "amount",
+        "label": "Bet Amount ($)",
+        "type": "number",
+        "placeholder": "Enter amount",
+        "min": 0,
+        "max": 5000,
+        "step": 1,
+        "defaultValue": 0,
+        "validators": {
+          "required": true,
+          "min": 0,
+          "max": 5000
+        }
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "label": "Round Robin",
+    "icon": "🔄",
+    "isEnabled": false,
+    "fieldMapping": {
+      "amountField": "betAmount",
+      "valueField": "betValue"
+    },
+    "valueSource": "custom",
+    "formFields": [
+      {
+        "name": "amount",
+        "label": "Bet Amount ($)",
+        "type": "number",
+        "placeholder": "Enter amount",
+        "min": 0,
+        "max": 5000,
+        "step": 1,
+        "defaultValue": 0,
+        "validators": {
+          "required": true,
+          "min": 0,
+          "max": 5000
+        }
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "label": "Pleaser",
+    "icon": "🎪",
+    "isEnabled": false,
+    "fieldMapping": {
+      "amountField": "betAmount",
+      "valueField": "betValue"
+    },
+    "valueSource": "custom",
+    "formFields": [
+      {
+        "name": "amount",
+        "label": "Bet Amount ($)",
+        "type": "number",
+        "placeholder": "Enter amount",
+        "min": 0,
+        "max": 5000,
+        "step": 1,
+        "defaultValue": 0,
+        "validators": {
+          "required": true,
+          "min": 0,
+          "max": 5000
+        }
+      }
+    ]
+  }
+]
