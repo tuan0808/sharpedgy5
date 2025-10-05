@@ -1,7 +1,3 @@
-// ================================
-// home.component.ts - SIMPLIFIED WITHOUT SIGNAL EFFECTS
-// ================================
-
 import { Component, computed, HostListener, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { GameCardComponent } from './game-card/game-card.component';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
@@ -11,7 +7,7 @@ import { ToastrService } from 'ngx-toastr';
 import { Game } from '../../../shared/model/paper-betting/Game';
 import { firstValueFrom, of, Subscription } from 'rxjs';
 import { catchError, retry, tap, timeout } from 'rxjs/operators';
-import {EventStatus} from "../../../shared/model/enums/EventStatus";
+import { EventStatus } from "../../../shared/model/enums/EventStatus";
 
 interface SportDetail {
     name: string;
@@ -54,6 +50,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     protected readonly account = computed(() => this.betSettlement.account());
     protected readonly balance = computed(() => this.betSettlement.balance());
     protected readonly credit = computed(() => this.betSettlement.credit());
+    protected readonly isWebSocketConnected = computed(() => this.betSettlement.isWebSocketActive());
 
     // Computed
     protected readonly displayedGames = computed(() => this.currentPageGames());
@@ -73,10 +70,15 @@ export class HomeComponent implements OnInit, OnDestroy {
     async ngOnInit(): Promise<void> {
         await this.waitForUser();
         await this.loadGames();
+
+        // Show WebSocket connection status
+        this.checkWebSocketConnection();
     }
 
     ngOnDestroy(): void {
         this.subscriptions.unsubscribe();
+        // Note: Don't disconnect WebSocket here as the service is singleton
+        // It should stay connected for the app lifetime
     }
 
     @HostListener('window:scroll')
@@ -133,7 +135,23 @@ export class HomeComponent implements OnInit, OnDestroy {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // ================================
+    // WEBSOCKET CONNECTION CHECK
+    // ================================
 
+    private checkWebSocketConnection(): void {
+        setTimeout(() => {
+            if (!this.isWebSocketConnected()) {
+                this.toastr.warning(
+                    'Real-time updates may be delayed',
+                    'Connection Issue',
+                    { timeOut: 5000 }
+                );
+            } else {
+                console.log('WebSocket connected successfully');
+            }
+        }, 2000); // Give WebSocket 2 seconds to connect
+    }
 
     // ================================
     // SETUP METHODS
@@ -143,39 +161,98 @@ export class HomeComponent implements OnInit, OnDestroy {
         const gameUpdateSub = this.betSettlement.gameUpdate$.subscribe(update => {
             console.log('Received game update:', update);
 
+            // Update the current page games
             const currentGames = this.currentPageGames();
             const gameIndex = currentGames.findIndex(g => g.id === update.gameId);
 
             if (gameIndex !== -1) {
+                // Get the updated game from the service's allGames
                 const allGames = this.betSettlement.allGames();
                 const updatedGame = allGames.find(g => g.id === update.gameId);
 
                 if (updatedGame) {
-                    const newGames = [...currentGames];
-                    newGames[gameIndex] = { ...updatedGame };
-                    this.currentPageGames.set(newGames); // Update displayed games
-                    console.log(`Updated game ${update.gameId} in currentPageGames with status: ${updatedGame.betSettlement?.status}`);
+                    // CRITICAL: Create a completely new array with a new game object reference
+                    // This ensures Angular detects the change
+                    const newGames = currentGames.map((game, index) =>
+                        index === gameIndex ? { ...updatedGame } : game
+                    );
+
+                    this.currentPageGames.set(newGames);
+
+                    console.log(`Updated game ${update.gameId} in currentPageGames`, updatedGame.betSettlement);
+
+                    // Show appropriate toast notification based on bet status
+                    if (updatedGame.betSettlement) {
+                        this.showBetSettlementNotification(updatedGame);
+                    }
                 }
+            } else {
+                console.log(`Game ${update.gameId} not found in current page, might be on different page`);
             }
 
-            // Reload games to ensure consistency
-            this.loadGames().then(() => {
-                if (update.betRecord) {
-                    this.toastr.success(
-                        `Bet confirmed: $${update.betRecord.wagerAmount} on ${update.betRecord.selectedTeam} (Status: ${update.betRecord.status})`,
-                        'Bet Placed'
-                    );
-                }
-            }).catch(error => this.handleError(error));
-
-            if (update.betRecord && update.betRecord.status === 'FAILED') {
-                this.handleError(new Error('Bet failed'));
+            // If a bet record is included, it's a new bet placement
+            if (update.betRecord) {
+                this.toastr.success(
+                    `Bet confirmed: ${update.betRecord.wagerAmount} on ${update.betRecord.selectedTeam}`,
+                    'Bet Placed'
+                );
             }
         });
 
         this.subscriptions.add(gameUpdateSub);
     }
 
+    private showBetSettlementNotification(game: Game): void {
+        const settlement = game.betSettlement;
+        if (!settlement) return;
+
+        const matchup = `${game.homeTeam.abbreviation} vs ${game.awayTeam.abbreviation}`;
+
+        switch (settlement.status) {
+            case EventStatus.WIN:
+                this.toastr.success(
+                    `Congrats! Your bet on ${matchup} won!`,
+                    'Bet Won',
+                    {
+                        timeOut: 7000,
+                        progressBar: true,
+                        closeButton: true
+                    }
+                );
+                break;
+
+            case EventStatus.LOSS:
+                this.toastr.info(
+                    `Your bet on ${matchup} didn't win this time`,
+                    'Bet Settled',
+                    {
+                        timeOut: 5000,
+                        progressBar: true
+                    }
+                );
+                break;
+
+            case EventStatus.PUSH:
+                this.toastr.info(
+                    `Your bet on ${matchup} was a push - wager refunded`,
+                    'Bet Push',
+                    {
+                        timeOut: 5000
+                    }
+                );
+                break;
+
+            case EventStatus.CANCELLED:
+                this.toastr.warning(
+                    `Your bet on ${matchup} was cancelled - wager refunded`,
+                    'Bet Cancelled',
+                    {
+                        timeOut: 5000
+                    }
+                );
+                break;
+        }
+    }
 
     // ================================
     // CORE LOGIC
@@ -223,8 +300,6 @@ export class HomeComponent implements OnInit, OnDestroy {
             );
 
             this.updateGameState(response);
-
-            // Also update the service's allGames signal with the loaded games
             this.syncGamesToService(response.content);
 
             if (response.totalElements === 0) {
@@ -245,7 +320,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     private syncGamesToService(games: Game[]): void {
         if (games.length === 0) return;
 
-        // Get current games from service
         const currentAllGames = this.betSettlement.allGames();
         const updatedGames = [...currentAllGames];
 
@@ -263,7 +337,6 @@ export class HomeComponent implements OnInit, OnDestroy {
             }
         });
 
-        // Update the service's allGames signal
         this.betSettlement.allGames.set(updatedGames);
         console.log(`Synced ${games.length} games to service`);
     }

@@ -1,19 +1,16 @@
-import {Component, inject, input, signal} from '@angular/core';
-import {Game} from "../../../../shared/model/paper-betting/Game";
-import {DatePipe, NgClass} from "@angular/common";
-import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
-import {BetTypes} from "../../../../shared/model/enums/BetTypes";
-import {SportType} from "../../../../shared/model/SportType";
-import {BetSettlementService} from "../../../../shared/services/betSettlement.service";
-import {BetFormComponent} from "../bet-form/bet-form.component";
-import {PaperBetRecord} from "../../../../shared/model/paper-betting/PaperBetRecord";
-import {EventStatus} from "../../../../shared/model/enums/EventStatus";
-import {ToastrService} from 'ngx-toastr';
-import {BetSettlement} from "../../../../shared/model/paper-betting/BetSettlement";
-import {BetResponseState} from "../../../../shared/model/enums/BetResponseState";
-
-// Import BetResult from the service or create a proper shared interface
-// DO NOT define BetResult locally - it should come from your API types
+import { Component, inject, input, signal, computed } from '@angular/core';
+import { Game } from "../../../../shared/model/paper-betting/Game";
+import { DatePipe, NgClass } from "@angular/common";
+import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { BetTypes } from "../../../../shared/model/enums/BetTypes";
+import { SportType } from "../../../../shared/model/SportType";
+import { BetSettlementService } from "../../../../shared/services/betSettlement.service";
+import { BetFormComponent } from "../bet-form/bet-form.component";
+import { PaperBetRecord } from "../../../../shared/model/paper-betting/PaperBetRecord";
+import { EventStatus } from "../../../../shared/model/enums/EventStatus";
+import { ToastrService } from 'ngx-toastr';
+import { BetSettlement } from "../../../../shared/model/paper-betting/BetSettlement";
+import { BetResponseState } from "../../../../shared/model/enums/BetResponseState";
 
 @Component({
   selector: 'app-game-card',
@@ -30,18 +27,71 @@ export class GameCardComponent {
   private betSettlementService = inject(BetSettlementService);
   private toastr = inject(ToastrService);
 
-  // Inputs from parent - DISPLAY ONLY
+  // Inputs from parent
   gameData = input.required<Game>();
   sportType = input.required<SportType>();
 
   // Track if bet is currently being processed
   private processingBet = signal<boolean>(false);
 
+  // Computed signal to check if this game has a bet settlement
+  protected hasBetPlaced = computed(() => {
+    const game = this.gameData();
+    return !!game.betSettlement;
+  });
+
+  // Computed signal for bet status display
+  protected betStatusClass = computed(() => {
+    const settlement = this.gameData().betSettlement;
+    if (!settlement) return '';
+
+    switch (settlement.status) {
+      case EventStatus.WIN:
+        return 'text-success';
+      case EventStatus.LOSS:
+        return 'text-danger';
+      case EventStatus.PENDING:
+        return 'text-warning';
+      case EventStatus.CANCELLED:
+        return 'text-muted';
+      case EventStatus.PUSH:
+        return 'text-info';
+      default:
+        return '';
+    }
+  });
+
+  // Computed signal for bet status icon
+  protected betStatusIcon = computed(() => {
+    const settlement = this.gameData().betSettlement;
+    if (!settlement) return '';
+
+    switch (settlement.status) {
+      case EventStatus.WIN:
+        return '✓';
+      case EventStatus.LOSS:
+        return '✗';
+      case EventStatus.PENDING:
+        return '⏱';
+      case EventStatus.CANCELLED:
+        return '⊘';
+      case EventStatus.PUSH:
+        return '↔';
+      default:
+        return '';
+    }
+  });
+
   isProcessingBet(): boolean {
     return this.processingBet();
   }
 
   placePaperBet() {
+    // Don't allow placing bet if one already exists or is being processed
+    if (this.hasBetPlaced() || this.processingBet()) {
+      return;
+    }
+
     const modalRef = this.modalService.open(BetFormComponent, {
       size: 'lg',
       backdrop: 'static'
@@ -76,14 +126,13 @@ export class GameCardComponent {
     paperBetRecord.betType = betData.betType as unknown as BetTypes;
     paperBetRecord.wagerValue = betData.wagerValue;
     paperBetRecord.wagerAmount = betData.wagerAmount;
-    paperBetRecord.betStatus = EventStatus.PENDING;
+    paperBetRecord.status = EventStatus.PENDING;
     paperBetRecord.selectedTeam = betData.selectedTeam;
     paperBetRecord.potentialWinnings = this.calculatePotentialWinnings(betData.wagerAmount, betData.wagerValue);
 
     try {
       this.toastr.info(`Placing $${paperBetRecord.wagerAmount} bet...`, 'Processing');
 
-      // The service method returns the actual BetResult from your Kotlin API
       const result = await this.betSettlementService.addRecordOptimistic(
           paperBetRecord,
           userId,
@@ -103,7 +152,6 @@ export class GameCardComponent {
     }
   }
 
-  // Use the actual BetResult type from your service/API types, not a local interface
   private handleBetResult(result: any, originalBetData: BetSettlement): void {
     switch (result.status) {
       case BetResponseState.SUCCESS:
@@ -151,44 +199,28 @@ export class GameCardComponent {
       console.log(`Credit updated - Remaining: ${result.remainingCredit}, Total: ${result.totalCredit}`);
     }
 
-    // Create optimistic bet settlement for immediate UI update
-    const betSettlement: BetSettlement = {
-      betType: originalBetData.betType,
-      selectedTeam: originalBetData.selectedTeam,
-      status: EventStatus.PENDING,
-      wagerValue: originalBetData.wagerValue,
-      wagerAmount: originalBetData.wagerAmount
-    };
-
-    // Update the game with bet settlement optimistically
-    this.updateGameWithBetSettlement(betSettlement);
+    // Note: Don't manually update the game here - the service will handle it
+    // The gameUpdate$ observable will trigger UI updates automatically
 
     this.toastr.success(
-        `Bet placed successfully! $${originalBetData.wagerAmount} wagered.`,
-        'Success'
+        `Bet placed successfully! $${originalBetData.wagerAmount} wagered on ${originalBetData.selectedTeam}.`,
+        'Success',
+        {
+          timeOut: 5000,
+          progressBar: true
+        }
     );
   }
 
-  private updateGameWithBetSettlement(betSettlement: BetSettlement): void {
-    // Update the current game data with the bet settlement
-    const currentGame = this.gameData();
-    if (currentGame) {
-      // This will trigger the UI to show the bet as placed
-      // Note: This is optimistic - the actual update will come via WebSocket
-      const updatedGame = {
-        ...currentGame,
-        betSettlement: betSettlement
-      };
-
-      // If you have a way to update the parent component's game data, do it here
-      // Otherwise, this optimistic update will be replaced by the WebSocket update
-      console.log('Game optimistically updated with bet settlement:', betSettlement);
-    }
-  }
-
   private calculatePotentialWinnings(wagerAmount: number, wagerValue: number): number {
-    // Simplified calculation: adjust based on your actual logic for potential winnings
-    return wagerAmount * (wagerValue > 0 ? wagerValue / 100 : Math.abs(100 / wagerValue));
+    // American odds calculation
+    if (wagerValue > 0) {
+      // Positive odds: (wagerAmount * (wagerValue / 100))
+      return wagerAmount * (wagerValue / 100);
+    } else {
+      // Negative odds: (wagerAmount / (Math.abs(wagerValue) / 100))
+      return wagerAmount / (Math.abs(wagerValue) / 100);
+    }
   }
 
   private generateTempId(): string {
@@ -197,7 +229,9 @@ export class GameCardComponent {
 
   viewMatchupDetails() {
     console.log('Viewing Matchup Details', this.gameData());
+    this.toastr.info('Matchup details feature coming soon!', 'Info');
   }
 
   protected readonly BetTypes = BetTypes;
+  protected readonly EventStatus = EventStatus;
 }

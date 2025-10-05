@@ -1,0 +1,57 @@
+// game-card.component.scss - Minimal additions to your original design
+
+// Add smooth transitions for status changes
+.bet-info {
+  .mb-1 {
+    transition: color 0.3s ease;
+  }
+
+  span {
+    font-weight: 600;
+
+    &.text-success {
+      animation: fadeIn 0.5s ease;
+    }
+
+    &.text-danger {
+      animation: fadeIn 0.5s ease;
+    }
+
+    &.text-warning {
+      animation: pulse 2s ease-in-out infinite;
+    }
+  }
+}
+
+// Button processing state
+.btn {
+  transition: all 0.2s ease;
+
+  .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  &.disabled, &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+// Simple animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}

@@ -8,4 +8,5 @@ export enum EventStatus {
     CANCELLED = 'CANCELLED',
     DELAYED = 'DELAYED',
     FAILED = 'FAILED',
+    PUSH = 'PUSH',
 }

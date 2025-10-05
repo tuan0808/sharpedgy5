@@ -1,0 +1,393 @@
+/* prediction.component.scss - Clean, modern design */
+.bet-simulator-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.bet-simulator-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.simulator-header {
+  padding: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.simulator-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+}
+
+.achievement-banner {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.achievement-text {
+  font-size: 14px;
+  margin: 0;
+  font-weight: 500;
+}
+
+.sport-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.sport-button {
+  padding: 10px 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(10px);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+.section-title {
+  padding: 20px 24px;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  color: #1a202c;
+}
+
+.games-list {
+  padding: 0 24px 24px 24px;
+}
+
+.game-item {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #cbd5e0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: #fff;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f7fafc;
+  }
+}
+
+.game-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
+  cursor: pointer;
+}
+
+.game-date {
+  color: #718096;
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.game-teams {
+  font-weight: 600;
+  font-size: 18px;
+  color: #2d3748;
+}
+
+.game-status {
+  color: #a0aec0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.game-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.place-bet-icon {
+  color: #3B82F6;
+
+  &:hover {
+    background-color: #dbeafe;
+  }
+}
+
+.view-matchup-icon {
+  color: #10B981;
+
+  &:hover {
+    background-color: #d1fae5;
+  }
+}
+
+.edit-icon {
+  color: #6B7280;
+
+  &:hover {
+    background-color: #f3f4f6;
+  }
+}
+
+.expand-icon {
+  color: #6B7280;
+
+  &:hover {
+    background-color: #f3f4f6;
+  }
+
+  svg {
+    transition: transform 0.3s ease;
+  }
+
+  svg.rotated {
+    transform: rotate(180deg);
+  }
+}
+
+.game-content {
+  padding: 24px;
+  background-color: #f8fafc;
+  border-top: 2px solid #e2e8f0;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.betting-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.betting-grid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  padding: 16px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a5568;
+  margin: 0;
+}
+
+.value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a202c;
+  margin: 0;
+}
+
+.matchup-analysis {
+  padding: 16px;
+  background-color: white;
+  border-radius: 8px;
+  border-left: 4px solid #3B82F6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.analysis-text {
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.6;
+  color: #4a5568;
+}
+
+.bet-results {
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    margin-top: 16px;
+  }
+}
+
+.bet-results-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0 0 16px 0;
+}
+
+.bet-results-grid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+}
+
+.no-prediction-text {
+  color: #718096;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.confidence-indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.confidence-bar {
+  display: block;
+  width: 100%;
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #f44336 0%, #ff9800 50%, #4caf50 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-top: 2px solid #e2e8f0;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+.page-size-selector {
+  display: flex;
+  align-items: center;
+}
+
+.page-size-select {
+  padding: 8px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: #cbd5e0;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #3B82F6;
+  }
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination-button {
+  padding: 8px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #cbd5e0;
+    background-color: #f7fafc;
+  }
+
+  &.active {
+    background-color: #3B82F6;
+    color: white;
+    border-color: #3B82F6;
+  }
+}
+
+.pagination-text {
+  padding: 0 12px;
+  font-size: 14px;
+  color: #718096;
+  font-weight: 500;
+}
