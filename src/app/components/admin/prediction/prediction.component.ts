@@ -4,13 +4,13 @@ import { Game } from "../../../shared/model/paper-betting/Game";
 import { BetTypes } from "../../../shared/model/enums/BetTypes";
 import { SportType } from "../../../shared/model/SportType";
 import {BetSettlementService, PagedResponse} from "../../../shared/services/betSettlement.service";
-import {ToastrService} from "ngx-toastr";
 import {firstValueFrom, of, Subscription} from "rxjs";
 import {EventStatus} from "../../../shared/model/enums/EventStatus";
 import {catchError, retry, tap, timeout} from "rxjs/operators";
 import {SportDetail} from "../../../shared/model/SportDetail";
 import {PaginationComponent} from "../../../shared/components/pagination/pagination.component";
 import {PredictionCardComponent} from "./prediction-card/prediction-card.component";
+import {ToastrService} from "ngx-toastr";
 
 @Component({
     selector: 'app-prediction',

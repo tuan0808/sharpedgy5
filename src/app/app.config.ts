@@ -2,9 +2,6 @@ import { ApplicationConfig, importProvidersFrom } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 
-import { provideCharts, withDefaultRegisterables, } from 'ng2-charts';
-import { provideToastr } from 'ngx-toastr';
-
 import { CalendarModule, DateAdapter } from 'angular-calendar';
 import { adapterFactory } from 'angular-calendar/date-adapters/date-fns';
 
@@ -22,6 +19,7 @@ import {initializeApp, provideFirebaseApp} from "@angular/fire/app";
 import {environment} from "../environments/environment";
 import {getAuth, provideAuth} from "@angular/fire/auth";
 import {authInterceptor} from "./shared/interceptors/auth.interceptor";
+import {provideToastr} from "ngx-toastr";
 console.log('~~~~~Loading the interceptor at', new Date().toISOString());
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -31,7 +29,6 @@ export const appConfig: ApplicationConfig = {
     provideToastr(),
     provideHttpClient(withInterceptors([authInterceptor])),
     { provide: 'INTERCEPTOR_STATUS', useValue: 'authInterceptor registered' },
-    provideCharts(withDefaultRegisterables()),
     provideRouter(routes),
     importProvidersFrom(
       CalendarModule.forRoot({

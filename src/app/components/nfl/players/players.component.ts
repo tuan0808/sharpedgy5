@@ -5,7 +5,6 @@ import {MdbRippleModule} from "mdb-angular-ui-kit/ripple";
 import {ColDef} from "ag-grid-community";
 import {Observable} from "rxjs";
 import {AccordionTableComponent} from "./accordion-table/accordion-table.component";
-import * as console from "console";
 
 @Component({
     selector: 'app-players',

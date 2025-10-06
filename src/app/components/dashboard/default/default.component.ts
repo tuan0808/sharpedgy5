@@ -6,9 +6,6 @@ import {
     afterNextRender, effect, signal, computed,  HostListener
 } from "@angular/core";
 import {CommonModule} from "@angular/common";
-import {ChartistModule} from "ng-chartist";
-import {FeatherIconsComponent} from "../../../shared/components/feather-icons/feather-icons.component";
-import {NgApexchartsModule} from "ng-apexcharts";
 import {GridsterComponent, GridsterConfig, GridsterItemComponent} from "angular-gridster2";
 import {DynamicHostDirective} from "../../../shared/directives/dynamic-host.directive";
 import {SidenavComponent} from "../sidenav/sidenav.component";
@@ -32,14 +29,9 @@ const POPUP_GRID_URL = '/popup-grid'; // Could come from environment.ts
     selector: "app-default",
     imports: [
         CommonModule,
-        FeatherIconsComponent,
-        ChartistModule,
-        NgApexchartsModule,
+
         GridsterItemComponent,
         GridsterComponent,
-        DynamicHostDirective,
-        GridItemComponent,
-        SidenavComponent,
         FormsModule,
         DynamicComponentDirective,
     ],

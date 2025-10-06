@@ -24,7 +24,7 @@ import {
     signInWithRedirect, getRedirectResult, FacebookAuthProvider, OAuthProvider, TwitterAuthProvider,
     getIdTokenResult, onIdTokenChanged, signInWithPopup
 } from '@angular/fire/auth';
-import { setPersistence } from 'firebase/auth';
+import { setPersistence } from '@angular/fire/auth';
 import { Router } from '@angular/router';
 import { LoginMetrics } from '../model/auth/LoginMetrics';
 import { environment } from '../../../environments/environment';
