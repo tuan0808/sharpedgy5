@@ -341,25 +341,27 @@ export class BetFormComponent extends BaseBetFormComponent implements OnInit {
         // Handle different bet types
         switch (this.selectedBetType) {
             case BetTypes.OVER_UNDER:
-                // Over/Under typically has standard odds of -110 for both sides
-                const overUnderOdds = -110;
-                this.potentialWinnings = (amount * 100) / Math.abs(overUnderOdds);
+                // Even money: bet $100, win $100
+                this.potentialWinnings = amount;
+                break;
+
+            case BetTypes.POINT_SPREAD:
+                // Even money: bet $100, win $100
+                // No need to check selectedTeam for potential winnings calculation
+                this.potentialWinnings = amount;
                 break;
 
             case BetTypes.MONEYLINE:
-            case BetTypes.POINT_SPREAD:
-                // These use the selected team's odds
-                if (this.selectedTeam) {
-                    const betValue = getBetValueForType(
-                        this.selectedBetType,
-                        this.game,
-                        this.selectedTeam
-                    );
+                // Moneyline uses actual odds from the game
+                if (this.selectedTeam && this.selectedTeam.odds) {
+                    const odds = parseFloat(this.selectedTeam.odds);
 
-                    if (betValue > 0) {
-                        this.potentialWinnings = (amount * betValue) / 100;
+                    if (odds > 0) {
+                        // Positive odds: +150 means bet $100 to win $150
+                        this.potentialWinnings = (amount * odds) / 100;
                     } else {
-                        this.potentialWinnings = (amount * 100) / Math.abs(betValue);
+                        // Negative odds: -110 means bet $110 to win $100
+                        this.potentialWinnings = (amount * 100) / Math.abs(odds);
                     }
                 } else {
                     this.potentialWinnings = 0;
