@@ -12,10 +12,9 @@ interface BetTypeOption {
 }
 
 @Component({
-  selector: 'app-base-bet-form',
-  standalone: true,
-  imports: [ReactiveFormsModule],
-  template: ''
+    selector: 'app-base-bet-form',
+    imports: [ReactiveFormsModule],
+    template: ''
 })
 export abstract class BaseBetFormComponent {
   protected fb = inject(FormBuilder);

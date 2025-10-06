@@ -5,11 +5,10 @@ import { Component, OnInit } from '@angular/core';
 
 // }
 @Component({
-  selector: 'app-simple',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './simple.component.html',
-  styleUrls: ['./simple.component.scss']
+    selector: 'app-simple',
+    imports: [CommonModule],
+    templateUrl: './simple.component.html',
+    styleUrls: ['./simple.component.scss']
 })
 
 

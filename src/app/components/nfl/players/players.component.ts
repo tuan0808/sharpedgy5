@@ -9,7 +9,6 @@ import * as console from "console";
 
 @Component({
     selector: 'app-players',
-    standalone: true,
     imports: [
         NgForOf,
         NgIf,

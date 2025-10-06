@@ -3,11 +3,10 @@ import { CommonModule } from '@angular/common';
 import { GridsterItem } from 'angular-gridster2';
 
 @Component({
-  selector: 'app-resizable-container',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './resizable-container.component.html',
-  styleUrls: ['./resizable-container.component.scss']
+    selector: 'app-resizable-container',
+    imports: [CommonModule],
+    templateUrl: './resizable-container.component.html',
+    styleUrls: ['./resizable-container.component.scss']
 })
 export class ResizableContainerComponent implements OnInit, GridsterItem {
   // GridsterItem required properties

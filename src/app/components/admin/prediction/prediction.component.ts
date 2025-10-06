@@ -13,15 +13,14 @@ import {PaginationComponent} from "../../../shared/components/pagination/paginat
 import {PredictionCardComponent} from "./prediction-card/prediction-card.component";
 
 @Component({
-  selector: 'app-prediction',
-  standalone: true,
-  imports: [
-    FormsModule,
-    PaginationComponent,
-    PredictionCardComponent,
-  ],
-  templateUrl: './prediction.component.html',
-  styleUrl: './prediction.component.scss'
+    selector: 'app-prediction',
+    imports: [
+        FormsModule,
+        PaginationComponent,
+        PredictionCardComponent,
+    ],
+    templateUrl: './prediction.component.html',
+    styleUrl: './prediction.component.scss'
 })
 export class PredictionComponent {
   private readonly betSettlement = inject(BetSettlementService);

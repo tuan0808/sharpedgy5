@@ -9,7 +9,6 @@ import { LeaderboardResponse } from '../../../shared/model/paper-betting/ranking
 
 @Component({
     selector: 'app-betting-rankings',
-    standalone: true,
     imports: [CommonModule, FormsModule],
     templateUrl: './leaderboard.component.html',
     styleUrls: ['./leaderboard.component.scss']

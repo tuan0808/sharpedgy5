@@ -6,11 +6,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-right-sidebar',
-  standalone: true,
-  imports: [CommonModule,RouterModule,FormsModule],
-  templateUrl: './right-sidebar.component.html',
-  styleUrls: ['./right-sidebar.component.scss']
+    selector: 'app-right-sidebar',
+    imports: [CommonModule, RouterModule, FormsModule],
+    templateUrl: './right-sidebar.component.html',
+    styleUrls: ['./right-sidebar.component.scss']
 })
 export class RightSidebarComponent implements OnInit {
 

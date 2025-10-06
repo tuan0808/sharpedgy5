@@ -9,12 +9,10 @@ import {of} from "rxjs";
 
 
 @Component({
-  selector: 'app-customizer',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './customizer.component.html',
-  styleUrls: ['./customizer.component.scss'],
-  
+    selector: 'app-customizer',
+    imports: [CommonModule],
+    templateUrl: './customizer.component.html',
+    styleUrls: ['./customizer.component.scss']
 })
 export class CustomizerComponent implements OnInit {
 

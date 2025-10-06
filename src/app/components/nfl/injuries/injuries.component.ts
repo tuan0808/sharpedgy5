@@ -8,17 +8,16 @@ import schedule from '../../../../assets/data/schedule.json'
 import {NflDataService} from "../../../shared/services/nfl-data.service";
 
 @Component({
-  selector: 'app-injuries',
-  standalone: true,
-  imports: [
-    AgGridAngular,
-    DragScrollComponent,
-    DragScrollItemDirective,
-    NgForOf,
-    AsyncPipe
-  ],
-  templateUrl: './injuries.component.html',
-  styleUrl: './injuries.component.scss'
+    selector: 'app-injuries',
+    imports: [
+        AgGridAngular,
+        DragScrollComponent,
+        DragScrollItemDirective,
+        NgForOf,
+        AsyncPipe
+    ],
+    templateUrl: './injuries.component.html',
+    styleUrl: './injuries.component.scss'
 })
 export class InjuriesComponent {
 

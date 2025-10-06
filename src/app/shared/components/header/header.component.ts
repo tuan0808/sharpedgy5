@@ -29,7 +29,6 @@ var body = document.getElementsByTagName("body")[0];
  */
 @Component({
     selector: 'app-header',
-    standalone: true,
     imports: [CommonModule, FeatherIconsComponent, FormsModule, RouterModule, TranslateModule],
     providers: [TranslateService],
     templateUrl: './header.component.html',

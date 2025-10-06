@@ -2,11 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'app-page-with-image',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './page-with-image.component.html',
-  styleUrls: ['./page-with-image.component.scss']
+    selector: 'app-page-with-image',
+    imports: [CommonModule],
+    templateUrl: './page-with-image.component.html',
+    styleUrls: ['./page-with-image.component.scss']
 })
 export class PageWithImageComponent implements OnInit {
   

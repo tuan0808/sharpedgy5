@@ -2,11 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'app-page-with-video',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './page-with-video.component.html',
-  styleUrls: ['./page-with-video.component.scss']
+    selector: 'app-page-with-video',
+    imports: [CommonModule],
+    templateUrl: './page-with-video.component.html',
+    styleUrls: ['./page-with-video.component.scss']
 })
 export class PageWithVideoComponent implements OnInit {
 

@@ -30,15 +30,14 @@ export class BreakpointState {
 }
 
 @Component({
-  selector: 'app-notification-home',
-  standalone: true,
-  imports: [
-    FormsModule,
-    DatePipe,
-    PaginationComponent,
-  ],
-  templateUrl: './notification-home.component.html',
-  styleUrl: './notification-home.component.scss'
+    selector: 'app-notification-home',
+    imports: [
+        FormsModule,
+        DatePipe,
+        PaginationComponent,
+    ],
+    templateUrl: './notification-home.component.html',
+    styleUrl: './notification-home.component.scss'
 })
 export class NotificationHomeComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);

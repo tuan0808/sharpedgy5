@@ -18,7 +18,6 @@ import {
 
 @Component({
     selector: 'app-bet-form',
-    standalone: true,
     imports: [ReactiveFormsModule, NgClass],
     templateUrl: './bet-form.component.html',
     styleUrls: ['./bet-form.component.scss']

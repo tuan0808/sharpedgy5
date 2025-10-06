@@ -7,11 +7,10 @@ import { FeatherIconsComponent } from '../feather-icons/feather-icons.component'
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
-  selector: 'app-bookmark',
-  standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, FeatherIconsComponent,NgbModule ],
-  templateUrl: './bookmark.component.html',
-  styleUrls: ['./bookmark.component.scss']
+    selector: 'app-bookmark',
+    imports: [CommonModule, RouterModule, FormsModule, FeatherIconsComponent, NgbModule],
+    templateUrl: './bookmark.component.html',
+    styleUrls: ['./bookmark.component.scss']
 })
 export class BookmarkComponent implements OnInit {
 

@@ -3,13 +3,12 @@ import {SportNotification} from "../../../shared/model/notifications/SportNotifi
 import {DatePipe} from "@angular/common";
 
 @Component({
-  selector: 'app-notification-card',
-  standalone: true,
-  imports: [
-    DatePipe
-  ],
-  templateUrl: './notification-card.component.html',
-  styleUrl: './notification-card.component.scss'
+    selector: 'app-notification-card',
+    imports: [
+        DatePipe
+    ],
+    templateUrl: './notification-card.component.html',
+    styleUrl: './notification-card.component.scss'
 })
 export class NotificationCardComponent {
   @Input() notification!: SportNotification;

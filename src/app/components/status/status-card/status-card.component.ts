@@ -31,13 +31,12 @@ interface Incident {
 }
 
 @Component({
-  selector: 'app-status-card',
-  standalone: true,
-  imports: [
-    NgClass
-  ],
-  templateUrl: './status-card.component.html',
-  styleUrl: './status-card.component.scss'
+    selector: 'app-status-card',
+    imports: [
+        NgClass
+    ],
+    templateUrl: './status-card.component.html',
+    styleUrl: './status-card.component.scss'
 })
 export class StatusCardComponent {
   @Input({required: true}) system!: System;

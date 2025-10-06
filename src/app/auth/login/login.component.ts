@@ -30,13 +30,12 @@ interface AuthErrorDetail {
 }
 
 @Component({
-  selector: 'app-login',
-  templateUrl: './login.component.html',
-  standalone: true,
-  imports: [
-    ReactiveFormsModule
-  ],
-  styleUrls: ['./login.component.scss']
+    selector: 'app-login',
+    templateUrl: './login.component.html',
+    imports: [
+        ReactiveFormsModule
+    ],
+    styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
   private fb = inject(FormBuilder);

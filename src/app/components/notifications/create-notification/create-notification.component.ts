@@ -82,13 +82,12 @@ interface GameStartEndPreferences {
 
 
 @Component({
-  selector: 'app-create-notification',
-  standalone: true,
-  imports: [
-    FormsModule
-  ],
-  templateUrl: './create-notification.component.html',
-  styleUrl: './create-notification.component.scss'
+    selector: 'app-create-notification',
+    imports: [
+        FormsModule
+    ],
+    templateUrl: './create-notification.component.html',
+    styleUrl: './create-notification.component.scss'
 })
 export class CreateNotificationComponent {
   breakpoint: BreakpointState = {

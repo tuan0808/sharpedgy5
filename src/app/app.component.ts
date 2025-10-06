@@ -5,11 +5,10 @@ import {LoaderComponent} from "./shared/components/loader/loader.component";
 import {AuthService} from "./shared/services/auth.service";
 
 @Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [CommonModule, RouterOutlet, LoaderComponent],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+    selector: 'app-root',
+    imports: [CommonModule, RouterOutlet, LoaderComponent],
+    templateUrl: './app.component.html',
+    styleUrl: './app.component.scss'
 })
 export class AppComponent {
   private authService = inject(AuthService);

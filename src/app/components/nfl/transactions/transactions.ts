@@ -17,19 +17,18 @@ class TransactionPlayer {
 }
 
 @Component({
-  selector: 'app-transactions',
-  standalone: true,
-  imports: [
-    AgGridAngular,
-    AsyncPipe,
-    NgForOf,
-    DragScrollComponent,
-    DragScrollItemDirective,
-    KeyValuePipe,
-    MdbAccordionModule,
-  ],
-  templateUrl: './transactions.html',
-  styleUrl: './transactions.scss'
+    selector: 'app-transactions',
+    imports: [
+        AgGridAngular,
+        AsyncPipe,
+        NgForOf,
+        DragScrollComponent,
+        DragScrollItemDirective,
+        KeyValuePipe,
+        MdbAccordionModule,
+    ],
+    templateUrl: './transactions.html',
+    styleUrl: './transactions.scss'
 })
 export class TransactionsComponent {
 

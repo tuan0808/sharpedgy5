@@ -13,14 +13,13 @@ import { BetSettlement } from "../../../../shared/model/paper-betting/BetSettlem
 import { BetResponseState } from "../../../../shared/model/enums/BetResponseState";
 
 @Component({
-  selector: 'app-game-card',
-  standalone: true,
-  imports: [
-    DatePipe,
-    NgClass
-  ],
-  templateUrl: './game-card.component.html',
-  styleUrl: './game-card.component.scss'
+    selector: 'app-game-card',
+    imports: [
+        DatePipe,
+        NgClass
+    ],
+    templateUrl: './game-card.component.html',
+    styleUrl: './game-card.component.scss'
 })
 export class GameCardComponent {
   private modalService = inject(NgbModal);

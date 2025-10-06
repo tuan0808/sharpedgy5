@@ -9,11 +9,10 @@ import { FeatherIconsComponent } from '../feather-icons/feather-icons.component'
 import { BookmarkComponent } from '../bookmark/bookmark.component';
 
 @Component({
-  selector: 'app-breadcrumb',
-  standalone: true,
-  imports: [CommonModule, RouterModule,FeatherIconsComponent,BookmarkComponent],
-  templateUrl: './breadcrumb.component.html',
-  styleUrls: ['./breadcrumb.component.scss']
+    selector: 'app-breadcrumb',
+    imports: [CommonModule, RouterModule, FeatherIconsComponent, BookmarkComponent],
+    templateUrl: './breadcrumb.component.html',
+    styleUrls: ['./breadcrumb.component.scss']
 })
 export class BreadcrumbComponent implements OnInit {
 

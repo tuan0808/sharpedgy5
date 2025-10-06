@@ -6,7 +6,6 @@ import {MdbRippleModule} from "mdb-angular-ui-kit/ripple";
 
 @Component({
     selector: 'app-team-stats',
-    standalone: true,
     imports: [
         NgForOf,
         MdbDropdownModule,

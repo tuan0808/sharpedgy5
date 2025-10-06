@@ -30,8 +30,7 @@ export interface GameData {
     line?: string;
 }
 @Component({
-  selector: 'app-sample-page2',
-  standalone: true,
+    selector: 'app-sample-page2',
     imports: [
         MdbAccordionModule,
         KeyValuePipe,
@@ -42,8 +41,8 @@ export interface GameData {
         DragScrollItemDirective,
         ScoreCardComponent
     ],
-  templateUrl: './Schedule.component.html',
-  styleUrl: './Schedule.component.scss'
+    templateUrl: './Schedule.component.html',
+    styleUrl: './Schedule.component.scss'
 })
 export class ScheduleComponent {
     currentDate = 'Thursday, February 27, 2025';

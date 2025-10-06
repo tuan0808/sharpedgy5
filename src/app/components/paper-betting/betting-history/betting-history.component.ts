@@ -9,15 +9,14 @@ import {BetSettlementService} from "../../../shared/services/betSettlement.servi
 import {toSignal} from "@angular/core/rxjs-interop";
 
 @Component({
-  selector: 'app-betting-history',
-  standalone: true,
+    selector: 'app-betting-history',
     imports: [
         FormsModule,
         DatePipe,
         CurrencyPipe,
     ],
-  templateUrl: './betting-history.component.html',
-  styleUrl: './betting-history.component.scss'
+    templateUrl: './betting-history.component.html',
+    styleUrl: './betting-history.component.scss'
 })
 export class BettingHistoryComponent {
   private betHistoryService = inject(BetSettlementService);

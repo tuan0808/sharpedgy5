@@ -71,11 +71,10 @@ export interface Preferences {
 }
 
 @Component({
-  selector: 'app-alerts-home',
-  standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, NgClass, RouterModule],
-  templateUrl: './alerts-home.component.html',
-  styleUrls: ['./alerts-home.component.scss']
+    selector: 'app-alerts-home',
+    imports: [CommonModule, FormsModule, ReactiveFormsModule, NgClass, RouterModule],
+    templateUrl: './alerts-home.component.html',
+    styleUrls: ['./alerts-home.component.scss']
 })
 export class AlertsHomeComponent implements OnInit, OnDestroy {
   // Component State

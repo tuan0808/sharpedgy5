@@ -29,11 +29,10 @@ interface Alert {
 }
 
 @Component({
-  selector: 'app-user-manager',
-  standalone: true,
-  imports: [ReactiveFormsModule],
-  templateUrl: './user-manager.component.html',
-  styleUrls: ['./user-manager.component.scss']
+    selector: 'app-user-manager',
+    imports: [ReactiveFormsModule],
+    templateUrl: './user-manager.component.html',
+    styleUrls: ['./user-manager.component.scss']
 })
 export class UserManagerComponent {
   @ViewChild('roleModal', { static: false }) roleModalTemplate!: TemplateRef<any>;

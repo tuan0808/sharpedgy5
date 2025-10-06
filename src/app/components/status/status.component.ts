@@ -38,14 +38,13 @@ interface Incident {
   time: string;
 }
 @Component({
-  selector: 'app-status',
-  standalone: true,
-  imports: [
-    StatusCardComponent,
-    NgClass
-  ],
-  templateUrl: './status.component.html',
-  styleUrl: './status.component.scss'
+    selector: 'app-status',
+    imports: [
+        StatusCardComponent,
+        NgClass
+    ],
+    templateUrl: './status.component.html',
+    styleUrl: './status.component.scss'
 })
 export class StatusComponent {
   overallStatus: SystemStatus = {

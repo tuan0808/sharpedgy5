@@ -4,16 +4,15 @@
  import {AsyncPipe, NgForOf, NgOptimizedImage, NgStyle} from "@angular/common";
 
 @Component({
-  selector: 'app-teams',
-  standalone: true,
+    selector: 'app-teams',
     imports: [
         NgForOf,
         AsyncPipe,
         NgOptimizedImage,
         NgStyle
     ],
-  templateUrl: './teams.component.html',
-  styleUrl: './teams.component.scss'
+    templateUrl: './teams.component.html',
+    styleUrl: './teams.component.scss'
 })
 export class TeamsComponent {
   protected teams: Observable<any[]>;

@@ -10,11 +10,10 @@ import {AuthService} from "../../services/auth.service";
 import {async, Observable} from "rxjs";
 
 @Component({
-  selector: 'app-sidebar',
-  standalone: true,
-  imports: [CommonModule,RouterModule,FeatherIconsComponent,NgbModule ,TranslateModule],
-  templateUrl: './sidebar.component.html',
-  styleUrls: ['./sidebar.component.scss'],
+    selector: 'app-sidebar',
+    imports: [CommonModule, RouterModule, FeatherIconsComponent, NgbModule, TranslateModule],
+    templateUrl: './sidebar.component.html',
+    styleUrls: ['./sidebar.component.scss']
 })
 export class SidebarComponent {
   protected isLoggedIn : Signal<boolean> = signal(false)

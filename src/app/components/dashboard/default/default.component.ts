@@ -30,7 +30,6 @@ const POPUP_GRID_URL = '/popup-grid'; // Could come from environment.ts
 
 @Component({
     selector: "app-default",
-    standalone: true,
     imports: [
         CommonModule,
         FeatherIconsComponent,
@@ -46,7 +45,7 @@ const POPUP_GRID_URL = '/popup-grid'; // Could come from environment.ts
     ],
     templateUrl: "./default.component.html",
     styleUrls: ["./default.component.scss"],
-    encapsulation: ViewEncapsulation.None,
+    encapsulation: ViewEncapsulation.None
 })
 export class DefaultComponent extends BaseGridComponent {
     @ViewChild(GridsterComponent) gridster: GridsterComponent;

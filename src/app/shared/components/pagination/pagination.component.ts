@@ -2,13 +2,12 @@ import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {FormsModule} from "@angular/forms";
 
 @Component({
-  selector: 'app-pagination',
-  standalone: true,
+    selector: 'app-pagination',
     imports: [
         FormsModule
     ],
-  templateUrl: './pagination.component.html',
-  styleUrl: './pagination.component.scss'
+    templateUrl: './pagination.component.html',
+    styleUrl: './pagination.component.scss'
 })
 export class PaginationComponent {
   @Input() currentPage: number = 1;

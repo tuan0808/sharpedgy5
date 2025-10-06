@@ -4,13 +4,12 @@ import achievements from "../../../../assets/achievements.json"
 import {DatePipe} from "@angular/common";
 
 @Component({
-  selector: 'app-achievements',
-  standalone: true,
-  imports: [
-    DatePipe
-  ],
-  templateUrl: './achievements.component.html',
-  styleUrl: './achievements.component.scss'
+    selector: 'app-achievements',
+    imports: [
+        DatePipe
+    ],
+    templateUrl: './achievements.component.html',
+    styleUrl: './achievements.component.scss'
 })
 export class AchievementsComponent {
   achievements = achievements as Achievement[];

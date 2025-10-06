@@ -4,14 +4,13 @@ import {Observable} from "rxjs";
 import {NflDataService} from "../../../shared/services/nfl-data.service";
 
 @Component({
-  selector: 'app-news',
-  standalone: true,
-  imports: [
-    AsyncPipe,
-    NgForOf
-  ],
-  templateUrl: './news.component.html',
-  styleUrl: './news.component.scss'
+    selector: 'app-news',
+    imports: [
+        AsyncPipe,
+        NgForOf
+    ],
+    templateUrl: './news.component.html',
+    styleUrl: './news.component.scss'
 })
 export class NewsComponent {
   protected news : Observable<any[]>

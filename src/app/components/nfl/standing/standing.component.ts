@@ -9,19 +9,18 @@ import {MdbTooltipModule} from "mdb-angular-ui-kit/tooltip";
 import {map} from "rxjs/operators";
 
 @Component({
-  selector: 'app-standing',
-  standalone: true,
-  imports: [
-    AgGridAngular,
-    DragScrollComponent,
-    NgForOf,
-    NgClass,
-    DragScrollItemDirective,
-    AsyncPipe,
-    MdbTooltipModule
-  ],
-  templateUrl: './standing.component.html',
-  styleUrl: './standing.component.scss'
+    selector: 'app-standing',
+    imports: [
+        AgGridAngular,
+        DragScrollComponent,
+        NgForOf,
+        NgClass,
+        DragScrollItemDirective,
+        AsyncPipe,
+        MdbTooltipModule
+    ],
+    templateUrl: './standing.component.html',
+    styleUrl: './standing.component.scss'
 })
 export class StandingComponent {
   @ViewChild('nav', {read: DragScrollComponent}) ds: DragScrollComponent | undefined;

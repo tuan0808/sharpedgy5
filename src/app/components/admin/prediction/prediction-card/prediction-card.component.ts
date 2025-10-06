@@ -5,12 +5,10 @@ import {BetFormComponent} from "../../../paper-betting/home/bet-form/bet-form.co
 import {BetSettlement} from "../../../../shared/model/paper-betting/BetSettlement";
 
 @Component({
-  selector: 'app-prediction-card',
-  standalone: true,
-  imports: [
-  ],
-  templateUrl: './prediction-card.component.html',
-  styleUrl: './prediction-card.component.scss'
+    selector: 'app-prediction-card',
+    imports: [],
+    templateUrl: './prediction-card.component.html',
+    styleUrl: './prediction-card.component.scss'
 })
 export class PredictionCardComponent {
   game = input.required<Game>();

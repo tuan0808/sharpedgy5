@@ -2,14 +2,13 @@ import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {NgClass, NgIf} from "@angular/common";
 
 @Component({
-  selector: 'app-grid-item',
-  standalone: true,
-  imports: [
-    NgClass,
-    NgIf
-  ],
-  templateUrl: './grid-item.component.html',
-  styleUrl: './grid-item.component.scss'
+    selector: 'app-grid-item',
+    imports: [
+        NgClass,
+        NgIf
+    ],
+    templateUrl: './grid-item.component.html',
+    styleUrl: './grid-item.component.scss'
 })
 export class GridItemComponent {
   @Input() component: string;

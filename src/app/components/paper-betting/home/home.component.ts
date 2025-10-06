@@ -18,7 +18,6 @@ interface SportDetail {
 @Component({
     selector: 'app-home',
     templateUrl: './home.component.html',
-    standalone: true,
     imports: [GameCardComponent, PaginationComponent],
     styleUrls: ['./home.component.scss']
 })

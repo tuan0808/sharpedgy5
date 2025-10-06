@@ -14,19 +14,18 @@ import { FooterComponent } from '../../footer/footer.component';
 import { CustomizerComponent } from '../../customizer/customizer.component';
 
 @Component({
-  selector: 'app-content-layout',
-  standalone: true,
-  imports: [CommonModule, HeaderComponent, SidebarComponent, 
-    RightSidebarComponent, BreadcrumbComponent, RouterModule, 
-    FooterComponent, CustomizerComponent],
-  templateUrl: './content-layout.component.html',
-  styleUrls: ['./content-layout.component.scss'],
-  animations: [
-    trigger('animateRoute', [transition('* => *', useAnimation(fadeIn, {
-      // Set the duration to 5seconds and delay to 2 seconds
-      //params: { timing: 3}
-    }))])
-  ]
+    selector: 'app-content-layout',
+    imports: [CommonModule, HeaderComponent, SidebarComponent,
+        RightSidebarComponent, BreadcrumbComponent, RouterModule,
+        FooterComponent, CustomizerComponent],
+    templateUrl: './content-layout.component.html',
+    styleUrls: ['./content-layout.component.scss'],
+    animations: [
+        trigger('animateRoute', [transition('* => *', useAnimation(fadeIn, {
+            // Set the duration to 5seconds and delay to 2 seconds
+            //params: { timing: 3}
+            }))])
+    ]
 })
 export class ContentLayoutComponent implements OnInit, AfterViewInit {
 
