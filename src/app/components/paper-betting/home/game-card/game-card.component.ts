@@ -193,8 +193,7 @@ export class GameCardComponent {
     if (result.remainingCredit !== undefined && result.totalCredit !== undefined) {
       this.betSettlementService.updateCredit({
         remainingCredit: result.remainingCredit,
-        totalCredit: result.totalCredit,
-        balance: result.balance || 0
+        totalCredit: result.totalCredit
       });
       console.log(`Credit updated - Remaining: ${result.remainingCredit}, Total: ${result.totalCredit}`);
     }

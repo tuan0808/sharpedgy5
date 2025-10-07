@@ -110,7 +110,7 @@
                             <i class="bi bi-calendar-x"></i>
                         </div>
                         <h3>No Games Available</h3>
-                        <p>There are no {{ selectedSport() }} games scheduled at the moment.</p>
+                        <p>There are no {{ selectedSport() }} games scheduled at the moment.</p>d
                         <p class="hint">Try selecting a different sport or check back later.</p>
                     </div>
                 </div>
@@ -119,10 +119,10 @@
             @else {
                 <div class="games-grid">
                     @for (game of displayedGames(); track game.id) {
-                        <app-game-card
-                                [sportType]="selectedSport()"
-                                [gameData]="game">
-                        </app-game-card>
+                        <app-prediction-card
+                                [league]="selectedSport()"
+                                [game]="game">
+                        </app-prediction-card>
                     }
                 </div>
 

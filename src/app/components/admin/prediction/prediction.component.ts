@@ -21,6 +21,7 @@ import {GameCardComponent} from "../../paper-betting/home/game-card/game-card.co
     PaginationComponent,
     DecimalPipe,
     GameCardComponent,
+    PredictionCardComponent,
   ],
     templateUrl: './prediction.component.html',
     styleUrl: './prediction.component.scss'
