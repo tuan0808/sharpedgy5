@@ -11,21 +11,23 @@ import {SportDetail} from "../../../shared/model/SportDetail";
 import {PaginationComponent} from "../../../shared/components/pagination/pagination.component";
 import {PredictionCardComponent} from "./prediction-card/prediction-card.component";
 import {ToastrService} from "ngx-toastr";
+import {DecimalPipe} from "@angular/common";
+import {GameCardComponent} from "../../paper-betting/home/game-card/game-card.component";
 
 @Component({
     selector: 'app-prediction',
-    imports: [
-        FormsModule,
-        PaginationComponent,
-        PredictionCardComponent,
-    ],
+  imports: [
+    FormsModule,
+    PaginationComponent,
+    DecimalPipe,
+    GameCardComponent,
+  ],
     templateUrl: './prediction.component.html',
     styleUrl: './prediction.component.scss'
 })
 export class PredictionComponent {
   private readonly betSettlement = inject(BetSettlementService);
   private readonly toastr = inject(ToastrService);
-
 
   // Constants
   private readonly MAX_RETRIES = 2;
@@ -49,6 +51,8 @@ export class PredictionComponent {
 
   // Service state - COMPUTED SIGNALS
   protected readonly account = computed(() => this.betSettlement.account());
+  protected readonly balance = computed(() => this.betSettlement.balance());
+  protected readonly credit = computed(() => this.betSettlement.credit());
   protected readonly isWebSocketConnected = computed(() => this.betSettlement.isWebSocketActive());
 
   // Computed
@@ -87,6 +91,10 @@ export class PredictionComponent {
     const nowAtTop = scrollTop <= 10;
 
     this.isAtTop.set(nowAtTop);
+
+    if (wasAtTop && !nowAtTop) {
+      this.toastr.info('Scroll back to top to see all options', 'Scrolled Down');
+    }
   }
 
   // ================================

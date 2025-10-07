@@ -17,9 +17,9 @@
         "type": "team-selector",
         "showOdds": true,
         "showProbability": true,
-        "validators": {
-          "required": true
-        }
+        "validators": [
+          { "type": "required" }
+        ]
       },
       {
         "name": "amount",
@@ -30,11 +30,12 @@
         "max": 5000,
         "step": 1,
         "defaultValue": 0,
-        "validators": {
-          "required": true,
-          "min": 0,
-          "max": 5000
-        }
+        "validators": [
+          { "type": "required" },
+          { "type": "min", "value": 0 },
+          { "type": "max", "value": 5000 },
+          { "type": "greaterThan", "value": 0 }
+        ]
       }
     ]
   },
@@ -56,9 +57,9 @@
         "type": "team-selector",
         "showOdds": true,
         "showProbability": true,
-        "validators": {
-          "required": true
-        }
+        "validators": [
+          { "type": "required" }
+        ]
       },
       {
         "name": "amount",
@@ -69,11 +70,12 @@
         "max": 5000,
         "step": 1,
         "defaultValue": 0,
-        "validators": {
-          "required": true,
-          "min": 0,
-          "max": 5000
-        }
+        "validators": [
+          { "type": "required" },
+          { "type": "min", "value": 0 },
+          { "type": "max", "value": 5000 },
+          { "type": "greaterThan", "value": 0 }
+        ]
       }
     ]
   },
@@ -97,9 +99,9 @@
           { "label": "Under", "value": "under" }
         ],
         "defaultValue": "over",
-        "validators": {
-          "required": true
-        }
+        "validators": [
+          { "type": "required" }
+        ]
       },
       {
         "name": "amount",
@@ -110,11 +112,12 @@
         "max": 5000,
         "step": 1,
         "defaultValue": 0,
-        "validators": {
-          "required": true,
-          "min": 0,
-          "max": 5000
-        }
+        "validators": [
+          { "type": "required" },
+          { "type": "min", "value": 0 },
+          { "type": "max", "value": 5000 },
+          { "type": "greaterThan", "value": 0 }
+        ]
       }
     ]
   },
@@ -140,25 +143,25 @@
           { "label": "5 Teams", "value": 5 }
         ],
         "defaultValue": 2,
-        "validators": {
-          "required": true
-        }
+        "validators": [
+          { "type": "required" },
+          { "type": "greaterThanOrEqual", "value": 2 },
+          { "type": "lessThanOrEqual", "value": 5 }
+        ]
       },
       {
         "name": "amount",
         "label": "Bet Amount ($)",
         "type": "slider",
-        "sportConfig": {
-          "default": {
-            "min": 0,
-            "max": 1000,
-            "step": 5,
-            "defaultValue": 50
-          }
-        },
-        "validators": {
-          "required": true
-        }
+        "min": 0,
+        "max": 1000,
+        "step": 5,
+        "defaultValue": 50,
+        "validators": [
+          { "type": "required" },
+          { "type": "greaterThan", "value": 0 },
+          { "type": "max", "value": 1000 }
+        ]
       }
     ]
   },
@@ -182,11 +185,12 @@
         "max": 5000,
         "step": 1,
         "defaultValue": 0,
-        "validators": {
-          "required": true,
-          "min": 0,
-          "max": 5000
-        }
+        "validators": [
+          { "type": "required" },
+          { "type": "min", "value": 0 },
+          { "type": "max", "value": 5000 },
+          { "type": "greaterThan", "value": 0 }
+        ]
       }
     ]
   },
@@ -210,11 +214,12 @@
         "max": 5000,
         "step": 1,
         "defaultValue": 0,
-        "validators": {
-          "required": true,
-          "min": 0,
-          "max": 5000
-        }
+        "validators": [
+          { "type": "required" },
+          { "type": "min", "value": 0 },
+          { "type": "max", "value": 5000 },
+          { "type": "greaterThan", "value": 0 }
+        ]
       }
     ]
   },
@@ -238,11 +243,12 @@
         "max": 5000,
         "step": 1,
         "defaultValue": 0,
-        "validators": {
-          "required": true,
-          "min": 0,
-          "max": 5000
-        }
+        "validators": [
+          { "type": "required" },
+          { "type": "min", "value": 0 },
+          { "type": "max", "value": 5000 },
+          { "type": "greaterThan", "value": 0 }
+        ]
       }
     ]
   }

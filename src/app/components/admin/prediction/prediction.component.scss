@@ -1,306 +1,500 @@
-/* bet-simulator.component.css with confidence bar */
-.bet-simulator-container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
+// Modern home component styling matching the game card design
+.home-container {
+  min-height: 100vh;
+  background: #f8f9fa;
 }
 
-.bet-simulator-card {
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+// ================================
+// HEADER
+// ================================
+.page-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1.5rem 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  .header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+
+    @media (max-width: 968px) {
+      flex-direction: column;
+      gap: 1rem;
+      align-items: stretch;
+    }
+  }
+
+  .header-left {
+    .page-title {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      i {
+        font-size: 1.5rem;
+      }
+
+      @media (max-width: 768px) {
+        font-size: 1.5rem;
+      }
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+
+    @media (max-width: 968px) {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
 }
 
-.simulator-header {
-  padding: 16px;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.simulator-title {
-  font-size: 24px;
-  font-weight: bold;
-  margin: 0 0 12px 0;
-}
-
-.achievement-banner {
-  background-color: #fff8e1;
-  border-radius: 6px;
-  padding: 8px 12px;
-  margin-top: 8px;
-}
-
-.achievement-text {
-  font-size: 14px;
-  margin: 0;
-}
-
-.sport-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.sport-button {
-  padding: 8px 12px;
-  border: 1px solid #ced4da;
-  border-radius: 6px;
-  background-color: #ffffff;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.sport-button:hover {
-  background-color: #f1f3f5;
-}
-
-.section-title {
-  padding: 16px;
-  font-size: 20px;
-  font-weight: bold;
-  margin: 0;
-}
-
-.games-list {
-  border-top: 1px solid #e9ecef;
-}
-
-.game-item {
-  border-bottom: 1px solid #e9ecef;
-}
-
-.game-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  transition: background-color 0.2s;
-}
-
-.game-header:hover {
-  background-color: #f8f9fa;
-}
-
-.game-info {
+// Balance Info
+.balance-info-wrapper {
   display: flex;
   align-items: center;
-  flex-grow: 1;
-  cursor: pointer;
+  gap: 1.5rem;
+
+  @media (max-width: 768px) {
+    gap: 1rem;
+  }
+
+  @media (max-width: 576px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
 }
 
-.game-date {
-  color: #6c757d;
-  margin-right: 8px;
-}
-
-.game-teams {
-  font-weight: 500;
-}
-
-.game-status {
-  color: #6c757d;
-  font-size: 14px;
-  margin-left: 16px;
-}
-
-.game-actions {
+.balance-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
+  color: white;
+
+  i {
+    font-size: 1.25rem;
+    opacity: 0.9;
+  }
+
+  .balance-text {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+
+    @media (max-width: 576px) {
+      flex-direction: column;
+      gap: 0.125rem;
+    }
+
+    .label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+
+    .value {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+  }
 }
 
-.action-icon {
+.notification-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: none;
-  background: none;
-  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s;
-}
+  transition: all 0.3s ease;
+  flex-shrink: 0;
 
-.place-bet-icon {
-  color: #3B82F6;
-}
+  &:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
 
-.place-bet-icon:hover {
-  background-color: #dbeafe;
-}
+  i {
+    font-size: 1.125rem;
+    color: white;
+  }
 
-.view-matchup-icon {
-  color: #10B981;
-}
-
-.view-matchup-icon:hover {
-  background-color: #d1fae5;
-}
-
-.edit-icon {
-  color: #6B7280;
-}
-
-.edit-icon:hover {
-  background-color: #f3f4f6;
-}
-
-.expand-icon {
-  color: #6B7280;
-}
-
-.expand-icon:hover {
-  background-color: #f3f4f6;
-}
-
-.rotated {
-  transform: rotate(180deg);
-  transition: transform 0.3s;
-}
-
-.game-content {
-  padding: 16px;
-  background-color: #f9fafb;
-}
-
-.content-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-@media (max-width: 768px) {
-  .content-grid {
-    grid-template-columns: 1fr;
+  .notification-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    background: #ff4757;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    border-radius: 10px;
+    border: 2px solid #667eea;
   }
 }
 
-.betting-info {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+// ================================
+// SPORTS NAVIGATION
+// ================================
+.sports-navigation {
+  background: white;
+  border-bottom: 1px solid #e9ecef;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 90;
 
-.betting-grid,
-.bet-results-grid {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 8px;
-}
+  .sports-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    scrollbar-width: none;
 
-.label {
-  font-size: 14px;
-  font-weight: 500;
-  margin: 0;
-}
+    &::-webkit-scrollbar {
+      display: none;
+    }
 
-.value {
-  font-size: 14px;
-  margin: 0;
-}
+    @media (max-width: 768px) {
+      padding: 0 1rem;
+    }
+  }
 
-.matchup-analysis {
-  margin-top: 16px;
-  padding: 12px;
-  background-color: #f1f3f5;
-  border-radius: 6px;
-}
+  .sport-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #6c757d;
 
-.analysis-text {
-  font-size: 14px;
-  margin: 0;
-  line-height: 1.5;
-}
+    &:hover:not(:disabled) {
+      color: #667eea;
+      background: rgba(102, 126, 234, 0.05);
+    }
 
-.bet-results {
-  border-left: 1px solid #e9ecef;
-  padding-left: 20px;
-}
+    &.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
 
-@media (max-width: 768px) {
-  .bet-results {
-    border-left: none;
-    border-top: 1px solid #e9ecef;
-    padding-left: 0;
-    padding-top: 20px;
-    margin-top: 20px;
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .sport-icon {
+      font-size: 1.5rem;
+    }
+
+    .sport-name {
+      font-weight: 600;
+    }
   }
 }
 
-.bet-results-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0 0 16px 0;
+// ================================
+// MAIN CONTENT
+// ================================
+.main-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 }
 
-/* Confidence indicator styles */
-.confidence-indicator {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.confidence-bar {
-  display: block;
-  width: 100%;
-  height: 8px;
-  background-color: #e9ecef;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.confidence-fill {
-  display: block;
-  height: 100%;
-  background-color: #3B82F6;
-  border-radius: 4px;
-  transition: width 0.3s ease;
-}
-
-.pagination-container {
+// Section Header
+.section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+
+  @media (max-width: 968px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+
+    h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #212529;
+
+      @media (max-width: 768px) {
+        font-size: 1.25rem;
+      }
+    }
+
+    .game-count {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #667eea;
+      background: rgba(102, 126, 234, 0.1);
+      padding: 0.25rem 0.625rem;
+      border-radius: 20px;
+    }
+  }
+
+  .section-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    @media (max-width: 968px) {
+      width: 100%;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+
+    .showing-info {
+      font-size: 0.875rem;
+      color: #6c757d;
+      font-weight: 500;
+
+      @media (max-width: 968px) {
+        text-align: center;
+      }
+    }
+  }
+}
+
+// ================================
+// CONTENT AREA
+// ================================
+.content-area {
+  min-height: 400px;
+}
+
+// State Containers
+.state-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 3rem 1rem;
+
+  .state-content {
+    text-align: center;
+    max-width: 500px;
+
+    h3 {
+      margin: 1.5rem 0 1rem 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #212529;
+    }
+
+    p {
+      margin: 0.5rem 0;
+      font-size: 1rem;
+      color: #6c757d;
+      line-height: 1.6;
+    }
+
+    .error-message {
+      color: #dc3545;
+      font-weight: 500;
+    }
+
+    .hint {
+      font-size: 0.875rem;
+      color: #adb5bd;
+    }
+  }
+}
+
+// Loading State
+.loading-state {
+  .spinner-wrapper {
+    margin: 0 auto 1.5rem auto;
+    width: 64px;
+    height: 64px;
+  }
+
+  .spinner {
+    width: 64px;
+    height: 64px;
+    border: 4px solid #e9ecef;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// State Icons
+.state-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+
+  i {
+    font-size: 2.5rem;
+  }
+
+  &.error {
+    background: rgba(220, 53, 69, 0.1);
+    i {
+      color: #dc3545;
+    }
+  }
+
+  &.empty {
+    background: rgba(108, 117, 125, 0.1);
+    i {
+      color: #6c757d;
+    }
+  }
+}
+
+// Retry Button
+.btn-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  margin-top: 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  i {
+    font-size: 1.125rem;
+  }
+}
+
+// ================================
+// GAMES GRID
+// ================================
+.games-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+// Pagination Footer
+.pagination-footer {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0 1rem 0;
   border-top: 1px solid #e9ecef;
 }
 
-.page-size-selector {
+// ================================
+// SCROLL TO TOP BUTTON
+// ================================
+.scroll-top-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
-}
-
-.page-size-select {
-  padding: 8px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-}
-
-.pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.pagination-button {
-  padding: 8px 12px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  background-color: #ffffff;
-  cursor: pointer;
-}
-
-.pagination-button.active {
-  background-color: #3B82F6;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 50%;
   color: white;
-  border-color: #3B82F6;
+  font-size: 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+  z-index: 80;
+  animation: fadeIn 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+  }
+
+  &:active {
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 768px) {
+    bottom: 1rem;
+    right: 1rem;
+    width: 48px;
+    height: 48px;
+    font-size: 1.125rem;
+  }
 }
 
-.pagination-text {
-  padding: 8px 12px;
+// ================================
+// ANIMATIONS
+// ================================
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Apply fade-in to grid items
+.games-grid > * {
+  animation: fadeIn 0.4s ease;
 }

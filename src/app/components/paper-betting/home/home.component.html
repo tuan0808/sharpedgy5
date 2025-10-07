@@ -1,112 +1,150 @@
-<!-- home.component.html - UPDATED WITH COMPUTED SIGNAL FIX -->
-<div class="header">
-    <h1>Bet Simulator</h1>
-    <div class="right">
-    <span class="balance">
-      <i class="bi bi-wallet2"></i>
-        {{credit()?.remainingCredit}} / {{credit()?.totalCredit}}
-    </span>
-        <span class="balance">
-      <i class="bi bi-wallet2"></i>
-            {{balance()}}
-    </span>
-        <i class="bi bi-bell notification"></i>
-    </div>
-</div>
+<div class="home-container">
+    <!-- Header -->
+    <header class="page-header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1 class="page-title">
+                    <i class="bi bi-trophy-fill"></i>
+                    Bet Simulator
+                </h1>
+            </div>
+            <div class="header-right">
+                <div class="balance-info-wrapper">
+                    <div class="balance-item">
+                        <i class="bi bi-credit-card"></i>
+                        <span class="balance-text">
+                            <span class="label">Credit:</span>
+                            <span class="value">${{ credit()?.remainingCredit | number:'1.0-0' }} / ${{ credit()?.totalCredit | number:'1.0-0' }}</span>
+                        </span>
+                    </div>
+                    <div class="balance-item">
+                        <i class="bi bi-wallet2"></i>
+                        <span class="balance-text">
+                            <span class="label">Balance:</span>
+                            <span class="value">${{ balance() | number:'1.2-2' }}</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
 
-<!-- Sports Selection -->
-<div class="top-container">
-    <div class="sports-scroll border-bottom card">
-        <div class="container-fluid px-4 position-relative">
-            <div class="d-flex overflow-auto py-2">
-                @for (sport of sports(); track sport.name) {
-                    <button class="btn sport-tab"
-                            [class.active]="selectedSport() === sport.type"
-                            (click)="onSportSelect(sport.type)"
-                            [disabled]="isLoading()">
-                        {{ sport.icon }}{{ sport.name }}
-                    </button>
+    <!-- Sports Navigation -->
+    <nav class="sports-navigation">
+        <div class="sports-container">
+            @for (sport of sports(); track sport.name) {
+                <button
+                        class="sport-tab"
+                        [class.active]="selectedSport() === sport.type"
+                        [disabled]="isLoading()"
+                        (click)="onSportSelect(sport.type)">
+                    <span class="sport-icon">{{ sport.icon }}</span>
+                    <span class="sport-name">{{ sport.name }}</span>
+                </button>
+            }
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Section Header -->
+        <div class="section-header">
+            <div class="section-title">
+                <h2>Today's Games</h2>
+                @if (!isLoading() && !hasError() && totalElements() > 0) {
+                    <span class="game-count">{{ totalElements() }} available</span>
                 }
             </div>
-        </div>
-    </div>
-</div>
 
-<!-- Games Section -->
-<div class="games-container">
-    <div class="games-header">
-        <h2 class="title">Today's Games</h2>
-
-        @if (!isLoading() && !hasError() && totalElements() > 0) {
-            <div class="games-info">
-                <small class="text-muted">
-                    Showing {{ ((currentPage() - 1) * pageSize() + 1) }} to
-                    {{ Math.min(currentPage() * pageSize(), totalElements()) }}
-                    of {{ totalElements() }} games
-                </small>
-            </div>
-            <app-pagination
-                    [currentPage]="currentPage()"
-                    [totalPages]="totalPages()"
-                    [pageSize]="pageSize()"
-                    (pageChange)="onPageChange($event)"
-                    (pageSizeChange)="onPageSizeChange($event)">
-            </app-pagination>
-        }
-    </div>
-
-    <!-- Loading State -->
-    @if (isLoading()) {
-        <div class="loading-container">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p>Loading games...</p>
-        </div>
-    }
-    @else if (hasError()) {
-        <div class="error-container">
-            <div class="alert alert-danger" role="alert">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                {{ errorMessage() }}
-            </div>
-            <button class="btn btn-primary mt-3" (click)="onRetry()">
-                <i class="bi bi-arrow-clockwise"></i> Retry
-            </button>
-        </div>
-    }
-    @else if (displayedGames().length === 0 && totalElements() === 0) {
-        <div class="empty-container">
-            <p>No games available at the moment.</p>
-        </div>
-    }
-    @else {
-        <div class="games">
-            @for (game of displayedGames(); track game.id) {
-                <app-game-card
-                        [sportType]="selectedSport()"
-                        [gameData]="game">
-                </app-game-card>
+            @if (!isLoading() && !hasError() && totalElements() > 0) {
+                <div class="section-actions">
+                    <div class="showing-info">
+                        Showing {{ ((currentPage() - 1) * pageSize() + 1) }}-{{ Math.min(currentPage() * pageSize(), totalElements()) }} of {{ totalElements() }}
+                    </div>
+                    <app-pagination
+                            [currentPage]="currentPage()"
+                            [totalPages]="totalPages()"
+                            [pageSize]="pageSize()"
+                            (pageChange)="onPageChange($event)"
+                            (pageSizeChange)="onPageSizeChange($event)">
+                    </app-pagination>
+                </div>
             }
         </div>
 
-        @if (totalPages() > 1) {
-            <div class="games-footer">
-                <app-pagination
-                        [currentPage]="currentPage()"
-                        [totalPages]="totalPages()"
-                        [pageSize]="pageSize()"
-                        (pageChange)="onPageChange($event)"
-                        (pageSizeChange)="onPageSizeChange($event)">
-                </app-pagination>
-            </div>
-        }
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Loading State -->
+            @if (isLoading()) {
+                <div class="state-container loading-state">
+                    <div class="state-content">
+                        <div class="spinner-wrapper">
+                            <div class="spinner"></div>
+                        </div>
+                        <h3>Loading Games</h3>
+                        <p>Please wait while we fetch the latest games...</p>
+                    </div>
+                </div>
+            }
+
+            @else if (hasError()) {
+                <div class="state-container error-state">
+                    <div class="state-content">
+                        <div class="state-icon error">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                        </div>
+                        <h3>Oops! Something went wrong</h3>
+                        <p class="error-message">{{ errorMessage() }}</p>
+                        <button class="btn btn-retry" (click)="onRetry()">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            <span>Try Again</span>
+                        </button>
+                    </div>
+                </div>
+            }
+
+            @else if (displayedGames().length === 0 && totalElements() === 0) {
+                <div class="state-container empty-state">
+                    <div class="state-content">
+                        <div class="state-icon empty">
+                            <i class="bi bi-calendar-x"></i>
+                        </div>
+                        <h3>No Games Available</h3>
+                        <p>There are no {{ selectedSport() }} games scheduled at the moment.</p>
+                        <p class="hint">Try selecting a different sport or check back later.</p>
+                    </div>
+                </div>
+            }
+
+            @else {
+                <div class="games-grid">
+                    @for (game of displayedGames(); track game.id) {
+                        <app-game-card
+                                [sportType]="selectedSport()"
+                                [gameData]="game">
+                        </app-game-card>
+                    }
+                </div>
+
+                @if (totalPages() > 1) {
+                    <div class="pagination-footer">
+                        <app-pagination
+                                [currentPage]="currentPage()"
+                                [totalPages]="totalPages()"
+                                [pageSize]="pageSize()"
+                                (pageChange)="onPageChange($event)"
+                                (pageSizeChange)="onPageSizeChange($event)">
+                        </app-pagination>
+                    </div>
+                }
+            }
+        </div>
+    </main>
+
+    <!-- Scroll to Top Button -->
+    @if (!isAtTop()) {
+        <button class="scroll-top-btn" (click)="scrollToTop()">
+            <i class="bi bi-arrow-up"></i>
+        </button>
     }
 </div>
-
-<!-- Scroll to top button -->
-@if (!isAtTop()) {
-    <button class="btn btn-primary scroll-to-top" (click)="scrollToTop()">
-        <i class="bi bi-arrow-up"></i>
-    </button>
-}

@@ -8,6 +8,7 @@ import { Game } from '../../../shared/model/paper-betting/Game';
 import { firstValueFrom, of, Subscription } from 'rxjs';
 import { catchError, retry, tap, timeout } from 'rxjs/operators';
 import { EventStatus } from "../../../shared/model/enums/EventStatus";
+import {DecimalPipe} from "@angular/common";
 
 interface SportDetail {
     name: string;
@@ -18,7 +19,7 @@ interface SportDetail {
 @Component({
     selector: 'app-home',
     templateUrl: './home.component.html',
-    imports: [GameCardComponent, PaginationComponent],
+    imports: [GameCardComponent, PaginationComponent, DecimalPipe],
     styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit, OnDestroy {

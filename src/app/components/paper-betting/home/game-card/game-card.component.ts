@@ -1,6 +1,6 @@
 import { Component, inject, input, signal, computed } from '@angular/core';
 import { Game } from "../../../../shared/model/paper-betting/Game";
-import { DatePipe, NgClass } from "@angular/common";
+import {DatePipe, DecimalPipe, NgClass} from "@angular/common";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { BetTypes } from "../../../../shared/model/enums/BetTypes";
 import { SportType } from "../../../../shared/model/SportType";
@@ -13,13 +13,14 @@ import { BetSettlement } from "../../../../shared/model/paper-betting/BetSettlem
 import { BetResponseState } from "../../../../shared/model/enums/BetResponseState";
 
 @Component({
-    selector: 'app-game-card',
-    imports: [
-        DatePipe,
-        NgClass
-    ],
-    templateUrl: './game-card.component.html',
-    styleUrl: './game-card.component.scss'
+  selector: 'app-game-card',
+  imports: [
+    DatePipe,
+    NgClass,
+    DecimalPipe
+  ],
+  templateUrl: './game-card.component.html',
+  styleUrl: './game-card.component.scss'
 })
 export class GameCardComponent {
   private modalService = inject(NgbModal);
@@ -67,15 +68,15 @@ export class GameCardComponent {
 
     switch (settlement.status) {
       case EventStatus.WIN:
-        return '✓';
+        return 'âœ“';
       case EventStatus.LOSS:
-        return '✗';
+        return 'âœ—';
       case EventStatus.PENDING:
-        return '⏱';
+        return 'â±';
       case EventStatus.CANCELLED:
-        return '⊘';
+        return 'âŠ˜';
       case EventStatus.PUSH:
-        return '↔';
+        return 'â†”';
       default:
         return '';
     }
@@ -233,4 +234,8 @@ export class GameCardComponent {
 
   protected readonly BetTypes = BetTypes;
   protected readonly EventStatus = EventStatus;
+
+  isOverUnderBet() {
+    return false;
+  }
 }
