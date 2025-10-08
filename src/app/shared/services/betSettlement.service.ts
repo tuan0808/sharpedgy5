@@ -10,7 +10,12 @@ import { BaseService } from './base.service';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { environment } from '../../../environments/environment';
-import { Credit } from '../model/paper-betting/Credit';
+
+// Updated Credit interface - removed balance field
+export interface Credit {
+    remainingCredit: number;
+    totalCredit: number;
+}
 
 // Updated enum to use string values matching server responses
 export enum BetResponseState {
@@ -119,6 +124,10 @@ export class BetSettlementService extends BaseService<Account> {
         this.initializeAccount();
     }
 
+    // ================================
+    // INITIALIZATION METHODS (FIXED)
+    // ================================
+
     private async initializeAccount(): Promise<void> {
         const userId = await this.initializeUser();
         if (!userId) {
@@ -126,34 +135,56 @@ export class BetSettlementService extends BaseService<Account> {
             this.errorMessage.set('User authentication failed');
             return;
         }
-        console.log('Initializing account for user:', userId);
-        await this.fetchInitialAccount(userId);
-        await this.fetchInitialCredit(userId);
 
-        // Initialize WebSocket connection after user is authenticated
+        console.log('Initializing account for user:', userId);
+
+        // Step 1: Fetch account first to get account ID and balance
+        const account = await this.fetchInitialAccount(userId);
+
+        // Step 2: Only fetch credit if we successfully got the account
+        if (account) {
+            await this.fetchInitialCredit(account.id);
+        }
+
+        // Step 3: Initialize WebSocket connection after user is authenticated
         this.connectWebSocket(userId);
     }
 
-    private async fetchInitialAccount(userId: string): Promise<void> {
+    private async fetchInitialAccount(userId: string): Promise<Account | null> {
         try {
             const initialAccount = await firstValueFrom(
-                this.get<Account | null>(`${this.apiUrl}/${userId}/getAccount`, 'Could not load account data')
+                this.get<Account | null>(
+                    `${this.apiUrl}/${userId}/getAccount`,
+                    'Could not load account data'
+                )
             );
+
             if (this.isValidAccount(initialAccount)) {
                 this.updateAccountState(initialAccount);
+                console.log('Account loaded successfully. ID:', initialAccount.id, 'Balance:', initialAccount.balance);
+                return initialAccount;
             }
+
+            console.warn('Invalid account data received');
+            return null;
         } catch (error) {
             console.error('Error fetching initial account:', error);
             this.errorMessage.set('Failed to load account');
+            return null;
         }
     }
 
-    private async fetchInitialCredit(userId: string): Promise<void> {
+    private async fetchInitialCredit(accountId: number): Promise<void> {
         try {
+            // Fixed: Use correct endpoint path and accountId parameter
             const credit = await firstValueFrom(
-                this.get<Credit>(`${this.apiUrl}/${userId}/getCreditByUUID`, 'Failed to load credit')
+                this.get<Credit>(
+                    `${this.apiUrl}/${accountId}/credit/weekly`,
+                    'Failed to load credit'
+                )
             );
-            console.log('Fetched initial credit:', credit);
+
+            console.log('Credit loaded successfully. Remaining:', credit.remainingCredit, 'Total:', credit.totalCredit);
             this.credit.set(credit);
         } catch (error) {
             console.error('Error fetching initial credit:', error);
@@ -161,6 +192,10 @@ export class BetSettlementService extends BaseService<Account> {
             this.errorMessage.set('Failed to load credit');
         }
     }
+
+    // ================================
+    // BET SUBMISSION METHODS (FIXED)
+    // ================================
 
     /**
      * Submit bet and return the actual server BetResult response
@@ -179,6 +214,7 @@ export class BetSettlementService extends BaseService<Account> {
         console.log(`Submitting bet with tempId ${tempId}:`, paperBetRecord);
         const originalBalance = this.balance();
 
+        // Optimistically update balance
         this.balance.set(originalBalance - paperBetRecord.wagerAmount);
 
         try {
@@ -196,20 +232,25 @@ export class BetSettlementService extends BaseService<Account> {
             console.log(`Server response for bet ${tempId}:`, result);
 
             if (result.status === BetResponseState.SUCCESS) {
+                // Update balance from server response
                 if (result.balance !== undefined) {
                     this.balance.set(result.balance);
                 }
+
+                // Update credit from server response
                 if (result.remainingCredit !== undefined && result.totalCredit !== undefined) {
                     this.credit.set({
                         remainingCredit: result.remainingCredit,
-                        totalCredit: result.totalCredit,
-                        balance: result.balance || this.balance()
+                        totalCredit: result.totalCredit
                     });
                 }
+
+                // Update game with bet record
                 const betRecord = result.paperBetRecord || paperBetRecord;
                 console.log(`Updating game with betRecord:`, betRecord);
                 this.updateGameWithBet(betRecord.gameId, betRecord);
             } else {
+                // Revert balance on failure
                 console.log(`Bet failed with status: ${result.status}`);
                 this.balance.set(originalBalance);
             }
@@ -218,6 +259,7 @@ export class BetSettlementService extends BaseService<Account> {
 
         } catch (error) {
             console.error(`Network error for bet ${tempId}:`, error);
+            // Revert balance on network error
             this.balance.set(originalBalance);
             return {
                 status: BetResponseState.ERROR,
@@ -263,6 +305,10 @@ export class BetSettlementService extends BaseService<Account> {
         }
     }
 
+    // ================================
+    // STATE UPDATE METHODS (FIXED)
+    // ================================
+
     /**
      * Public methods for balance/credit updates
      */
@@ -270,27 +316,12 @@ export class BetSettlementService extends BaseService<Account> {
         this.balance.set(newBalance);
     }
 
-    updateCredit(creditData: { remainingCredit: number; totalCredit: number; balance: number }): void {
+    updateCredit(creditData: { remainingCredit: number; totalCredit: number }): void {
         this.credit.set({
             remainingCredit: creditData.remainingCredit,
-            totalCredit: creditData.totalCredit,
-            balance: creditData.balance
+            totalCredit: creditData.totalCredit
         });
-        this.balance.set(creditData.balance);
-    }
-
-    // STATUS HELPER METHODS
-    isSuccessfulBet(result: BetResult): boolean {
-        return result.status === BetResponseState.SUCCESS;
-    }
-
-    isCreditError(result: BetResult): boolean {
-        return result.status === BetResponseState.CREDIT_LIMIT_EXCEEDED;
-    }
-
-    isAccountError(result: BetResult): boolean {
-        return result.status === BetResponseState.USER_NOT_FOUND ||
-            result.status === BetResponseState.ACCOUNT_NOT_FOUND;
+        // Note: Balance is NOT part of credit - it comes from account separately
     }
 
     private isValidAccount(account: Account | null): account is Account {
@@ -307,6 +338,23 @@ export class BetSettlementService extends BaseService<Account> {
                 this.updateGameWithBet(latestBet.gameId, latestBet);
             }
         }
+    }
+
+    // ================================
+    // STATUS HELPER METHODS
+    // ================================
+
+    isSuccessfulBet(result: BetResult): boolean {
+        return result.status === BetResponseState.SUCCESS;
+    }
+
+    isCreditError(result: BetResult): boolean {
+        return result.status === BetResponseState.CREDIT_LIMIT_EXCEEDED;
+    }
+
+    isAccountError(result: BetResult): boolean {
+        return result.status === BetResponseState.USER_NOT_FOUND ||
+            result.status === BetResponseState.ACCOUNT_NOT_FOUND;
     }
 
     // ================================
@@ -378,11 +426,13 @@ export class BetSettlementService extends BaseService<Account> {
     private handleBetSettlementNotification(notification: BetSettlementNotification): void {
         console.log('Processing bet settlement notification:', notification);
 
+        // Update balance from notification
         if (notification.newBalance !== undefined) {
             this.balance.set(notification.newBalance);
             console.log(`Balance updated to: ${notification.newBalance}`);
         }
 
+        // Update game status
         const currentGames = this.allGames();
         const gameId = parseInt(notification.gameId);
         const gameIndex = currentGames.findIndex(g => g.id === gameId);
@@ -423,15 +473,22 @@ export class BetSettlementService extends BaseService<Account> {
             console.warn(`Game ${notification.gameId} not found in current games list`);
         }
 
+        // Refresh credit after settlement
         this.refreshCreditAfterSettlement();
     }
 
     private async refreshCreditAfterSettlement(): Promise<void> {
-        const userId = this.currentUserId();
-        if (!userId) return;
+        const account = this.account();
+
+        if (!account) {
+            console.warn('Cannot refresh credit: account not loaded');
+            return;
+        }
 
         try {
-            await this.fetchInitialCredit(userId);
+            // Use account.id, not userId
+            await this.fetchInitialCredit(account.id);
+            console.log('Credit refreshed after settlement');
         } catch (error) {
             console.error('Failed to refresh credit after settlement:', error);
         }
@@ -465,29 +522,8 @@ export class BetSettlementService extends BaseService<Account> {
     }
 
     // ================================
-    // BACKWARD COMPATIBILITY
+    // GAME RETRIEVAL METHODS
     // ================================
-
-    addRecord(paperBetRecord: PaperBetRecord): Observable<any> {
-        console.log(`paperBetRecord ${JSON.stringify(paperBetRecord)}`);
-        const result = this.post<any, PaperBetRecord>(
-            `${this.apiUrl}/saveBetHistory`,
-            paperBetRecord,
-            'Failed to save bet'
-        ).pipe(
-            map(response => response),
-            catchError(error => {
-                const currentAccount = this.account();
-                if (currentAccount) {
-                    this.balance.set(currentAccount.balance);
-                    this.account.set(currentAccount);
-                }
-                return throwError(() => error);
-            })
-        );
-        result.subscribe(s => console.log(`test ${JSON.stringify(s)}`));
-        return result;
-    }
 
     getSportsByNFL(sportType: SportType): Observable<Game[]> {
         const userId = this.currentUserId();
@@ -530,10 +566,20 @@ export class BetSettlementService extends BaseService<Account> {
 
     private convertSportTypeToLeague(sportType: SportType): string {
         const sportMapping: Record<SportType, string> = {
-            [SportType.NFL]: 'NFL', [SportType.NHL]: 'NHL', [SportType.ALL]: 'ALL', [SportType.NBA]: 'NBA',
-            [SportType.MLB]: 'MLB', [SportType.MLS]: 'MLS', [SportType.EPL]: 'EPL', [SportType.UFC]: 'UFC',
-            [SportType.PGA]: 'PGA', [SportType.WTA]: 'WTA', [SportType.NASCAR]: 'NASCAR',
-            [SportType.NCAA_FOOTBALL]: 'NCAAF', [SportType.NCAA_BASKETBALL]: 'NCAAB', [SportType.SOCCER]: 'SOCCER'
+            [SportType.NFL]: 'NFL',
+            [SportType.NHL]: 'NHL',
+            [SportType.ALL]: 'ALL',
+            [SportType.NBA]: 'NBA',
+            [SportType.MLB]: 'MLB',
+            [SportType.MLS]: 'MLS',
+            [SportType.EPL]: 'EPL',
+            [SportType.UFC]: 'UFC',
+            [SportType.PGA]: 'PGA',
+            [SportType.WTA]: 'WTA',
+            [SportType.NASCAR]: 'NASCAR',
+            [SportType.NCAA_FOOTBALL]: 'NCAAF',
+            [SportType.NCAA_BASKETBALL]: 'NCAAB',
+            [SportType.SOCCER]: 'SOCCER'
         };
 
         return sportMapping[sportType] || 'NFL';
@@ -546,7 +592,8 @@ export class BetSettlementService extends BaseService<Account> {
         return games.map(game => {
             const betRecord = betHistory.find(bet => bet.gameId === game.id);
             return betRecord ? {
-                ...game, betSettlement: {
+                ...game,
+                betSettlement: {
                     betType: betRecord.betType,
                     selectedTeam: betRecord.selectedTeam,
                     status: betRecord.status,
@@ -557,13 +604,27 @@ export class BetSettlementService extends BaseService<Account> {
         });
     }
 
+    // ================================
+    // REFRESH AND UTILITY METHODS (FIXED)
+    // ================================
+
     async refreshUserData(): Promise<void> {
         const userId = this.currentUserId();
-        if (!userId) return;
+        if (!userId) {
+            console.warn('Cannot refresh: user not authenticated');
+            return;
+        }
 
         try {
-            await this.fetchInitialAccount(userId);
-            await this.fetchInitialCredit(userId);
+            // Fetch account first
+            const account = await this.fetchInitialAccount(userId);
+
+            // Then fetch credit if account exists
+            if (account) {
+                await this.fetchInitialCredit(account.id);
+            }
+
+            console.log('User data refreshed successfully');
         } catch (error) {
             console.error('Failed to refresh user data:', error);
         }
@@ -579,14 +640,41 @@ export class BetSettlementService extends BaseService<Account> {
         return this.get<Account[]>(`${this.apiUrl}/${userId}/getAccounts`, 'Failed to load accounts');
     }
 
-    getBalanceById(): Observable<Credit> {
-        const userId = this.currentUserId();
-        if (!userId) {
-            this.errorMessage.set('User not authenticated');
-            return throwError(() => new Error('User not authenticated'));
-        }
-        return this.get<Credit>(`${this.apiUrl}/${userId}/getCreditByUUID`, 'Failed to load credit');
+    getCreditByAccountId(accountId: number): Observable<Credit> {
+        return this.get<Credit>(
+            `${this.apiUrl}/${accountId}/credit/weekly`,
+            'Failed to load credit'
+        );
     }
+
+    // ================================
+    // BACKWARD COMPATIBILITY (DEPRECATED)
+    // ================================
+
+    addRecord(paperBetRecord: PaperBetRecord): Observable<any> {
+        console.log(`paperBetRecord ${JSON.stringify(paperBetRecord)}`);
+        const result = this.post<any, PaperBetRecord>(
+            `${this.apiUrl}/saveBetHistory`,
+            paperBetRecord,
+            'Failed to save bet'
+        ).pipe(
+            map(response => response),
+            catchError(error => {
+                const currentAccount = this.account();
+                if (currentAccount) {
+                    this.balance.set(currentAccount.balance);
+                    this.account.set(currentAccount);
+                }
+                return throwError(() => error);
+            })
+        );
+        result.subscribe(s => console.log(`test ${JSON.stringify(s)}`));
+        return result;
+    }
+
+    // ================================
+    // CLEANUP
+    // ================================
 
     ngOnDestroy(): void {
         this.disconnectWebSocket();

@@ -1,12 +1,11 @@
 import {Component, computed, EventEmitter, inject, Input, Output, signal, OnInit} from '@angular/core';
 import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import {NgClass, JsonPipe} from "@angular/common";
-import {ReactiveFormsModule, FormBuilder, Validators} from "@angular/forms";
+import {ReactiveFormsModule, Validators} from "@angular/forms";
 import {BaseBetFormComponent} from "../../../base-bet-form-component/base-bet-form-component.component";
 import {SportType} from "../../../../shared/model/SportType";
 import {BetSettlement} from "../../../../shared/model/paper-betting/BetSettlement";
 import {EventStatus} from "../../../../shared/model/enums/EventStatus";
-import {Game} from "../../../../shared/model/paper-betting/Game";
 import {BetTypes} from "../../../../shared/model/enums/BetTypes";
 import betTypesConfig from '../../../../../assets/config/bet-types.json';
 import {
@@ -15,10 +14,11 @@ import {
     getAllBetTypes, getBetValueForType,
     getFieldsForBetType
 } from "../../../../shared/model/paper-betting/FieldConfig";
+import {CustomValidators} from "../../../../shared/utils/CustomValidators";
 
 @Component({
     selector: 'app-bet-form',
-    imports: [ReactiveFormsModule, NgClass],
+    imports: [ReactiveFormsModule ],
     templateUrl: './bet-form.component.html',
     styleUrls: ['./bet-form.component.scss']
 })
@@ -106,74 +106,49 @@ export class BetFormComponent extends BaseBetFormComponent implements OnInit {
     }
 
     private rebuildForm(): void {
-        console.log('=== rebuildForm called ===');
-        console.log('Rebuilding form for bet type:', this.selectedBetType);
-        console.log('Using sport type:', this.sportType);
-
         this.currentFormFields = getFieldsForBetType(this.selectedBetType, this.sportType);
-
-        console.log('Current form fields received:', this.currentFormFields);
-        console.log('Number of fields:', this.currentFormFields.length);
-
         const formConfig: any = {};
 
-        this.currentFormFields.forEach((field, index) => {
-            console.log(`Processing field ${index}: ${field.name} (${field.type})`);
-
-            if (field.type === 'team-selector') {
-                console.log('  -> Skipping team-selector (handled separately)');
-                return;
-            }
+        this.currentFormFields.forEach((field) => {
+            if (field.type === 'team-selector') return;
 
             const validators = [];
 
-            if (field.validators?.required) {
-                validators.push(Validators.required);
-                console.log('  -> Added required validator');
-            }
-
-            if (field.min !== undefined) {
-                validators.push(Validators.min(field.min));
-                console.log('  -> Added min validator:', field.min);
-            }
-            if (field.max !== undefined) {
-                validators.push(Validators.max(field.max));
-                console.log('  -> Added max validator:', field.max);
-            }
-
-            let defaultValue = field.defaultValue;
-            if (defaultValue === undefined || defaultValue === null) {
-                if (field.type === 'slider' && field.min !== undefined && field.max !== undefined) {
-                    if (field.min < 0 && field.max > 0) {
-                        defaultValue = 0;
-                        console.log('  -> Using middle value (0) for slider with negative/positive range');
-                    } else {
-                        defaultValue = field.min;
-                        console.log('  -> Using min value as default');
+            // Process validator array
+            if (field.validators && Array.isArray(field.validators)) {
+                field.validators.forEach(v => {
+                    switch (v.type) {
+                        case 'required':
+                            validators.push(Validators.required);
+                            break;
+                        case 'min':
+                            validators.push(Validators.min(v.value));
+                            break;
+                        case 'max':
+                            validators.push(Validators.max(v.value));
+                            break;
+                        case 'lessThan':
+                            validators.push(CustomValidators.lessThan(v.value));
+                            break;
+                        case 'greaterThan':
+                            validators.push(CustomValidators.greaterThan(v.value));
+                            break;
+                        case 'lessThanOrEqual':
+                            validators.push(CustomValidators.lessThanOrEqual(v.value));
+                            break;
+                        case 'greaterThanOrEqual':
+                            validators.push(CustomValidators.greaterThanOrEqual(v.value));
+                            break;
                     }
-                } else {
-                    defaultValue = '';
-                }
+                });
             }
 
+            const defaultValue = field.defaultValue ?? (field.type === 'slider' && field.min < 0 && field.max > 0 ? 0 : field.min) ?? '';
             formConfig[field.name] = [defaultValue, validators];
-            console.log(`  -> Added ${field.name} to formConfig with default value:`, defaultValue);
         });
-
-        console.log('Final form config object:', formConfig);
-        console.log('Form config keys:', Object.keys(formConfig));
 
         this.bettingForm = this.fb.group(formConfig);
-
-        console.log('Form group created');
-        console.log('Form controls:', Object.keys(this.bettingForm.controls));
-        console.log('Form value:', this.bettingForm.value);
-        console.log('Form valid:', this.bettingForm.valid);
-
-        this.bettingForm.valueChanges.subscribe((value) => {
-            console.log('Form value changed:', value);
-            this.updatePotentialWinnings();
-        });
+        this.bettingForm.valueChanges.subscribe(() => this.updatePotentialWinnings());
     }
 
     private buildBetPayload(): Record<string, any> {
@@ -338,39 +313,42 @@ export class BetFormComponent extends BaseBetFormComponent implements OnInit {
             return;
         }
 
-        // Handle different bet types
+        let odds: number;
+
+        // Determine the odds based on bet type
         switch (this.selectedBetType) {
             case BetTypes.OVER_UNDER:
-                // Even money: bet $100, win $100
-                this.potentialWinnings = amount;
+                // Over/Under: Standard odds are -110 for both sides
+                odds = -110;
                 break;
 
             case BetTypes.POINT_SPREAD:
-                // Even money: bet $100, win $100
-                // No need to check selectedTeam for potential winnings calculation
-                this.potentialWinnings = amount;
+                // Point Spread: Standard odds are -110 for both sides
+                odds = -110;
                 break;
 
             case BetTypes.MONEYLINE:
-                // Moneyline uses actual odds from the game
-                if (this.selectedTeam && this.selectedTeam.odds) {
-                    const odds = parseFloat(this.selectedTeam.odds);
-
-                    if (odds > 0) {
-                        // Positive odds: +150 means bet $100 to win $150
-                        this.potentialWinnings = (amount * odds) / 100;
-                    } else {
-                        // Negative odds: -110 means bet $110 to win $100
-                        this.potentialWinnings = (amount * 100) / Math.abs(odds);
-                    }
-                } else {
+                // Moneyline: Use the actual team's moneyline odds
+                if (!this.selectedTeam || !this.selectedTeam.odds) {
                     this.potentialWinnings = 0;
+                    return;
                 }
+                odds = parseFloat(this.selectedTeam.odds);
                 break;
 
             default:
                 this.potentialWinnings = 0;
-                break;
+                return;
+        }
+
+        // Calculate potential winnings (profit only, not including original wager)
+        // American odds calculation:
+        if (odds > 0) {
+            // Positive odds: +150 means bet $100 to win $150 profit
+            this.potentialWinnings = (amount * odds) / 100;
+        } else {
+            // Negative odds: -110 means bet $110 to win $100 profit
+            this.potentialWinnings = (amount * 100) / Math.abs(odds);
         }
     }
 
