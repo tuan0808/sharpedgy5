@@ -1,7 +1,7 @@
 import { SportType } from '../SportType';
 import {BetTypes} from "../enums/BetTypes";
 
-export type FieldType = 'number' | 'slider' | 'select' | 'toggle' | 'radio' | 'team-selector' | 'range';
+export type FieldType = 'number' | 'slider' | 'select' | 'toggle' | 'radio' | 'team-selector' | 'range' | 'richtext';
 
 export interface SportSpecificConfig {
     min?: number;
