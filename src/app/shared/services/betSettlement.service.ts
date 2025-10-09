@@ -289,7 +289,8 @@ export class BetSettlementService extends BaseService<Account> {
                     selectedTeam: betRecord.selectedTeam,
                     status: betRecord.status,
                     wagerValue: betRecord.wagerValue,
-                    wagerAmount: betRecord.wagerAmount
+                    wagerAmount: betRecord.wagerAmount,
+                    message: ''
                 }
             };
 
@@ -457,7 +458,8 @@ export class BetSettlementService extends BaseService<Account> {
                     selectedTeam: notification.homeTeam,
                     status: notification.status as any,
                     wagerValue: 0,
-                    wagerAmount: notification.wagerAmount
+                    wagerAmount: notification.wagerAmount,
+                    message: ''
                 };
             }
 
@@ -598,7 +600,8 @@ export class BetSettlementService extends BaseService<Account> {
                     selectedTeam: betRecord.selectedTeam,
                     status: betRecord.status,
                     wagerValue: betRecord.wagerValue,
-                    wagerAmount: betRecord.wagerAmount
+                    wagerAmount: betRecord.wagerAmount,
+                    message: ''
                 }
             } : { ...game };
         });
