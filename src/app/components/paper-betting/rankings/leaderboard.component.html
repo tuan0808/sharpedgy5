@@ -285,7 +285,7 @@
                             *ngFor="let p of getPageNumbers()"
                             [class.active]="p === page + 1"
                             (click)="page = p - 1; loadLeaderboard()">
-                        {{ p }}
+                         {{ p }}
                     </button>
                 </div>
                 <button class="page-btn" (click)="nextPage()" [disabled]="!hasNextPage">
