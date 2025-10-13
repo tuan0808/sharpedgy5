@@ -109,9 +109,10 @@ export class PredictionCardComponent {
   }
 
 
-
   private async handleBetSubmission(betData: BetSettlement): Promise<void> {
     const userId = this.predictionService.currentUserId();
+
+    console.log(userId);
     if (!userId) {
       this.toastr.error('User not authenticated', 'Error');
       return;
@@ -119,19 +120,21 @@ export class PredictionCardComponent {
 
     this.processingBet.set(true);
 
-    const paperBetRecord = new Prediction();
-    paperBetRecord.gameId = this.game().id;
-    paperBetRecord.userId = userId;
-    paperBetRecord.sport = this.league();
-    paperBetRecord.betType = betData.betType as unknown as BetTypes;
-    paperBetRecord.wagerValue = betData.wagerValue;
-    paperBetRecord.betStatus = EventStatus.PENDING;
-    paperBetRecord.selectedTeam = betData.selectedTeam;
-    paperBetRecord.message = betData.message;
+    const prediction = new Prediction();
+    prediction.gameId = this.game().id;
+    prediction.userId = userId;
+    prediction.sport = this.league();
+    prediction.betType = betData.betType as unknown as BetTypes;
+    prediction.wagerValue = betData.wagerValue;
+    prediction.betStatus = EventStatus.PENDING;
+    prediction.selectedTeam = betData.selectedTeam;
+    prediction.message = betData.message;
+
+    console.log(JSON.stringify(prediction));
 
     try {
       const result = await this.predictionService.addRecordOptimistic(
-          paperBetRecord,
+          prediction,
           userId,
           this.generateTempId()
       );

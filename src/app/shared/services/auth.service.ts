@@ -554,14 +554,25 @@ export class AuthService {
      * @returns Promise resolving with true if registration succeeds.
      */
     async registerAccount(user: User): Promise<boolean> {
-        const isNew = this.checkIfNewUser(user.metadata.creationTime!, user.metadata.lastSignInTime!);
-        if (isNew) {
+        try {
             await this.userService.createUser({
                 uid: user.uid,
                 displayName: user.displayName,
             });
+            this.logSecurityEvent('user_registered', { uid: user.uid });
+            return true;
+        } catch (error: any) {
+            // User already exists - this is fine
+            if (error.status === 409 || error.message?.includes('already exists')) {
+                return true;
+            }
+            // Actual error
+            this.logSecurityEvent('user_registration_failed', {
+                uid: user.uid,
+                error: error.message
+            });
+            throw error;
         }
-        return true;
     }
 
     /**

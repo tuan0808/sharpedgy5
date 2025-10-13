@@ -12,7 +12,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     const authService = inject(AuthService);
 
 
-    console.log('📤 POST BODY:', JSON.stringify(req.body, null, 2));
 
     if ((req.method === 'POST' || req.method === 'PUT') && req.body) {
     }
