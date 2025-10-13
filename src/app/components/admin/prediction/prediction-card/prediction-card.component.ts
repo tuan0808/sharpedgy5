@@ -1,16 +1,15 @@
 import { Component, inject, input, signal, computed } from '@angular/core';
 import { Game } from "../../../../shared/model/paper-betting/Game";
-import {DatePipe, DecimalPipe, NgClass} from "@angular/common";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { BetTypes } from "../../../../shared/model/enums/BetTypes";
 import { SportType } from "../../../../shared/model/SportType";
-import { BetSettlementService } from "../../../../shared/services/betSettlement.service";
-import { PaperBetRecord } from "../../../../shared/model/paper-betting/PaperBetRecord";
 import { EventStatus } from "../../../../shared/model/enums/EventStatus";
 import { ToastrService } from 'ngx-toastr';
 import { BetSettlement } from "../../../../shared/model/paper-betting/BetSettlement";
 import { BetResponseState } from "../../../../shared/model/enums/BetResponseState";
 import {PredictionFormComponent} from "../prediction-form/prediction-form.component";
+import {PredictionsService} from "../../../../shared/services/predictions.service";
+import {Prediction} from "../../../../shared/model/Prediction";
 
 @Component({
   selector: 'app-prediction-card',
@@ -20,7 +19,8 @@ import {PredictionFormComponent} from "../prediction-form/prediction-form.compon
 })
 export class PredictionCardComponent {
   private modalService = inject(NgbModal);
-  private betSettlementService = inject(BetSettlementService);
+ // private betSettlementService = inject(BetSettlementService);
+  private predictionService = inject(PredictionsService);
   private toastr = inject(ToastrService);
 
   // Inputs from parent
@@ -97,7 +97,7 @@ export class PredictionCardComponent {
 
     modalRef.componentInstance.game = this.game();
     modalRef.componentInstance.sportType = this.league();
-    modalRef.componentInstance.uid = this.betSettlementService.currentUserId() || '';
+    modalRef.componentInstance.uid = this.predictionService.currentUserId() || '';
 
     modalRef.result.then((betData: BetSettlement) => {
       if (betData) {
@@ -111,7 +111,7 @@ export class PredictionCardComponent {
 
 
   private async handleBetSubmission(betData: BetSettlement): Promise<void> {
-    const userId = this.betSettlementService.currentUserId();
+    const userId = this.predictionService.currentUserId();
     if (!userId) {
       this.toastr.error('User not authenticated', 'Error');
       return;
@@ -119,21 +119,18 @@ export class PredictionCardComponent {
 
     this.processingBet.set(true);
 
-    const paperBetRecord = new PaperBetRecord();
+    const paperBetRecord = new Prediction();
     paperBetRecord.gameId = this.game().id;
     paperBetRecord.userId = userId;
     paperBetRecord.sport = this.league();
     paperBetRecord.betType = betData.betType as unknown as BetTypes;
     paperBetRecord.wagerValue = betData.wagerValue;
-    paperBetRecord.wagerAmount = betData.wagerAmount;
-    paperBetRecord.status = EventStatus.PENDING;
+    paperBetRecord.betStatus = EventStatus.PENDING;
     paperBetRecord.selectedTeam = betData.selectedTeam;
-    paperBetRecord.potentialWinnings = this.calculatePotentialWinnings(betData.wagerAmount, betData.wagerValue);
+    paperBetRecord.message = betData.message;
 
     try {
-      this.toastr.info(`Placing $${paperBetRecord.wagerAmount} bet...`, 'Processing');
-
-      const result = await this.betSettlementService.addRecordOptimistic(
+      const result = await this.predictionService.addRecordOptimistic(
           paperBetRecord,
           userId,
           this.generateTempId()
@@ -184,31 +181,7 @@ export class PredictionCardComponent {
   }
 
   private handleSuccessfulBet(result: any, originalBetData: BetSettlement): void {
-    // Update balance and credit from the server's response
-    if (result.balance !== undefined) {
-      this.betSettlementService.updateBalance(result.balance);
-      console.log(`Balance updated to: ${result.balance}`);
-    }
 
-    if (result.remainingCredit !== undefined && result.totalCredit !== undefined) {
-      this.betSettlementService.updateCredit({
-        remainingCredit: result.remainingCredit,
-        totalCredit: result.totalCredit
-      });
-      console.log(`Credit updated - Remaining: ${result.remainingCredit}, Total: ${result.totalCredit}`);
-    }
-
-    // Note: Don't manually update the game here - the service will handle it
-    // The gameUpdate$ observable will trigger UI updates automatically
-
-    this.toastr.success(
-        `Bet placed successfully! $${originalBetData.wagerAmount} wagered on ${originalBetData.selectedTeam}.`,
-        'Success',
-        {
-          timeOut: 5000,
-          progressBar: true
-        }
-    );
   }
 
   private calculatePotentialWinnings(wagerAmount: number, wagerValue: number): number {

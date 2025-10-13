@@ -100,10 +100,6 @@ export class PredictionFormComponent extends BaseBetFormComponent implements OnI
     this.editors.clear();
   }
 
-  getFormControlNames(): string {
-    return Object.keys(this.bettingForm.controls).join(', ');
-  }
-
   onBetTypeClick(bet: BetTypeMapping): void {
     console.log('=== onBetTypeClick ===');
     console.log('Bet clicked:', bet);

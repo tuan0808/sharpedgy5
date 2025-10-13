@@ -1,34 +1,29 @@
 import {Component, computed, HostListener, inject, signal} from '@angular/core';
 import { FormsModule } from "@angular/forms";
 import { Game } from "../../../shared/model/paper-betting/Game";
-import { BetTypes } from "../../../shared/model/enums/BetTypes";
 import { SportType } from "../../../shared/model/SportType";
-import {BetSettlementService, PagedResponse} from "../../../shared/services/betSettlement.service";
 import {firstValueFrom, of, Subscription} from "rxjs";
-import {EventStatus} from "../../../shared/model/enums/EventStatus";
 import {catchError, retry, tap, timeout} from "rxjs/operators";
 import {SportDetail} from "../../../shared/model/SportDetail";
 import {PaginationComponent} from "../../../shared/components/pagination/pagination.component";
 import {PredictionCardComponent} from "./prediction-card/prediction-card.component";
 import {ToastrService} from "ngx-toastr";
-import {DecimalPipe} from "@angular/common";
-import {GameCardComponent} from "../../paper-betting/home/game-card/game-card.component";
+import {PredictionsService} from "../../../shared/services/predictions.service";
+import {PagedResponse} from "../../../shared/model/PagedResponse";
 
 @Component({
-    selector: 'app-prediction',
+  selector: 'app-prediction',
   imports: [
     FormsModule,
     PaginationComponent,
-    DecimalPipe,
-    GameCardComponent,
     PredictionCardComponent,
   ],
-    templateUrl: './prediction.component.html',
-    styleUrl: './prediction.component.scss'
+  templateUrl: './prediction.component.html',
+  styleUrl: './prediction.component.scss'
 })
 export class PredictionComponent {
-  private readonly betSettlement = inject(BetSettlementService);
   private readonly toastr = inject(ToastrService);
+  private readonly predictionService = inject(PredictionsService);
 
   // Constants
   private readonly MAX_RETRIES = 2;
@@ -51,10 +46,7 @@ export class PredictionComponent {
   protected readonly totalElements = signal<number>(0);
 
   // Service state - COMPUTED SIGNALS
-  protected readonly account = computed(() => this.betSettlement.account());
-  protected readonly balance = computed(() => this.betSettlement.balance());
-  protected readonly credit = computed(() => this.betSettlement.credit());
-  protected readonly isWebSocketConnected = computed(() => this.betSettlement.isWebSocketActive());
+  protected readonly isWebSocketConnected = computed(() => this.predictionService.isWebSocketActive());
 
   // Computed
   protected readonly displayedGames = computed(() => this.currentPageGames());
@@ -75,14 +67,12 @@ export class PredictionComponent {
     await this.waitForUser();
     await this.loadGames();
 
-    // Show WebSocket connection status
+    // Show WebSocket connection status (will be false for predictions)
     this.checkWebSocketConnection();
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
-    // Note: Don't disconnect WebSocket here as the service is singleton
-    // It should stay connected for the app lifetime
   }
 
   @HostListener('window:scroll')
@@ -146,15 +136,12 @@ export class PredictionComponent {
   private checkWebSocketConnection(): void {
     setTimeout(() => {
       if (!this.isWebSocketConnected()) {
-        this.toastr.warning(
-            'Real-time updates may be delayed',
-            'Connection Issue',
-            { timeOut: 5000 }
-        );
+        // For predictions, this will always be false - that's expected
+        console.log('Predictions service does not use WebSocket (this is normal)');
       } else {
         console.log('WebSocket connected successfully');
       }
-    }, 2000); // Give WebSocket 2 seconds to connect
+    }, 2000);
   }
 
   // ================================
@@ -162,8 +149,8 @@ export class PredictionComponent {
   // ================================
 
   private setupGameUpdateSubscription(): void {
-    const gameUpdateSub = this.betSettlement.gameUpdate$.subscribe(update => {
-      console.log('Received game update:', update);
+    const gameUpdateSub = this.predictionService.gameUpdate$.subscribe(update => {
+      console.log(`Game update received for gameId: ${update.gameId}`);
 
       // Update the current page games
       const currentGames = this.currentPageGames();
@@ -171,91 +158,36 @@ export class PredictionComponent {
 
       if (gameIndex !== -1) {
         // Get the updated game from the service's allGames
-        const allGames = this.betSettlement.allGames();
+        const allGames = this.predictionService.allGames();
         const updatedGame = allGames.find(g => g.id === update.gameId);
 
         if (updatedGame) {
-          // CRITICAL: Create a completely new array with a new game object reference
-          // This ensures Angular detects the change
+          // Create a new array with the updated game
           const newGames = currentGames.map((game, index) =>
               index === gameIndex ? { ...updatedGame } : game
           );
 
           this.currentPageGames.set(newGames);
-
-          console.log(`Updated game ${update.gameId} in currentPageGames`, updatedGame.betSettlement);
-
-          // Show appropriate toast notification based on bet status
-          if (updatedGame.betSettlement) {
-            this.showBetSettlementNotification(updatedGame);
-          }
+          console.log(`Updated game ${update.gameId} in currentPageGa`)
         }
       } else {
-        console.log(`Game ${update.gameId} not found in current page, might be on different page`);
-      }
-
-      // If a bet record is included, it's a new bet placement
-      if (update.betRecord) {
-        this.toastr.success(
-            `Bet confirmed: ${update.betRecord.wagerAmount} on ${update.betRecord.selectedTeam}`,
-            'Bet Placed'
-        );
+        console.log(`Game ${update.gameId} not found on current page`);
       }
     });
 
     this.subscriptions.add(gameUpdateSub);
   }
 
-  private showBetSettlementNotification(game: Game): void {
-    const settlement = game.betSettlement;
-    if (!settlement) return;
-
+  private showPredictionNotification(game: Game): void {
     const matchup = `${game.homeTeam.abbreviation} vs ${game.awayTeam.abbreviation}`;
-
-    switch (settlement.status) {
-      case EventStatus.WIN:
-        this.toastr.success(
-            `Congrats! Your bet on ${matchup} won!`,
-            'Bet Won',
-            {
-              timeOut: 7000,
-              progressBar: true,
-              closeButton: true
-            }
-        );
-        break;
-
-      case EventStatus.LOSS:
-        this.toastr.info(
-            `Your bet on ${matchup} didn't win this time`,
-            'Bet Settled',
-            {
-              timeOut: 5000,
-              progressBar: true
-            }
-        );
-        break;
-
-      case EventStatus.PUSH:
-        this.toastr.info(
-            `Your bet on ${matchup} was a push - wager refunded`,
-            'Bet Push',
-            {
-              timeOut: 5000
-            }
-        );
-        break;
-
-      case EventStatus.CANCELLED:
-        this.toastr.warning(
-            `Your bet on ${matchup} was cancelled - wager refunded`,
-            'Bet Cancelled',
-            {
-              timeOut: 5000
-            }
-        );
-        break;
-    }
+    this.toastr.success(
+        `Prediction submitted for ${matchup}`,
+        'Prediction Saved',
+        {
+          timeOut: 3000,
+          progressBar: true
+        }
+    );
   }
 
   // ================================
@@ -266,18 +198,18 @@ export class PredictionComponent {
     const maxRetries = 3;
     let retryCount = 0;
 
-    while (!this.betSettlement.currentUserId() && retryCount < maxRetries) {
+    while (!this.predictionService.currentUserId() && retryCount < maxRetries) {
       await new Promise(resolve => setTimeout(resolve, 1000));
       retryCount++;
     }
 
-    if (!this.betSettlement.currentUserId()) {
+    if (!this.predictionService.currentUserId()) {
       throw new Error('Failed to authenticate user');
     }
   }
 
   private async loadGames(): Promise<void> {
-    const userId = this.betSettlement.currentUserId();
+    const userId = this.predictionService.currentUserId();
     if (this.isLoading() || !userId) return;
 
     try {
@@ -287,7 +219,7 @@ export class PredictionComponent {
       const sport = this.selectedSport();
 
       const response = await firstValueFrom(
-          this.betSettlement.getUpcomingGamesPaginated(userId, sport, pageIndex, this.pageSize())
+          this.predictionService.getUpcomingGamesPaginated(userId, sport, pageIndex, this.pageSize())
               .pipe(
                   timeout(this.TIMEOUT_MS),
                   retry({
@@ -304,7 +236,6 @@ export class PredictionComponent {
       );
 
       this.updateGameState(response);
-      this.syncGamesToService(response.content);
 
       if (response.totalElements === 0) {
         this.toastr.info(`No ${SportType[sport]} games available at the moment`, 'No Games');
@@ -316,33 +247,6 @@ export class PredictionComponent {
     } finally {
       this.setLoadingState(false);
     }
-  }
-
-  /**
-   * Sync loaded games to the service's allGames signal
-   */
-  private syncGamesToService(games: Game[]): void {
-    if (games.length === 0) return;
-
-    const currentAllGames = this.betSettlement.allGames();
-    const updatedGames = [...currentAllGames];
-
-    games.forEach(newGame => {
-      const existingIndex = updatedGames.findIndex(g => g.id === newGame.id);
-      if (existingIndex !== -1) {
-        // Preserve bet information if it exists in the current game
-        const existingGame = updatedGames[existingIndex];
-        if (existingGame.betSettlement && !newGame.betSettlement) {
-          newGame.betSettlement = existingGame.betSettlement;
-        }
-        updatedGames[existingIndex] = newGame;
-      } else {
-        updatedGames.push(newGame);
-      }
-    });
-
-    this.betSettlement.allGames.set(updatedGames);
-    console.log(`Synced ${games.length} games to service`);
   }
 
   // ================================

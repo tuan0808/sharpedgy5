@@ -3,15 +3,15 @@ import {SportType} from "./SportType";
 import {EventStatus} from "./enums/EventStatus";
 
 export class Prediction {
+    message : string
     gameId : number
+    userId : string
+    betStatus : EventStatus
+    creationDate: Date;
+    sport : SportType
     betType : BetTypes
     selectedTeam : string
-    confidence : number
-    note : string
-    sport : SportType
     gameStart : Date
-    status : EventStatus
     wagerValue : number
-    creationDate: Date;
 
 }

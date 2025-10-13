@@ -7,5 +7,5 @@ export  class BetSettlement {
     wagerValue: number
     wagerAmount: number
     status : EventStatus
-    message : String = ''
+    message : string = ''
 }

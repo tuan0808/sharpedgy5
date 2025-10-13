@@ -11,6 +11,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     console.log(`🔍 INTERCEPTOR START: ${req.method} ${req.url}`);
     const authService = inject(AuthService);
 
+
+    console.log('📤 POST BODY:', JSON.stringify(req.body, null, 2));
+
+    if ((req.method === 'POST' || req.method === 'PUT') && req.body) {
+    }
+
+    console.log(JSON.stringify(req.body))
     if (req.url.endsWith('/favicon.ico')) {
         console.log(`🔍 Skipping favicon request`);
         return next(req);
