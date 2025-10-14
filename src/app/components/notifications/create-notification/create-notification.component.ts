@@ -1,26 +1,18 @@
-import {Component, Inject, PLATFORM_ID} from '@angular/core';
-import {isPlatformBrowser} from "@angular/common";
-import {ActivatedRoute, Router} from "@angular/router";
-import {FormsModule} from "@angular/forms";
+import { Component, inject, Inject, PLATFORM_ID, signal, computed, DestroyRef } from '@angular/core';
+import { isPlatformBrowser } from "@angular/common";
+import { ActivatedRoute, Router } from "@angular/router";
+import { FormsModule } from "@angular/forms";
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {GameService} from "../../../shared/services/game.service";
+import {SportType} from "../../../shared/model/SportType";
+import {Game} from "../../../shared/model/paper-betting/Game";
+
 export class BreakpointState {
   isMobile: boolean = false;
   isTablet: boolean = false;
   isDesktop: boolean = true;
   screenWidth: number = 1920;
   orientation: 'portrait' | 'landscape' = 'landscape';
-}
-
-export class NotificationGame {
-  id: string;
-  sportType : string;
-  homeTeam: string;
-  awayTeam: string;
-  homeScore: string;
-  awayScore: string;
-  scheduledTime: string;
-  homeRecord: string;
-  awayRecord: string;
-  status: string;
 }
 
 export enum EventStatus {
@@ -33,6 +25,19 @@ export enum EventStatus {
   SUSPENDED = 'suspended',
   RESUMED = 'resumed',
   COMPLETED = 'completed'
+}
+
+export interface NotificationGame {
+  id: string;
+  sportType: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: string;
+  awayScore: string;
+  scheduledTime: string;
+  homeRecord: string;
+  awayRecord: string;
+  status: EventStatus;
 }
 
 interface PointSpreadPreferences {
@@ -79,18 +84,33 @@ interface GameStartEndPreferences {
   finalScoreDelay: string | null;
 }
 
-
-
 @Component({
-    selector: 'app-create-notification',
-    imports: [
-        FormsModule
-    ],
-    templateUrl: './create-notification.component.html',
-    styleUrl: './create-notification.component.scss'
+  selector: 'app-create-notification',
+  imports: [
+    FormsModule
+  ],
+  templateUrl: './create-notification.component.html',
+  styleUrl: './create-notification.component.scss'
 })
 export class CreateNotificationComponent {
-  breakpoint: BreakpointState = {
+  private readonly gameService = inject(GameService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
+
+  // Signal-based state management (Angular 19 best practice)
+  readonly upcomingGames = signal<NotificationGame[]>([]);
+  readonly activeGames = signal<NotificationGame[]>([]);
+  readonly isLoadingUpcoming = signal<boolean>(false);
+  readonly isLoadingActive = signal<boolean>(false);
+  readonly errorMessage = signal<string | null>(null);
+
+  // Computed signal for checking if any data is loading
+  readonly isLoading = computed(() =>
+      this.isLoadingUpcoming() || this.isLoadingActive()
+  );
+
+   breakpoint: BreakpointState = {
     isMobile: false,
     isTablet: false,
     isDesktop: true,
@@ -101,21 +121,6 @@ export class CreateNotificationComponent {
   // Step management
   currentStep = 1;
   totalSteps = 2;
-
-  // Data
-  upcomingGames: NotificationGame[] = [
-    { id: 'bal-cle', sportType: 'MLB', homeTeam: 'CLE', awayTeam: 'BAL', homeScore: '', awayScore: '', scheduledTime: '6:40 PM ET', homeRecord: '40-50', awayRecord: '44-55', status: EventStatus.UPCOMING },
-    { id: 'det-pit', sportType: 'MLB', homeTeam: 'PIT', awayTeam: 'DET', homeScore: '', awayScore: '', scheduledTime: '6:40 PM ET', homeRecord: '40-61', awayRecord: '50-41', status: EventStatus.UPCOMING },
-    { id: 'sd-mia', sportType: 'MLB', homeTeam: 'MIA', awayTeam: 'SD', homeScore: '', awayScore: '', scheduledTime: '6:40 PM ET', homeRecord: '45-53', awayRecord: '55-45', status: EventStatus.UPCOMING },
-    { id: 'bos-phi', sportType: 'MLB', homeTeam: 'PHI', awayTeam: 'BOS', homeScore: '', awayScore: '', scheduledTime: '6:45 PM ET', homeRecord: '57-43', awayRecord: '54-48', status: EventStatus.UPCOMING },
-    { id: 'cin-wsh', sportType: 'MLB', homeTeam: 'WSH', awayTeam: 'CIN', homeScore: '', awayScore: '', scheduledTime: '6:46 PM ET', homeRecord: '40-60', awayRecord: '52-49', status: EventStatus.UPCOMING },
-    { id: 'chw-tb', sportType: 'MLB', homeTeam: 'TB', awayTeam: 'CHW', homeScore: '', awayScore: '', scheduledTime: '7:05 PM ET', homeRecord: '52-49', awayRecord: '35-65', status: EventStatus.UPCOMING }
-  ];
-
-  activeGames: NotificationGame[] = [
-    { id: 'lal-gsw-live', sportType: 'NBA', homeTeam: 'GSW', awayTeam: 'LAL', homeScore: '89', awayScore: '92', scheduledTime: 'Q3 8:24', homeRecord: '35-47', awayRecord: '42-40', status: EventStatus.LIVE },
-    { id: 'bos-mia-live', sportType: 'NBA', homeTeam: 'MIA', awayTeam: 'BOS', homeScore: '76', awayScore: '81', scheduledTime: 'Q3 5:12', homeRecord: '44-38', awayRecord: '57-25', status: EventStatus.LIVE }
-  ];
 
   // Form mode and state
   mode: 'create' | 'edit' = 'create';
@@ -138,16 +143,18 @@ export class CreateNotificationComponent {
     'Score Update',
     'Moneyline Odds',
     'Over/Under',
-    'ScheduledGame Start/End'
+    'Game Start/End'
   ];
 
   darkMode = false;
 
-  constructor(
-      private router: Router,
-      private route: ActivatedRoute,
-      @Inject(PLATFORM_ID) private platformId: Object
-  ) {
+  // Configuration for backend calls
+  private readonly userId = 'current-user-id'; // TODO: Get from auth service
+  private readonly defaultLeague = SportType.ALL;
+  private readonly defaultPage = 0;
+  private readonly defaultResultsPerPage = 50;
+
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     // Initialize typeSpecificPreferences based on default notification type
     this.typeSpecificPreferences = this.getDefaultPreferences('Point Spread Diff');
   }
@@ -157,35 +164,163 @@ export class CreateNotificationComponent {
       this.detectDevice();
     }
     this.initializeFromRoute();
+    this.loadGames();
+  }
+
+  /**
+   * Load games from backend using Angular 19 patterns
+   */
+  private loadGames(): void {
+    this.loadUpcomingGames();
+    this.loadActiveGames();
+  }
+
+  /**
+   * Load upcoming games from backend
+   */
+  private loadUpcomingGames(): void {
+    this.isLoadingUpcoming.set(true);
+    this.errorMessage.set(null);
+
+    this.gameService.getUpcomingGamesPaginated(
+        this.userId,
+        this.defaultLeague,
+        this.defaultPage,
+        this.defaultResultsPerPage
+    )
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (response) => {
+            const games = response.content.map(game => this.mapGameToNotificationGame(game, EventStatus.UPCOMING));
+            this.upcomingGames.set(games);
+            this.isLoadingUpcoming.set(false);
+          },
+          error: (error) => {
+            console.error('Error loading upcoming games:', error);
+            this.errorMessage.set('Failed to load upcoming games. Please try again.');
+            this.isLoadingUpcoming.set(false);
+            // Set empty array on error
+            this.upcomingGames.set([]);
+          }
+        });
+  }
+
+  /**
+   * Load active/live games from backend
+   */
+  private loadActiveGames(): void {
+    this.isLoadingActive.set(true);
+
+    this.gameService.getLiveGamesPaginated(
+        this.userId,
+        this.defaultLeague,
+        this.defaultPage,
+        this.defaultResultsPerPage
+    )
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (response) => {
+            const games = response.content.map(game => this.mapGameToNotificationGame(game, EventStatus.LIVE));
+            this.activeGames.set(games);
+            this.isLoadingActive.set(false);
+          },
+          error: (error) => {
+            console.error('Error loading active games:', error);
+            this.isLoadingActive.set(false);
+            // Set empty array on error
+            this.activeGames.set([]);
+          }
+        });
+  }
+
+  /**
+   * Map backend Game model to NotificationGame
+   */
+  private mapGameToNotificationGame(game: Game, defaultStatus: EventStatus): NotificationGame {
+    return {
+      id: game.id?.toString() || '',
+      sportType: game.sportType || 'N/A',
+      homeTeam: game.homeTeamAbbr || game.homeTeam || 'HOME',
+      awayTeam: game.awayTeamAbbr || game.awayTeam || 'AWAY',
+      homeScore: game.homeScore?.toString() || '',
+      awayScore: game.awayScore?.toString() || '',
+      scheduledTime: this.formatGameTime(game.commenceTime),
+      homeRecord: game.homeRecord || '',
+      awayRecord: game.awayRecord || '',
+      status: this.mapGameStatus(game) || defaultStatus
+    };
+  }
+
+  /**
+   * Map backend game status to EventStatus
+   */
+  private mapGameStatus(game: Game): EventStatus | undefined {
+    // Adjust based on your Game model's status field
+    if (game.completed) return EventStatus.COMPLETED;
+    if (game.inProgress) return EventStatus.LIVE;
+    if (game.upcoming) return EventStatus.UPCOMING;
+    return undefined;
+  }
+
+  /**
+   * Format game commence time for display
+   */
+  private formatGameTime(commenceTime?: string | Date): string {
+    if (!commenceTime) return 'TBD';
+
+    const date = typeof commenceTime === 'string' ? new Date(commenceTime) : commenceTime;
+
+    if (isNaN(date.getTime())) return 'TBD';
+
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    const displayMinutes = minutes.toString().padStart(2, '0');
+
+    return `${displayHours}:${displayMinutes} ${ampm} ET`;
   }
 
   private initializeFromRoute(): void {
-    this.route.queryParams.subscribe(params => {
-      if (params['edit'] && params['id']) {
-        this.mode = 'edit';
-        this.editingNotificationId = parseInt(params['id']);
-        this.loadExistingNotification(this.editingNotificationId);
-      } else if (params['gameId']) {
-        this.mode = 'create';
-        this.preselectedGameId = params['gameId'];
-        this.preselectGame(params['gameId']);
-      } else {
-        this.mode = 'create';
-        this.currentStep = 1;
-      }
-    });
+    this.route.queryParams
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(params => {
+          if (params['edit'] && params['id']) {
+            this.mode = 'edit';
+            this.editingNotificationId = parseInt(params['id']);
+            this.loadExistingNotification(this.editingNotificationId);
+          } else if (params['gameId']) {
+            this.mode = 'create';
+            this.preselectedGameId = params['gameId'];
+            this.preselectGame(params['gameId']);
+          } else {
+            this.mode = 'create';
+            this.currentStep = 1;
+          }
+        });
   }
 
   private preselectGame(gameId: string): void {
-    const game = [...this.upcomingGames, ...this.activeGames].find(g => g.id === gameId);
-    if (game) {
-      this.selectedGames = [game];
-      this.currentStep = 2;
-      this.activeTab = game.status === EventStatus.LIVE ? 'live' : 'upcoming';
-    }
+    // Wait for games to load before preselecting
+    const checkGames = () => {
+      const allGames = [...this.upcomingGames(), ...this.activeGames()];
+      const game = allGames.find(g => g.id === gameId);
+
+      if (game) {
+        this.selectedGames = [game];
+        this.currentStep = 2;
+        this.activeTab = game.status === EventStatus.LIVE ? 'live' : 'upcoming';
+      } else if (this.isLoading()) {
+        // Games are still loading, check again after a short delay
+        setTimeout(checkGames, 100);
+      }
+    };
+
+    checkGames();
   }
 
   private loadExistingNotification(notificationId: number): void {
+    // TODO: Implement loading from actual backend service
     // Simulate loading from a service
     const existingNotifications = [
       {
@@ -206,7 +341,7 @@ export class CreateNotificationComponent {
       this.selectedNotificationType = notification.type;
       this.typeSpecificPreferences = this.getDefaultPreferences(notification.type);
       Object.assign(this.typeSpecificPreferences, notification.preferences);
-      const game = [...this.upcomingGames, ...this.activeGames].find(g => g.id === notification.gameId);
+      const game = [...this.upcomingGames(), ...this.activeGames()].find(g => g.id === notification.gameId);
       if (game) {
         this.selectedGames = [game];
       }
@@ -254,7 +389,7 @@ export class CreateNotificationComponent {
         return { threshold: 15.0, trackFavoriteShift: true, trackUnderdogShift: true, minimumOddsValue: 100.0 };
       case 'Over/Under':
         return { threshold: 1.5, alertOnIncrease: true, alertOnDecrease: true };
-      case 'ScheduledGame Start/End':
+      case 'Game Start/End':
         return { gameStart: true, gameEnd: true, includeStats: false, preGameReminder: null, finalScoreDelay: null };
       default:
         return { threshold: 2.5, alertOnIncrease: true, alertOnDecrease: true, minimumGameTime: '30_MINUTES_BEFORE' };
@@ -299,7 +434,7 @@ export class CreateNotificationComponent {
       const game = this.selectedGames[0];
       return game ? `Create Notification for ${game.awayTeam} @ ${game.homeTeam}` : 'Create Notification';
     }
-    return 'Create ScheduledGame Notifications';
+    return 'Create Game Notifications';
   }
 
   getPageSubtitle(): string {
@@ -322,7 +457,7 @@ export class CreateNotificationComponent {
     return this.currentStep === 2 || this.preselectedGameId != null || this.mode === 'edit';
   }
 
-  // ScheduledGame selection methods
+  // Game selection methods
   isGameSelected(gameId: string): boolean {
     return this.selectedGames.some(game => game.id === gameId);
   }
@@ -356,6 +491,8 @@ export class CreateNotificationComponent {
       typeSpecificSettings: this.typeSpecificPreferences
     });
 
+    // TODO: Call backend service to create notifications
+
     const message = `${this.selectedGames.length} notification${this.selectedGames.length !== 1 ? 's' : ''} created successfully!`;
     this.navigateBackWithMessage(message);
   }
@@ -368,6 +505,8 @@ export class CreateNotificationComponent {
       commonSettings: this.notificationSettings,
       typeSpecificSettings: this.typeSpecificPreferences
     });
+
+    // TODO: Call backend service to update notification
 
     const message = 'Notification updated successfully!';
     this.navigateBackWithMessage(message);
@@ -392,5 +531,12 @@ export class CreateNotificationComponent {
       return 'env(safe-area-inset-bottom, 0px)';
     }
     return '0px';
+  }
+
+  /**
+   * Refresh games from backend
+   */
+  refreshGames(): void {
+    this.loadGames();
   }
 }

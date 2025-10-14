@@ -1,362 +1,524 @@
-<div class="container">
-    <header class="header">
-        <div class="header-content">
-            <div class="header-left">
+<div class="create-notification-page" [class.mobile]="breakpoint.isMobile">
+    <!-- Header -->
+    <header class="page-header">
+        <div class="header-container">
+            <div class="header-content">
                 @if (!breakpoint.isMobile) {
-                    <a href="#" (click)="goBack()">Back</a>
+                    <button class="back-button" (click)="goBack()">
+                        <i class="icon-arrow-left"></i>
+                        <span>Back</span>
+                    </button>
                 }
-                <div class="header-title">
-                    <h1>{{ getPageTitle() }}</h1>
-                    <p>{{ getPageSubtitle() }}</p>
+                <div class="header-center">
+                    <h1 class="page-title">{{ getPageTitle() }}</h1>
+                    <p class="page-subtitle">{{ getPageSubtitle() }}</p>
                 </div>
+                @if (breakpoint.isMobile) {
+                    <button class="cancel-button-mobile" (click)="cancel()">Cancel</button>
+                }
             </div>
-            @if (breakpoint.isMobile) {
-                <a href="#" (click)="cancel()">Cancel</a>
+            @if (!preselectedGameId && mode !== 'edit') {
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" [style.width.%]="(currentStep / totalSteps) * 100"></div>
+                    </div>
+                </div>
             }
         </div>
     </header>
 
-    <main class="main-content">
-        <div class="content-wrapper">
-            @if (shouldShowGameSelection()) {
-                <section class="game-selection">
-                    <h2>Select Games to Monitor</h2>
-                    <p>Choose which games you want to create notifications for. You can select multiple games.</p>
-                    <div class="tabs">
-                        <button [class.active]="activeTab === 'upcoming'" (click)="activeTab = 'upcoming'">
-                            @if (breakpoint.isMobile) {
-                                Upcoming ({{ upcomingGames.length }})
-                            } @else {
-                                Upcoming Games
-                            }
-                        </button>
-                        <button [class.active]="activeTab === 'live'" (click)="activeTab = 'live'">
-                            @if (breakpoint.isMobile) {
-                                Live ({{ activeGames.length }})
-                            } @else {
-                                Live Games ({{ activeGames.length }})
-                            }
-                        </button>
-                    </div>
-                    <div class="game-list">
-                        @for (game of (activeTab === 'upcoming' ? upcomingGames : activeGames); track game.id) {
-                            <div class="game-item">
-                                <label>
-                                    @if (isGameSelected(game.id)) {
-                                        <input type="checkbox" checked (change)="toggleGameSelection(game)">
-                                    } @else {
-                                        <input type="checkbox" (change)="toggleGameSelection(game)">
-                                    }
-                                    <div class="game-info">
-                                        <p>{{ game.awayTeam }} &#64; {{ game.homeTeam }}</p>
-                                        <p>{{ game.scheduledTime }} {{ game.sportType }}</p>
-                                    </div>
-                                    @if (activeTab === 'live') {
-                                        <p>{{ game.awayScore }} - {{ game.homeScore }}</p>
-                                    }
-                                </label>
-                            </div>
-                        }
-                    </div>
-                    @if (selectedGames.length > 0) {
-                        <div class="selected-games">
-                            <p>{{ selectedGames.length }} game{{ selectedGames.length !== 1 ? 's' : '' }} selected:</p>
-                            <ul>
-                                @for (game of selectedGames; track game.id) {
-                                    <li>
-                                        <span>{{ game.awayTeam }} &#64; {{ game.homeTeam }}</span>
-                                        <button (click)="removeSelectedGame(game)">Remove</button>
-                                    </li>
-                                }
-                            </ul>
-                        </div>
-                    }
-                </section>
+    <!-- Main Content -->
+    <main class="page-content">
+        <div class="content-container">
+            <!-- Error Message -->
+            @if (errorMessage()) {
+                <div class="error-banner">
+                    <i class="icon-alert-circle"></i>
+                    <span>{{ errorMessage() }}</span>
+                    <button class="btn-retry" (click)="refreshGames()">Retry</button>
+                </div>
             }
 
-            @if (shouldShowSettings()) {
-                <section class="settings">
-                    <h2>Configure Notification Settings</h2>
-                    <p>These settings will be applied to all {{ selectedGames.length }} selected game{{ selectedGames.length !== 1 ? 's' : '' }}.</p>
-                    <div class="notification-types">
-                        <h3>Notification Type</h3>
-                        <ul>
-                            @for (type of notificationTypes; track type) {
-                                <li>
-                                    <label>
-                                        <input type="radio" [(ngModel)]="selectedNotificationType" (ngModelChange)="onNotificationTypeChange()" [value]="type">
-                                        {{ type }}
-                                        <span>
-                                            @switch (type) {
-                                                @case ('Point Spread Diff') {Alert when betting lines move significantly}
-                                                @case ('Betting Volume Spike') {Alert when unusual betting activity occurs}
-                                                @case ('Score Update') {Get real-time score notifications}
-                                                @case ('Moneyline Odds') {Alert when moneyline odds change}
-                                                @case ('Over/Under') {Alert when total points line moves}
-                                                @case ('Game Start/End') {Alert when games begin or end}
-                                            }
-                                        </span>
-                                    </label>
-                                </li>
+            <!-- Step 1: Game Selection -->
+            @if (shouldShowGameSelection()) {
+                <div class="step-content">
+                    <div class="step-header">
+                        <h2>Select Games to Monitor</h2>
+                        <p>Choose which games you want to create notifications for. You can select multiple games.</p>
+                    </div>
+
+                    <!-- Game Tabs -->
+                    <div class="game-tabs" [class.mobile]="breakpoint.isMobile">
+                        <button
+                                class="tab-button"
+                                [class.active]="activeTab === 'upcoming'"
+                                (click)="activeTab = 'upcoming'">
+                            @if (breakpoint.isMobile) {
+                                <span>Upcoming</span>
+                                <span class="tab-count">{{ upcomingGames().length }}</span>
+                            } @else {
+                                <span>Upcoming Games</span>
                             }
-                        </ul>
+                        </button>
+                        <button
+                                class="tab-button"
+                                [class.active]="activeTab === 'live'"
+                                (click)="activeTab = 'live'">
+                            @if (breakpoint.isMobile) {
+                                <span>Live</span>
+                                <span class="tab-count">{{ activeGames().length }}</span>
+                            } @else {
+                                <span>Live Games</span>
+                                <span class="tab-count">{{ activeGames().length }}</span>
+                            }
+                        </button>
                     </div>
-                    @switch (selectedNotificationType) {
-                        @case ('Point Spread Diff') {
-                            <div class="notification-settings">
-                                <h3>Configure Notification Settings</h3>
-                                <ul>
-                                    <li>
-                                        <label>Threshold</label>
-                                        <input type="number" [(ngModel)]="$any(typeSpecificPreferences).threshold" step="0.5">
-                                    </li>
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" [(ngModel)]="$any(typeSpecificPreferences).alertOnIncrease">
-                                            Alert on Increase
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" [(ngModel)]="$any(typeSpecificPreferences).alertOnDecrease">
-                                            Alert on Decrease
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <label>Minimum ScheduledGame Time</label>
-                                        <select [(ngModel)]="$any(typeSpecificPreferences).minimumGameTime">
-                                            <option value="30_MINUTES_BEFORE">30 Minutes Before</option>
-                                            <option value="1_HOUR_BEFORE">1 Hour Before</option>
-                                            <option value="2_HOURS_BEFORE">2 Hours Before</option>
-                                        </select>
-                                    </li>
-                                </ul>
-                            </div>
-                        }
-                        @case ('Betting Volume Spike') {
-                            <div class="notification-settings">
-                                <h3>Configure Notification Settings</h3>
-                                <ul>
-                                    <li>
-                                        <label>Volume Threshold</label>
-                                        <input type="number" [(ngModel)]="$any(typeSpecificPreferences).volumeThreshold">
-                                    </li>
-                                    <li>
-                                        <label>Time Window</label>
-                                        <select [(ngModel)]="$any(typeSpecificPreferences).timeWindow">
-                                            <option value="5_MINUTES">5 Minutes</option>
-                                            <option value="15_MINUTES">15 Minutes</option>
-                                            <option value="30_MINUTES">30 Minutes</option>
-                                        </select>
-                                    </li>
-                                </ul>
-                            </div>
-                        }
-                        @case ('Score Update') {
-                            <div class="notification-settings">
-                                <h3>Configure Notification Settings</h3>
-                                <ul>
-                                    <li>
-                                        <label>Increment Threshold</label>
-                                        <input type="number" [(ngModel)]="$any(typeSpecificPreferences).incrementThreshold">
-                                        <p>Alert when score changes by at least this amount</p>
-                                    </li>
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" [(ngModel)]="$any(typeSpecificPreferences).realTimeUpdates">
-                                            Real-time Updates
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" [(ngModel)]="$any(typeSpecificPreferences).onlySignificantScores">
-                                            Only Significant Scores
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" [(ngModel)]="$any(typeSpecificPreferences).quarterEnd">
-                                            Quarter End
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" [(ngModel)]="$any(typeSpecificPreferences).halfTime">
-                                            Half Time
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" [(ngModel)]="$any(typeSpecificPreferences).periodEnd">
-                                            Period End
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" [(ngModel)]="$any(typeSpecificPreferences).overtime">
-                                            Overtime
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" [(ngModel)]="$any(typeSpecificPreferences).twoMinuteWarning">
-                                            Two Minute Warning
-                                        </label>
-                                    </li>
-                                </ul>
-                            </div>
-                        }
-                        @case ('Moneyline Odds') {
-                            <div class="notification-settings">
-                                <h3>Configure Notification Settings</h3>
-                                <ul>
-                                    <li>
-                                        <label>Threshold</label>
-                                        <input type="number" [(ngModel)]="$any(typeSpecificPreferences).threshold" step="5">
-                                    </li>
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" [(ngModel)]="$any(typeSpecificPreferences).trackFavoriteShift">
-                                            Track Favorite Shift
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" [(ngModel)]="$any(typeSpecificPreferences).trackUnderdogShift">
-                                            Track Underdog Shift
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <label>Minimum Odds Value</label>
-                                        <input type="number" [(ngModel)]="$any(typeSpecificPreferences).minimumOddsValue" step="10">
-                                    </li>
-                                </ul>
-                            </div>
-                        }
-                        @case ('Over/Under') {
-                            <div class="notification-settings">
-                                <h3>Configure Notification Settings</h3>
-                                <ul>
-                                    <li>
-                                        <label>Threshold</label>
-                                        <input type="number" [(ngModel)]="$any(typeSpecificPreferences).threshold" step="0.5">
-                                    </li>
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" [(ngModel)]="$any(typeSpecificPreferences).alertOnIncrease">
-                                            Alert on Increase
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" [(ngModel)]="$any(typeSpecificPreferences).alertOnDecrease">
-                                            Alert on Decrease
-                                        </label>
-                                    </li>
-                                </ul>
-                            </div>
-                        }
-                        @case ('Game Start/End') {
-                            <div class="notification-settings">
-                                <h3>Configure Notification Settings</h3>
-                                <ul>
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" [(ngModel)]="$any(typeSpecificPreferences).gameStart">
-                                            Alert on ScheduledGame Start
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" [(ngModel)]="$any(typeSpecificPreferences).gameEnd">
-                                            Alert on ScheduledGame End
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" [(ngModel)]="$any(typeSpecificPreferences).includeStats">
-                                            Include Stats in Final Score
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <label>Pre-ScheduledGame Reminder</label>
-                                        <select [(ngModel)]="$any(typeSpecificPreferences).preGameReminder">
-                                            <option [value]="null">None</option>
-                                            <option value="15_MINUTES">15 Minutes Before</option>
-                                            <option value="30_MINUTES">30 Minutes Before</option>
-                                            <option value="1_HOUR">1 Hour Before</option>
-                                        </select>
-                                    </li>
-                                    <li>
-                                        <label>Final Score Delay</label>
-                                        <select [(ngModel)]="$any(typeSpecificPreferences).finalScoreDelay">
-                                            <option [value]="null">Immediate</option>
-                                            <option value="2_MINUTES">2 Minutes After</option>
-                                            <option value="5_MINUTES">5 Minutes After</option>
-                                        </select>
-                                    </li>
-                                </ul>
-                            </div>
-                        }
+
+                    <!-- Loading State -->
+                    @if (isLoading()) {
+                        <div class="loading-container">
+                            <div class="loading-spinner"></div>
+                            <p>Loading games...</p>
+                        </div>
                     }
-                    <div class="common-settings">
-                        <h3>Preferences</h3>
-                        <ul>
-                            <li>
-                                <label>
-                                    <input type="checkbox" [(ngModel)]="notificationSettings.gameHoursOnly">
-                                    Only notify during game hours
+
+                    <!-- Games Grid -->
+                    @if (!isLoading()) {
+                        <div class="games-grid" [class.mobile]="breakpoint.isMobile">
+                            @for (game of (activeTab === 'upcoming' ? upcomingGames() : activeGames()); track game.id) {
+                                <label class="game-option" [class.selected]="isGameSelected(game.id)">
+                                    <input
+                                            type="checkbox"
+                                            class="game-checkbox"
+                                            [checked]="isGameSelected(game.id)"
+                                            (change)="toggleGameSelection(game)">
+                                    <div class="game-card">
+                                        @if (isGameSelected(game.id)) {
+                                            <i class="selected-indicator icon-check-circle"></i>
+                                        }
+                                        <div class="game-matchup">
+                                            {{ game.awayTeam }} &#64; {{ game.homeTeam }}
+                                        </div>
+                                        <div class="game-details">
+                                            <span class="game-league">{{ game.sportType }}</span>
+                                            <span class="game-time">{{ game.scheduledTime }}</span>
+                                        </div>
+                                        @if (activeTab === 'live') {
+                                            <div class="live-score">
+                                                {{ game.awayScore }} - {{ game.homeScore }}
+                                            </div>
+                                        }
+                                    </div>
                                 </label>
-                            </li>
-                            <li>
-                                <label>
-                                    <input type="checkbox" [(ngModel)]="notificationSettings.enableImmediately">
-                                    Enable notifications immediately
-                                </label>
-                            </li>
-                            <li>
-                                <label>
-                                    <input type="checkbox" [(ngModel)]="notificationSettings.autoDisable">
-                                    Auto-disable after game ends
-                                </label>
-                            </li>
-                        </ul>
+                            } @empty {
+                                <div class="empty-state">
+                                    <i class="icon-calendar"></i>
+                                    <p>No {{ activeTab }} games available at the moment.</p>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <!-- Selection Summary -->
+                    @if (selectedGames.length > 0) {
+                        <div class="selection-summary">
+                            <h3>{{ selectedGames.length }} game{{ selectedGames.length !== 1 ? 's' : '' }} selected</h3>
+                            <div class="selected-games">
+                                @for (game of selectedGames; track game.id) {
+                                    <div class="selected-game-chip">
+                                        <span>{{ game.awayTeam }} &#64; {{ game.homeTeam }}</span>
+                                        <button class="remove-game" (click)="removeSelectedGame(game)" type="button">
+                                            <i class="icon-x"></i>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- Step 2: Settings Configuration -->
+            @if (shouldShowSettings()) {
+                <div class="step-content">
+                    <div class="step-header">
+                        <h2>Configure Notification Settings</h2>
+                        <p>
+                            @if (selectedGames.length > 1) {
+                                These settings will be applied to all {{ selectedGames.length }} selected games.
+                            } @else {
+                                Configure how you want to be notified about this game.
+                            }
+                        </p>
                     </div>
-                </section>
+
+                    <div class="settings-layout" [class.mobile]="breakpoint.isMobile">
+                        <!-- Notification Type Selection -->
+                        <div class="settings-section">
+                            <h3>Notification Type</h3>
+                            <div class="notification-types">
+                                @for (type of notificationTypes; track type) {
+                                    <label class="type-option" [class.selected]="selectedNotificationType === type">
+                                        <input
+                                                type="radio"
+                                                name="notificationType"
+                                                [(ngModel)]="selectedNotificationType"
+                                                (ngModelChange)="onNotificationTypeChange()"
+                                                [value]="type">
+                                        <div class="type-card">
+                                            <h4>{{ type }}</h4>
+                                            <p>
+                                                @switch (type) {
+                                                    @case ('Point Spread Diff') { Alert when betting lines move significantly }
+                                                    @case ('Betting Volume Spike') { Alert when unusual betting activity occurs }
+                                                    @case ('Score Update') { Get real-time score notifications }
+                                                    @case ('Moneyline Odds') { Alert when moneyline odds change }
+                                                    @case ('Over/Under') { Alert when total points line moves }
+                                                    @case ('Game Start/End') { Alert when games begin or end }
+                                                }
+                                            </p>
+                                        </div>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Type-Specific Settings -->
+                        <div class="settings-section">
+                            <h3>Notification Parameters</h3>
+
+                            @switch (selectedNotificationType) {
+                                @case ('Point Spread Diff') {
+                                    <div class="type-settings">
+                                        <div class="setting-group">
+                                            <label for="threshold">Movement Threshold</label>
+                                            <input
+                                                    type="number"
+                                                    id="threshold"
+                                                    class="form-input"
+                                                    [(ngModel)]="$any(typeSpecificPreferences).threshold"
+                                                    step="0.5"
+                                                    min="0">
+                                            <span class="input-hint">Points required to trigger alert</span>
+                                        </div>
+                                        <div class="toggle-settings">
+                                            <div class="toggle-group">
+                                                <input
+                                                        type="checkbox"
+                                                        id="alertIncrease"
+                                                        [(ngModel)]="$any(typeSpecificPreferences).alertOnIncrease">
+                                                <label for="alertIncrease">Alert on spread increase</label>
+                                            </div>
+                                            <div class="toggle-group">
+                                                <input
+                                                        type="checkbox"
+                                                        id="alertDecrease"
+                                                        [(ngModel)]="$any(typeSpecificPreferences).alertOnDecrease">
+                                                <label for="alertDecrease">Alert on spread decrease</label>
+                                            </div>
+                                        </div>
+                                        <div class="setting-group">
+                                            <label for="minGameTime">Minimum Game Time</label>
+                                            <select
+                                                    id="minGameTime"
+                                                    class="form-select"
+                                                    [(ngModel)]="$any(typeSpecificPreferences).minimumGameTime">
+                                                <option value="30_MINUTES_BEFORE">30 Minutes Before</option>
+                                                <option value="1_HOUR_BEFORE">1 Hour Before</option>
+                                                <option value="2_HOURS_BEFORE">2 Hours Before</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                }
+                                @case ('Betting Volume Spike') {
+                                    <div class="type-settings">
+                                        <div class="setting-group">
+                                            <label for="volumeThreshold">Volume Threshold (%)</label>
+                                            <input
+                                                    type="number"
+                                                    id="volumeThreshold"
+                                                    class="form-input"
+                                                    [(ngModel)]="$any(typeSpecificPreferences).volumeThreshold"
+                                                    min="0">
+                                            <span class="input-hint">Percentage increase to trigger alert</span>
+                                        </div>
+                                        <div class="setting-group">
+                                            <label for="timeWindow">Time Window</label>
+                                            <select
+                                                    id="timeWindow"
+                                                    class="form-select"
+                                                    [(ngModel)]="$any(typeSpecificPreferences).timeWindow">
+                                                <option value="5_MINUTES">5 Minutes</option>
+                                                <option value="15_MINUTES">15 Minutes</option>
+                                                <option value="30_MINUTES">30 Minutes</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                }
+                                @case ('Score Update') {
+                                    <div class="type-settings">
+                                        <div class="setting-group">
+                                            <label for="incrementThreshold">Score Change Threshold</label>
+                                            <input
+                                                    type="number"
+                                                    id="incrementThreshold"
+                                                    class="form-input"
+                                                    [(ngModel)]="$any(typeSpecificPreferences).incrementThreshold"
+                                                    min="1">
+                                            <span class="input-hint">Minimum score change to notify</span>
+                                        </div>
+                                        <div class="toggle-settings">
+                                            <div class="toggle-group">
+                                                <input
+                                                        type="checkbox"
+                                                        id="realTimeUpdates"
+                                                        [(ngModel)]="$any(typeSpecificPreferences).realTimeUpdates">
+                                                <label for="realTimeUpdates">Real-time updates</label>
+                                            </div>
+                                            <div class="toggle-group">
+                                                <input
+                                                        type="checkbox"
+                                                        id="onlySignificant"
+                                                        [(ngModel)]="$any(typeSpecificPreferences).onlySignificantScores">
+                                                <label for="onlySignificant">Only significant scores</label>
+                                            </div>
+                                            <div class="toggle-group">
+                                                <input
+                                                        type="checkbox"
+                                                        id="quarterEnd"
+                                                        [(ngModel)]="$any(typeSpecificPreferences).quarterEnd">
+                                                <label for="quarterEnd">Quarter end alerts</label>
+                                            </div>
+                                            <div class="toggle-group">
+                                                <input
+                                                        type="checkbox"
+                                                        id="halfTime"
+                                                        [(ngModel)]="$any(typeSpecificPreferences).halfTime">
+                                                <label for="halfTime">Half-time alerts</label>
+                                            </div>
+                                            <div class="toggle-group">
+                                                <input
+                                                        type="checkbox"
+                                                        id="periodEnd"
+                                                        [(ngModel)]="$any(typeSpecificPreferences).periodEnd">
+                                                <label for="periodEnd">Period end alerts</label>
+                                            </div>
+                                            <div class="toggle-group">
+                                                <input
+                                                        type="checkbox"
+                                                        id="overtime"
+                                                        [(ngModel)]="$any(typeSpecificPreferences).overtime">
+                                                <label for="overtime">Overtime alerts</label>
+                                            </div>
+                                            <div class="toggle-group">
+                                                <input
+                                                        type="checkbox"
+                                                        id="twoMinuteWarning"
+                                                        [(ngModel)]="$any(typeSpecificPreferences).twoMinuteWarning">
+                                                <label for="twoMinuteWarning">Two-minute warning</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                @case ('Moneyline Odds') {
+                                    <div class="type-settings">
+                                        <div class="setting-group">
+                                            <label for="oddsThreshold">Odds Movement Threshold</label>
+                                            <input
+                                                    type="number"
+                                                    id="oddsThreshold"
+                                                    class="form-input"
+                                                    [(ngModel)]="$any(typeSpecificPreferences).threshold"
+                                                    step="5"
+                                                    min="0">
+                                            <span class="input-hint">Odds change required to trigger alert</span>
+                                        </div>
+                                        <div class="toggle-settings">
+                                            <div class="toggle-group">
+                                                <input
+                                                        type="checkbox"
+                                                        id="trackFavorite"
+                                                        [(ngModel)]="$any(typeSpecificPreferences).trackFavoriteShift">
+                                                <label for="trackFavorite">Track favorite shifts</label>
+                                            </div>
+                                            <div class="toggle-group">
+                                                <input
+                                                        type="checkbox"
+                                                        id="trackUnderdog"
+                                                        [(ngModel)]="$any(typeSpecificPreferences).trackUnderdogShift">
+                                                <label for="trackUnderdog">Track underdog shifts</label>
+                                            </div>
+                                        </div>
+                                        <div class="setting-group">
+                                            <label for="minOddsValue">Minimum Odds Value</label>
+                                            <input
+                                                    type="number"
+                                                    id="minOddsValue"
+                                                    class="form-input"
+                                                    [(ngModel)]="$any(typeSpecificPreferences).minimumOddsValue"
+                                                    step="10"
+                                                    min="0">
+                                        </div>
+                                    </div>
+                                }
+                                @case ('Over/Under') {
+                                    <div class="type-settings">
+                                        <div class="setting-group">
+                                            <label for="ouThreshold">Line Movement Threshold</label>
+                                            <input
+                                                    type="number"
+                                                    id="ouThreshold"
+                                                    class="form-input"
+                                                    [(ngModel)]="$any(typeSpecificPreferences).threshold"
+                                                    step="0.5"
+                                                    min="0">
+                                            <span class="input-hint">Points required to trigger alert</span>
+                                        </div>
+                                        <div class="toggle-settings">
+                                            <div class="toggle-group">
+                                                <input
+                                                        type="checkbox"
+                                                        id="ouAlertIncrease"
+                                                        [(ngModel)]="$any(typeSpecificPreferences).alertOnIncrease">
+                                                <label for="ouAlertIncrease">Alert on line increase</label>
+                                            </div>
+                                            <div class="toggle-group">
+                                                <input
+                                                        type="checkbox"
+                                                        id="ouAlertDecrease"
+                                                        [(ngModel)]="$any(typeSpecificPreferences).alertOnDecrease">
+                                                <label for="ouAlertDecrease">Alert on line decrease</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                @case ('Game Start/End') {
+                                    <div class="type-settings">
+                                        <div class="toggle-settings">
+                                            <div class="toggle-group">
+                                                <input
+                                                        type="checkbox"
+                                                        id="gameStart"
+                                                        [(ngModel)]="$any(typeSpecificPreferences).gameStart">
+                                                <label for="gameStart">Alert on game start</label>
+                                            </div>
+                                            <div class="toggle-group">
+                                                <input
+                                                        type="checkbox"
+                                                        id="gameEnd"
+                                                        [(ngModel)]="$any(typeSpecificPreferences).gameEnd">
+                                                <label for="gameEnd">Alert on game end</label>
+                                            </div>
+                                            <div class="toggle-group">
+                                                <input
+                                                        type="checkbox"
+                                                        id="includeStats"
+                                                        [(ngModel)]="$any(typeSpecificPreferences).includeStats">
+                                                <label for="includeStats">Include stats in final score</label>
+                                            </div>
+                                        </div>
+                                        <div class="setting-group">
+                                            <label for="preGameReminder">Pre-Game Reminder</label>
+                                            <select
+                                                    id="preGameReminder"
+                                                    class="form-select"
+                                                    [(ngModel)]="$any(typeSpecificPreferences).preGameReminder">
+                                                <option [value]="null">None</option>
+                                                <option value="15_MINUTES">15 Minutes Before</option>
+                                                <option value="30_MINUTES">30 Minutes Before</option>
+                                                <option value="1_HOUR">1 Hour Before</option>
+                                            </select>
+                                        </div>
+                                        <div class="setting-group">
+                                            <label for="finalScoreDelay">Final Score Delay</label>
+                                            <select
+                                                    id="finalScoreDelay"
+                                                    class="form-select"
+                                                    [(ngModel)]="$any(typeSpecificPreferences).finalScoreDelay">
+                                                <option [value]="null">Immediate</option>
+                                                <option value="2_MINUTES">2 Minutes After</option>
+                                                <option value="5_MINUTES">5 Minutes After</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                }
+                            }
+
+                            <!-- Common Settings -->
+                            <div class="common-settings">
+                                <h4>Additional Preferences</h4>
+                                <div class="toggle-settings">
+                                    <div class="toggle-group">
+                                        <input
+                                                type="checkbox"
+                                                id="gameHoursOnly"
+                                                [(ngModel)]="notificationSettings.gameHoursOnly">
+                                        <label for="gameHoursOnly">Only notify during game hours</label>
+                                    </div>
+                                    <div class="toggle-group">
+                                        <input
+                                                type="checkbox"
+                                                id="enableImmediately"
+                                                [(ngModel)]="notificationSettings.enableImmediately">
+                                        <label for="enableImmediately">Enable notifications immediately</label>
+                                    </div>
+                                    <div class="toggle-group">
+                                        <input
+                                                type="checkbox"
+                                                id="autoDisable"
+                                                [(ngModel)]="notificationSettings.autoDisable">
+                                        <label for="autoDisable">Auto-disable after game ends</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             }
         </div>
     </main>
 
-    <footer class="footer">
-        <div class="footer-content">
-            <p>
+    <!-- Footer -->
+    <footer class="page-footer">
+        <div class="footer-container">
+            <div class="footer-info">
                 @if (shouldShowGameSelection()) {
-                    Select games to create notifications for
+                    <span>Select games to create notifications for</span>
                 }
                 @if (shouldShowSettings()) {
                     @if (mode === 'edit') {
-                        Updating notification settings
+                        <span>Updating notification settings</span>
                     } @else {
-                        Creating notifications for {{ selectedGames.length }} game{{ selectedGames.length !== 1 ? 's' : '' }}
+                        <span>Creating notifications for {{ selectedGames.length }} game{{ selectedGames.length !== 1 ? 's' : '' }}</span>
                     }
                 }
-            </p>
-            <div class="footer-actions">
+            </div>
+            <div class="footer-actions" [class.mobile]="breakpoint.isMobile">
                 @if (currentStep > 1 && !preselectedGameId) {
-                    <button (click)="goBack()">Back</button>
+                    <button class="btn btn-outline" (click)="goBack()">
+                        <i class="icon-arrow-left"></i>
+                        <span>Back</span>
+                    </button>
                 }
                 @if (!breakpoint.isMobile) {
-                    <button (click)="cancel()">Cancel</button>
+                    <button class="btn btn-secondary" (click)="cancel()">Cancel</button>
                 }
                 @if (currentStep < totalSteps && !preselectedGameId) {
-                    <button (click)="nextStep()">Next</button>
+                    <button
+                            class="btn btn-primary"
+                            (click)="nextStep()"
+                            [disabled]="selectedGames.length === 0">
+                        <span>Next</span>
+                        <i class="icon-arrow-right"></i>
+                    </button>
                 } @else {
-                    <button (click)="createNotifications()">
+                    <button class="btn btn-primary" (click)="createNotifications()">
                         @if (mode === 'edit') {
-                            Update Notification
+                            <span>Update Notification</span>
                         } @else {
-                            Create Notifications
+                            <span>Create Notifications</span>
                         }
+                        <i class="icon-check"></i>
                     </button>
                 }
             </div>

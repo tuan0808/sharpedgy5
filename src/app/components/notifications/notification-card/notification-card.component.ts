@@ -1,11 +1,9 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {SportNotification} from "../../../shared/model/notifications/SportNotification";
-import {DatePipe} from "@angular/common";
 
 @Component({
     selector: 'app-notification-card',
     imports: [
-        DatePipe
     ],
     templateUrl: './notification-card.component.html',
     styleUrl: './notification-card.component.scss'
