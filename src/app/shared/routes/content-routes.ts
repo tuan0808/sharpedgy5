@@ -2,6 +2,7 @@
 import {authGuard} from "../guard/AuthGuard";
 import {adminGuard} from "../guard/admin.guard";
 import {StatusComponent} from "../../components/status/status.component";
+ import {NewsComponent} from "../../components/news/news.component";
 
 export const content: Routes = [
     // {
@@ -16,6 +17,14 @@ export const content: Routes = [
             breadcrumb: "Dashboard"
         },
         loadChildren: () => import('../../../app/components/dashboard/dashboard.routes').then(r => r.dashboard)
+    },
+    {
+        path: '',
+        pathMatch: 'full',
+        component: NewsComponent, // Changed from redirectTo to load StatusPageComponent
+        data: {
+            breadcrumb: "News"
+        }
     },
     {
         path: 'nfl',
