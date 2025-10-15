@@ -14,7 +14,7 @@ export class BaseService<T> {
     protected http = inject(HttpClient);
     protected destroyRef = inject(DestroyRef);
     private injector = inject(Injector); // Inject Injector
-    protected apiUrl = 'http://localhost:8080';
+    protected  apiUrl = 'http://localhost:9080';
 
     protected isLoading = signal<boolean>(false);
     protected errorMessage = signal<string | null>(null);

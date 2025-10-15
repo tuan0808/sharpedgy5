@@ -16,10 +16,11 @@ import { AsyncPipe, DatePipe, isPlatformBrowser, NgForOf, NgIf, NgSwitch, DOCUME
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from "@angular/router";
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NotificationService } from "../../../shared/services/notifications/notification.service";
+import { NotificationService } from "../../../shared/services/notification.service";
 import { UserIdentityService } from "../../../shared/services/user-identity.service";
 import { NotificationFilters } from "../../../shared/model/notifications/NotificationFilters";
 import { PaginationComponent } from "../../../shared/components/pagination/pagination.component";
+import {NotificationFormResult} from "../create-notification/create-notification.component";
 
 export class BreakpointState {
   isMobile: boolean = false;
@@ -30,14 +31,14 @@ export class BreakpointState {
 }
 
 @Component({
-    selector: 'app-notification-home',
-    imports: [
-        FormsModule,
-        DatePipe,
-        PaginationComponent,
-    ],
-    templateUrl: './notification-home.component.html',
-    styleUrl: './notification-home.component.scss'
+  selector: 'app-notification-home',
+  imports: [
+    FormsModule,
+    DatePipe,
+    PaginationComponent,
+  ],
+  templateUrl: './notification-home.component.html',
+  styleUrl: './notification-home.component.scss'
 })
 export class NotificationHomeComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
@@ -181,9 +182,26 @@ export class NotificationHomeComponent implements OnInit, OnDestroy {
     // Subscribe to route params for success messages
     this.route.queryParams
         .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe(params => {
+        .subscribe(async params => {
           if (params['message']) {
+            console.log('Success message detected, refreshing data...');
+
+            // Clear any filters that might hide new notifications
+            this.filters.set({ enabled: 'all', sport: 'all', type: 'all', league: 'all' });
+            this.searchTerm.set('');
+
+            // Show success message
             this.showToast(params['message'], 'success');
+
+            // Add a small delay to ensure backend has processed the creation
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Refresh data to show newly created notifications
+            await this.loadData(0);
+
+            console.log('Data refreshed, notifications count:', this.notifications().length);
+
+            // Clear query params from URL
             this.router.navigate([], {
               relativeTo: this.route,
               queryParams: {},
@@ -478,6 +496,12 @@ export class NotificationHomeComponent implements OnInit, OnDestroy {
     } else {
       return 'repeat(auto-fill, minmax(300px, 1fr))';
     }
+  }
+
+  onNotificationCreated(result: NotificationFormResult) {
+    console.log('Notification created:', result);
+    // Handle the result
+    this.router.navigate(['/notifications/home']);
   }
 
   getSafeAreaTop(): string {

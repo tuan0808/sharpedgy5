@@ -1,11 +1,31 @@
-import { Component, inject, Inject, PLATFORM_ID, signal, computed, DestroyRef } from '@angular/core';
+import {
+  Component,
+  inject,
+  Inject,
+  PLATFORM_ID,
+  signal,
+  computed,
+  DestroyRef,
+  EventEmitter,
+  Output
+} from '@angular/core';
 import { isPlatformBrowser } from "@angular/common";
 import { ActivatedRoute, Router } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import {GameService} from "../../../shared/services/game.service";
+import { forkJoin, map } from 'rxjs';
+import { Page } from "../../../shared/model/notifications/Page";
 import {SportType} from "../../../shared/model/SportType";
-import {Game} from "../../../shared/model/paper-betting/Game";
+import {NotificationService} from "../../../shared/services/notification.service";
+import {Game} from "../../../shared/model/notifications/Game";
+import { UserIdentityService } from "../../../shared/services/user-identity.service";
+import {PointSpreadPreferences} from "../../../shared/model/notifications/forms/PointSpreadPreferences";
+import {BettingVolumeSpikePreferences} from "../../../shared/model/notifications/forms/BettingVolumeSpikePreferences";
+import {ScoreUpdatePreferences} from "../../../shared/model/notifications/forms/ScoreUpdatePreferences";
+import { MoneyLinePreferences } from '../../../shared/model/notifications/forms/MoneyLinePreferences';
+import {OverUnderPreferences} from "../../../shared/model/notifications/forms/OverUnderPreferences";
+import {GameStartEndPreferences} from "../../../shared/model/notifications/forms/GameStartEndPreference";
+import {shouldWatchRoot} from "@angular-devkit/build-angular/src/utils/environment-options";
 
 export class BreakpointState {
   isMobile: boolean = false;
@@ -40,49 +60,14 @@ export interface NotificationGame {
   status: EventStatus;
 }
 
-interface PointSpreadPreferences {
-  threshold: number;
-  alertOnIncrease: boolean;
-  alertOnDecrease: boolean;
-  minimumGameTime: string;
+
+export interface NotificationFormResult {
+  games: NotificationGame[];
+  type: string;
+  settings: any;
+  preferences: any;
 }
 
-interface BettingVolumeSpikePreferences {
-  volumeThreshold: number;
-  timeWindow: string;
-}
-
-interface ScoreUpdatePreferences {
-  incrementThreshold: number;
-  realTimeUpdates: boolean;
-  onlySignificantScores: boolean;
-  quarterEnd: boolean;
-  halfTime: boolean;
-  periodEnd: boolean;
-  overtime: boolean;
-  twoMinuteWarning: boolean;
-}
-
-interface MoneyLinePreferences {
-  threshold: number;
-  trackFavoriteShift: boolean;
-  trackUnderdogShift: boolean;
-  minimumOddsValue: number;
-}
-
-interface OverUnderPreferences {
-  threshold: number;
-  alertOnIncrease: boolean;
-  alertOnDecrease: boolean;
-}
-
-interface GameStartEndPreferences {
-  gameStart: boolean;
-  gameEnd: boolean;
-  includeStats: boolean;
-  preGameReminder: string | null;
-  finalScoreDelay: string | null;
-}
 
 @Component({
   selector: 'app-create-notification',
@@ -93,10 +78,14 @@ interface GameStartEndPreferences {
   styleUrl: './create-notification.component.scss'
 })
 export class CreateNotificationComponent {
-  private readonly gameService = inject(GameService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly identityService = inject(UserIdentityService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+
+  @Output() notificationCreated = new EventEmitter<NotificationFormResult>();
+
 
   // Signal-based state management (Angular 19 best practice)
   readonly upcomingGames = signal<NotificationGame[]>([]);
@@ -110,7 +99,7 @@ export class CreateNotificationComponent {
       this.isLoadingUpcoming() || this.isLoadingActive()
   );
 
-   breakpoint: BreakpointState = {
+  breakpoint: BreakpointState = {
     isMobile: false,
     isTablet: false,
     isDesktop: true,
@@ -160,6 +149,7 @@ export class CreateNotificationComponent {
   }
 
   ngOnInit(): void {
+    console.log('ngOnInit called');
     if (isPlatformBrowser(this.platformId)) {
       this.detectDevice();
     }
@@ -171,66 +161,57 @@ export class CreateNotificationComponent {
    * Load games from backend using Angular 19 patterns
    */
   private loadGames(): void {
-    this.loadUpcomingGames();
-    this.loadActiveGames();
-  }
-
-  /**
-   * Load upcoming games from backend
-   */
-  private loadUpcomingGames(): void {
-    this.isLoadingUpcoming.set(true);
+    console.log('loadGames called');
     this.errorMessage.set(null);
-
-    this.gameService.getUpcomingGamesPaginated(
-        this.userId,
-        this.defaultLeague,
-        this.defaultPage,
-        this.defaultResultsPerPage
-    )
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: (response) => {
-            const games = response.content.map(game => this.mapGameToNotificationGame(game, EventStatus.UPCOMING));
-            this.upcomingGames.set(games);
-            this.isLoadingUpcoming.set(false);
-          },
-          error: (error) => {
-            console.error('Error loading upcoming games:', error);
-            this.errorMessage.set('Failed to load upcoming games. Please try again.');
-            this.isLoadingUpcoming.set(false);
-            // Set empty array on error
-            this.upcomingGames.set([]);
-          }
-        });
-  }
-
-  /**
-   * Load active/live games from backend
-   */
-  private loadActiveGames(): void {
+    this.isLoadingUpcoming.set(true);
     this.isLoadingActive.set(true);
 
-    this.gameService.getLiveGamesPaginated(
-        this.userId,
-        this.defaultLeague,
-        this.defaultPage,
-        this.defaultResultsPerPage
-    )
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: (response) => {
-            const games = response.content.map(game => this.mapGameToNotificationGame(game, EventStatus.LIVE));
-            this.activeGames.set(games);
-            this.isLoadingActive.set(false);
-          },
-          error: (error) => {
-            console.error('Error loading active games:', error);
-            this.isLoadingActive.set(false);
-            // Set empty array on error
-            this.activeGames.set([]);
-          }
-        });
+    const liveParams = { page: this.defaultPage, size: this.defaultResultsPerPage };
+    const upcomingParams = { page: this.defaultPage, size: this.defaultResultsPerPage };
+    console.log('Params prepared:', liveParams, upcomingParams);
+
+    const live$ = this.notificationService.getLiveGames(liveParams).pipe(
+        map((page: Page<Game>) => this.mapGamesToNotificationGames(page.content || [], EventStatus.LIVE))
+    );
+
+    const upcoming$ = this.notificationService.getUpcomingGames(upcomingParams).pipe(
+        map((page: Page<Game>) => this.mapGamesToNotificationGames(page.content || [], EventStatus.UPCOMING))
+    );
+
+    console.log('Observables created');
+
+    forkJoin({
+      live: live$,
+      upcoming: upcoming$
+    }).pipe(
+        takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (results) => {
+        console.log('forkJoin next:', results);
+        this.activeGames.set(results.live);
+        this.upcomingGames.set(results.upcoming);
+        this.isLoadingUpcoming.set(false);
+        this.isLoadingActive.set(false);
+      },
+      error: (error) => {
+        console.error('forkJoin error:', error);
+        this.errorMessage.set('Failed to load games. Please try again.');
+        this.isLoadingUpcoming.set(false);
+        this.isLoadingActive.set(false);
+      },
+      complete: () => {
+        console.log('forkJoin complete');
+      }
+    });
+    console.log('Subscribed to forkJoin');
+  }
+
+  /**
+   * Map backend games to NotificationGame array
+   */
+  private mapGamesToNotificationGames(games: Game[], defaultStatus: EventStatus): NotificationGame[] {
+    console.log('Mapping games:', games.length, 'with status:', defaultStatus);
+    return games.map(game => this.mapGameToNotificationGame(game, defaultStatus));
   }
 
   /**
@@ -238,28 +219,25 @@ export class CreateNotificationComponent {
    */
   private mapGameToNotificationGame(game: Game, defaultStatus: EventStatus): NotificationGame {
     return {
-      id: game.id?.toString() || '',
-      sportType: game.sportType || 'N/A',
-      homeTeam: game.homeTeamAbbr || game.homeTeam || 'HOME',
-      awayTeam: game.awayTeamAbbr || game.awayTeam || 'AWAY',
-      homeScore: game.homeScore?.toString() || '',
-      awayScore: game.awayScore?.toString() || '',
-      scheduledTime: this.formatGameTime(game.commenceTime),
-      homeRecord: game.homeRecord || '',
-      awayRecord: game.awayRecord || '',
-      status: this.mapGameStatus(game) || defaultStatus
+      id: game.id.toString(),
+      sportType: game.league || 'N/A',
+      homeTeam: game.homeTeam || 'HOME',
+      awayTeam: game.awayTeam || 'AWAY',
+      homeScore: game.homeScore?.toString() || '0',
+      awayScore: game.awayScore?.toString() || '0',
+      scheduledTime: this.formatGameTime(game.scheduledTime),
+      homeRecord: '', // TODO: Fetch if available from backend
+      awayRecord: '', // TODO: Fetch if available from backend
+      status: this.mapGameStatus(game.status || '') || defaultStatus
     };
   }
 
   /**
    * Map backend game status to EventStatus
    */
-  private mapGameStatus(game: Game): EventStatus | undefined {
-    // Adjust based on your Game model's status field
-    if (game.completed) return EventStatus.COMPLETED;
-    if (game.inProgress) return EventStatus.LIVE;
-    if (game.upcoming) return EventStatus.UPCOMING;
-    return undefined;
+  private mapGameStatus(statusStr: string): EventStatus | undefined {
+    const key = statusStr.toUpperCase() as keyof typeof EventStatus;
+    return EventStatus[key];
   }
 
   /**
@@ -282,9 +260,11 @@ export class CreateNotificationComponent {
   }
 
   private initializeFromRoute(): void {
+    console.log('initializeFromRoute called');
     this.route.queryParams
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(params => {
+          console.log('Query params:', params);
           if (params['edit'] && params['id']) {
             this.mode = 'edit';
             this.editingNotificationId = parseInt(params['id']);
@@ -301,18 +281,22 @@ export class CreateNotificationComponent {
   }
 
   private preselectGame(gameId: string): void {
+    console.log('preselectGame called with id:', gameId);
     // Wait for games to load before preselecting
     const checkGames = () => {
       const allGames = [...this.upcomingGames(), ...this.activeGames()];
       const game = allGames.find(g => g.id === gameId);
 
       if (game) {
+        console.log('Game preselected:', game);
         this.selectedGames = [game];
         this.currentStep = 2;
         this.activeTab = game.status === EventStatus.LIVE ? 'live' : 'upcoming';
       } else if (this.isLoading()) {
         // Games are still loading, check again after a short delay
         setTimeout(checkGames, 100);
+      } else {
+        console.log('Game not found after loading');
       }
     };
 
@@ -320,6 +304,7 @@ export class CreateNotificationComponent {
   }
 
   private loadExistingNotification(notificationId: number): void {
+    console.log('loadExistingNotification called with id:', notificationId);
     // TODO: Implement loading from actual backend service
     // Simulate loading from a service
     const existingNotifications = [
@@ -475,15 +460,15 @@ export class CreateNotificationComponent {
   }
 
   // Form submission
-  createNotifications(): void {
+  async createNotifications(): Promise<void> {
     if (this.mode === 'edit') {
-      this.updateNotification();
+      await this.updateNotification();
     } else {
-      this.createNewNotifications();
+      await this.createNewNotifications();
     }
   }
 
-  private createNewNotifications(): void {
+  private async createNewNotifications(): Promise<void> {
     console.log('Creating notifications:', {
       games: this.selectedGames,
       type: this.selectedNotificationType,
@@ -491,13 +476,62 @@ export class CreateNotificationComponent {
       typeSpecificSettings: this.typeSpecificPreferences
     });
 
-    // TODO: Call backend service to create notifications
+    try {
+      if (this.selectedGames.length === 0) {
+        this.errorMessage.set('No games selected');
+        return;
+      }
 
-    const message = `${this.selectedGames.length} notification${this.selectedGames.length !== 1 ? 's' : ''} created successfully!`;
-    this.navigateBackWithMessage(message);
+      const userId = await this.identityService.getCurrentUserId();
+      if (!userId) {
+        this.errorMessage.set('User not authenticated');
+        return;
+      }
+
+      // Create subscriptions for each selected game
+      for (const game of this.selectedGames) {
+        await this.createSubscriptionForGame(game, userId);
+      }
+
+      const message = `${this.selectedGames.length} notification${this.selectedGames.length > 1 ? 's' : ''} created successfully!`;
+      this.navigateBackWithMessage(message);
+    } catch (error) {
+      console.error('Failed to create notifications:', error);
+      this.errorMessage.set('Failed to create notifications. Please try again.');
+    }
   }
 
-  private updateNotification(): void {
+  private async createSubscriptionForGame(game: NotificationGame, userId: string): Promise<void> {
+    const subscription = {
+      userId: userId,
+      gameId: game.id,
+      eventType: this.selectedNotificationType,
+      league: game.sportType,
+      sportType: game.sportType,
+      isEnabled: this.notificationSettings.enableImmediately,
+      game: {
+        id: game.id,
+        homeTeam: game.homeTeam,
+        awayTeam: game.awayTeam,
+        scheduledTime: game.scheduledTime,
+        league: game.sportType,
+        homeScore: parseInt(game.homeScore) || 0,
+        awayScore: parseInt(game.awayScore) || 0,
+        status: game.status
+      },
+      preferences: {
+        ...this.typeSpecificPreferences,
+        gameHoursOnly: this.notificationSettings.gameHoursOnly,
+        autoDisable: this.notificationSettings.autoDisable
+      },
+      lastTriggered: 'Never',
+      triggerCount: 0
+    };
+
+    await this.notificationService.createSubscription(subscription as any);
+  }
+
+  private async updateNotification(): Promise<void> {
     console.log('Updating notification:', {
       id: this.editingNotificationId,
       games: this.selectedGames,
@@ -506,10 +540,59 @@ export class CreateNotificationComponent {
       typeSpecificSettings: this.typeSpecificPreferences
     });
 
-    // TODO: Call backend service to update notification
+    try {
+      if (!this.editingNotificationId) {
+        this.errorMessage.set('No notification ID provided');
+        return;
+      }
 
-    const message = 'Notification updated successfully!';
-    this.navigateBackWithMessage(message);
+      const userId = await this.identityService.getCurrentUserId();
+      if (!userId) {
+        this.errorMessage.set('User not authenticated');
+        return;
+      }
+
+      const game = this.selectedGames[0];
+      if (!game) {
+        this.errorMessage.set('No game selected');
+        return;
+      }
+
+      const subscription = {
+        id: this.editingNotificationId.toString(),
+        userId: userId,
+        gameId: game.id,
+        eventType: this.selectedNotificationType,
+        league: game.sportType,
+        sportType: game.sportType,
+        isEnabled: this.notificationSettings.enableImmediately,
+        game: {
+          id: game.id,
+          homeTeam: game.homeTeam,
+          awayTeam: game.awayTeam,
+          scheduledTime: game.scheduledTime,
+          league: game.sportType,
+          homeScore: parseInt(game.homeScore) || 0,
+          awayScore: parseInt(game.awayScore) || 0,
+          status: game.status
+        },
+        preferences: {
+          ...this.typeSpecificPreferences,
+          gameHoursOnly: this.notificationSettings.gameHoursOnly,
+          autoDisable: this.notificationSettings.autoDisable
+        },
+        lastTriggered: 'Never',
+        triggerCount: 0
+      };
+
+      await this.notificationService.updateSubscription(this.editingNotificationId.toString(), subscription as any);
+
+      const message = 'Notification updated successfully!';
+      this.navigateBackWithMessage(message);
+    } catch (error) {
+      console.error('Failed to update notification:', error);
+      this.errorMessage.set('Failed to update notification. Please try again.');
+    }
   }
 
   private navigateBackWithMessage(message: string): void {
@@ -539,4 +622,4 @@ export class CreateNotificationComponent {
   refreshGames(): void {
     this.loadGames();
   }
-}
+}shouldWatchRoot

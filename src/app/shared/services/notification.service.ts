@@ -1,14 +1,15 @@
 import {computed, Injectable, signal} from '@angular/core';
 import {HttpParams} from '@angular/common/http';
-import {BaseService} from "../base.service";
-import {NotificationFilters} from '../../model/notifications/NotificationFilters';
-import {Page} from "../../model/notifications/Page";
-import {UserSubscription} from '../../model/notifications/UserSubscription';
-import {EventType} from '../../model/notifications/EventType';
-import {PageRequest} from "../../model/notifications/PageRequest";
+import {BaseService} from "./base.service";
+import {NotificationFilters} from '../model/notifications/NotificationFilters';
+import {Page} from "../model/notifications/Page";
+import {UserSubscription} from '../model/notifications/UserSubscription';
+import {EventType} from '../model/notifications/EventType';
+import {PageRequest} from "../model/notifications/PageRequest";
 import {firstValueFrom, Observable} from 'rxjs';
 import {catchError, retry, tap} from "rxjs/operators";
-import {SportType} from "../../model/SportType";
+import {SportType} from "../model/SportType";
+import {Game} from "../model/notifications/Game";
 
 export interface CreateNotificationRequest {
   type: string;
@@ -22,6 +23,14 @@ export interface CreateNotificationRequest {
   conditions: any;
   enabled: boolean;
 }
+
+
+
+export interface GamesParams {
+  page?: number;
+  size?: number;
+}
+
 
 export interface SubscriptionQueryParams {
   userId: string;
@@ -222,4 +231,47 @@ export class NotificationService extends BaseService<UserSubscription> {
       await this.loadSubscriptions(userId);
     }
   }
+
+  /**
+   * Fetch live games with pagination
+   * @param params - Pagination parameters (page, size)
+   * @returns Observable of pageable response containing live games
+   */
+  getLiveGames(params: GamesParams = { page: 0, size: 5 }): Observable<Page<Game>> {
+    const httpParams = new HttpParams()
+        .set('page', params.page?.toString() || '0')
+        .set('size', params.size?.toString() || '5');
+
+    return this.http.get<Page<Game>>(`${this.apiUrl}/games/live`, { params: httpParams });
+  }
+
+  /**
+   * Fetch upcoming games with pagination
+   * @param params - Pagination parameters (page, size)
+   * @returns Observable of pageable response containing upcoming games
+   */
+  getUpcomingGames(params: GamesParams = { page: 0, size: 5 }): Observable<Page<Game>> {
+    const httpParams = new HttpParams()
+        .set('page', params.page?.toString() || '0')
+        .set('size', params.size?.toString() || '5');
+
+    return this.http.get<Page<Game>>(`${this.apiUrl}/games/upcoming`, { params: httpParams });
+  }
+
+  /**
+   * Fetch both live and upcoming games concurrently
+   * @param liveParams - Pagination params for live games
+   * @param upcomingParams - Pagination params for upcoming games
+   * @returns Object with observables for both live and upcoming games
+   */
+  getAllGames(
+      liveParams: GamesParams = { page: 0, size: 5 },
+      upcomingParams: GamesParams = { page: 0, size: 5 }
+  ) {
+    return {
+      live: this.getLiveGames(liveParams),
+      upcoming: this.getUpcomingGames(upcomingParams)
+    };
+  }
 }
+

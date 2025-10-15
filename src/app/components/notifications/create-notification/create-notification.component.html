@@ -57,7 +57,7 @@
                                 <span>Upcoming</span>
                                 <span class="tab-count">{{ upcomingGames().length }}</span>
                             } @else {
-                                <span>Upcoming Games</span>
+                                <span>Upcoming Games ({{ upcomingGames().length }})</span>
                             }
                         </button>
                         <button
@@ -68,8 +68,7 @@
                                 <span>Live</span>
                                 <span class="tab-count">{{ activeGames().length }}</span>
                             } @else {
-                                <span>Live Games</span>
-                                <span class="tab-count">{{ activeGames().length }}</span>
+                                <span>Live Games ({{ activeGames().length }})</span>
                             }
                         </button>
                     </div>
@@ -93,19 +92,25 @@
                                             [checked]="isGameSelected(game.id)"
                                             (change)="toggleGameSelection(game)">
                                     <div class="game-card">
-                                        @if (isGameSelected(game.id)) {
-                                            <i class="selected-indicator icon-check-circle"></i>
-                                        }
-                                        <div class="game-matchup">
-                                            {{ game.awayTeam }} &#64; {{ game.homeTeam }}
+                                        <div class="game-header">
+                                            <div class="game-matchup">
+                                                {{ game.awayTeam }} &#64; {{ game.homeTeam }}
+                                            </div>
+                                            @if (activeTab === 'live') {
+                                                <div class="live-score">
+                                                    <span class="away-score">{{ game.awayScore }}</span>
+                                                    <span class="score-separator">-</span>
+                                                    <span class="home-score">{{ game.homeScore }}</span>
+                                                </div>
+                                            }
                                         </div>
-                                        <div class="game-details">
+                                        <div class="game-meta">
                                             <span class="game-league">{{ game.sportType }}</span>
                                             <span class="game-time">{{ game.scheduledTime }}</span>
                                         </div>
-                                        @if (activeTab === 'live') {
-                                            <div class="live-score">
-                                                {{ game.awayScore }} - {{ game.homeScore }}
+                                        @if (isGameSelected(game.id)) {
+                                            <div class="selected-indicator">
+                                                <i class="icon-check-circle"></i>
                                             </div>
                                         }
                                     </div>
@@ -114,6 +119,7 @@
                                 <div class="empty-state">
                                     <i class="icon-calendar"></i>
                                     <p>No {{ activeTab }} games available at the moment.</p>
+                                    <p class="empty-hint">Check back later for updates.</p>
                                 </div>
                             }
                         </div>
