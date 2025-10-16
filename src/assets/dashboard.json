@@ -9,27 +9,6 @@
     "active": true
   },
   {
-    "title": "MLB",
-    "icon": "airplay",
-    "type": "sub",
-    "active": false,
-    "children": [
-      {"path": "nfl/nfl draft", "title": "NFL Draft", "type": "link"},
-      {"path": "mlb/scores", "title": "Scores", "type": "link"},
-      {"path": "mlb/schedule", "title": "Schedule", "type": "link"},
-      {"path": "mlb/standing", "title": "Standing", "type": "link"},
-      {"path": "mlb/survival", "title": "Survival", "type": "link"},
-      {"path": "mlb/odds", "title": "Odds", "type": "link"},
-      {"path": "mlb/teams", "title": "Teams", "type": "link"},
-      {"path": "mlb/team stats", "title": "Team Stats", "type": "link"},
-      {"path": "mlb/players", "title": "Players", "type": "link"},
-      {"path": "mlb/player stats", "title": "Player Stats", "type": "link"},
-      {"path": "mlb/league leaders", "title": "League Leaders", "type": "link"},
-      {"path": "mlb/injuries", "title": "Injuries", "type": "link"},
-      {"path": "mlb/transactions", "title": "Transactions", "type": "link"}
-    ]
-  },
-  {
     "title": "NFL",
     "icon": "airplay",
     "type": "sub",
@@ -47,26 +26,6 @@
       {"path": "nfl/league-leaders", "title": "League Leaders", "type": "link"},
       {"path": "nfl/injuries", "title": "Injuries", "type": "link"},
       {"path": "nfl/transactions", "title": "Transactions", "type": "link"}
-    ]
-  },
-  {
-    "title": "College Football",
-    "icon": "airplay",
-    "type": "sub",
-    "active": false,
-    "children": [
-      {"path": "cf/scores", "title": "Scores", "type": "link"},
-      {"path": "cf/schedule", "title": "Schedule", "type": "link"},
-      {"path": "cf/standing", "title": "Standing", "type": "link"},
-      {"path": "cf/survival", "title": "Survival", "type": "link"},
-      {"path": "cf/odds", "title": "Odds", "type": "link"},
-      {"path": "cf/teams", "title": "Teams", "type": "link"},
-      {"path": "cf/team stats", "title": "Team Stats", "type": "link"},
-      {"path": "cf/players", "title": "Players", "type": "link"},
-      {"path": "cf/player stats", "title": "Player Stats", "type": "link"},
-      {"path": "cf/league leaders", "title": "League Leaders", "type": "link"},
-      {"path": "cf/injuries", "title": "Injuries", "type": "link"},
-      {"path": "cf/transactions", "title": "Transactions", "type": "link"}
     ]
   },
   {
@@ -90,6 +49,48 @@
       {"path": "nba/transactions", "title": "Transactions", "type": "link"}
     ]
   },
+  {
+    "title": "NCAAF",
+    "icon": "airplay",
+    "type": "sub",
+    "active": false,
+    "children": [
+      {"path": "cf/scores", "title": "Scores", "type": "link"},
+      {"path": "cf/schedule", "title": "Schedule", "type": "link"},
+      {"path": "cf/standing", "title": "Standing", "type": "link"},
+      {"path": "cf/survival", "title": "Survival", "type": "link"},
+      {"path": "cf/odds", "title": "Odds", "type": "link"},
+      {"path": "cf/teams", "title": "Teams", "type": "link"},
+      {"path": "cf/team stats", "title": "Team Stats", "type": "link"},
+      {"path": "cf/players", "title": "Players", "type": "link"},
+      {"path": "cf/player stats", "title": "Player Stats", "type": "link"},
+      {"path": "cf/league leaders", "title": "League Leaders", "type": "link"},
+      {"path": "cf/injuries", "title": "Injuries", "type": "link"},
+      {"path": "cf/transactions", "title": "Transactions", "type": "link"}
+    ]
+  },
+  {
+    "title": "MLB",
+    "icon": "airplay",
+    "type": "sub",
+    "active": false,
+    "children": [
+      {"path": "nfl/nfl draft", "title": "NFL Draft", "type": "link"},
+      {"path": "mlb/scores", "title": "Scores", "type": "link"},
+      {"path": "mlb/schedule", "title": "Schedule", "type": "link"},
+      {"path": "mlb/standing", "title": "Standing", "type": "link"},
+      {"path": "mlb/survival", "title": "Survival", "type": "link"},
+      {"path": "mlb/odds", "title": "Odds", "type": "link"},
+      {"path": "mlb/teams", "title": "Teams", "type": "link"},
+      {"path": "mlb/team stats", "title": "Team Stats", "type": "link"},
+      {"path": "mlb/players", "title": "Players", "type": "link"},
+      {"path": "mlb/player stats", "title": "Player Stats", "type": "link"},
+      {"path": "mlb/league leaders", "title": "League Leaders", "type": "link"},
+      {"path": "mlb/injuries", "title": "Injuries", "type": "link"},
+      {"path": "mlb/transactions", "title": "Transactions", "type": "link"}
+    ]
+  },
+
   {
     "title": "NHL",
     "icon": "airplay",

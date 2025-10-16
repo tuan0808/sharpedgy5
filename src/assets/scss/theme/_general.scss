@@ -2,12 +2,30 @@
      01. General CSS Start
 ==========================**/
 //Custom css Start
-body {
+*{margin:0;}
+
+body, html, .wrapper {
     background-color: $body-bg-color;
     font-size: $body-font-size;
     overflow-x: hidden;
     font-family: $font-work-sans, $font-serif;
     color: $theme-body-font-color;
+    height:100%;
+}
+
+body > .wrapper{
+    height:auto;
+    min-height:100%;
+}
+
+.wrapper:after {
+    content: "";
+    display: block;
+    height: 100px;
+}
+
+.wrapper p{
+    margin: 20px 0;
 }
 
 ul {
